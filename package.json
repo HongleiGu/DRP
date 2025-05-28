@@ -1,0 +1,38 @@
+{
+  "name": "socketio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@ant-design/nextjs-registry": "^1.0.2",
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "@clerk/nextjs": "^6.20.1",
+    "@neondatabase/serverless": "^1.0.0",
+    "@supabase/supabase-js": "^2.49.8",
+    "antd": "^5.25.3",
+    "next": "15.3.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "redis": "^5.1.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "socketio": "link:",
+    "zod": "^3.25.32"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
