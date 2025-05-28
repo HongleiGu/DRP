@@ -47,7 +47,7 @@ export default function Page() {
       } else {
         message.error('Chatroom does not exist');
       }
-    } catch (err) {
+    } catch {
       message.error('Failed to fetch chatroom');
     } finally {
       setJoinLoading(false);
@@ -61,7 +61,7 @@ export default function Page() {
       if (chatroomId) {
         router.push(`/chatroom/${chatroomId}`);
       }
-    } catch (err) {
+    } catch {
       message.error('Failed to create chatroom');
     } finally {
       setCreateLoading(false);

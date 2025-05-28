@@ -36,9 +36,9 @@ export async function registerUser(
     }
 
     // return data;
-  } catch (e: any) {
+  } catch (e) {
     console.error("UNEXPECTED ERROR:", e);
-    throw new Error(e.message || "Registration failed");
+    throw e
   }
 }
 

@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Input, Button, List, Avatar, message } from 'antd';
 import { io, Socket } from 'socket.io-client';
 import { Message } from '@/types/datatypes';
-import { getChatHistory, insertChatHistory } from '@/utils/api';
+import { insertChatHistory } from '@/utils/api';
 import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
 import { getUserId } from '@/utils/user';
 
