@@ -1,6 +1,6 @@
 "use server"
 
-import { Message } from '@/types/datatypes';
+import { Message, PlayerPosition } from '@/types/datatypes';
 import { createClient } from 'redis';
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
@@ -25,3 +25,27 @@ export async function getMessagesFromChatroom(chatroomId: string): Promise<Messa
     const messages = await redis.lRange(key, 0, -1);
     return messages.map(msg => JSON.parse(msg));
 }
+
+
+// gridworld backend functions
+
+// Game position functions
+export const setPlayerPosition = async (playerId: string, position: PlayerPosition | null) => {
+  if (position) {
+    await redis.hSet('player_positions', playerId, JSON.stringify(position));
+  } else {
+    await redis.hDel('player_positions', playerId);
+  }
+};
+
+export const getPlayerPosition = async (playerId: string): Promise<PlayerPosition | null> => {
+  const position = await redis.hGet('player_positions', playerId);
+  return position ? JSON.parse(position) : null;
+};
+
+export const getAllPlayerPositions = async (): Promise<Record<string, PlayerPosition>> => {
+  const positions = await redis.hGetAll('player_positions');
+  return Object.fromEntries(
+    Object.entries(positions).map(([id, pos]) => [id, JSON.parse(pos)])
+  );
+};
