@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Modal, Form, Input, Button, Typography, message } from "antd";
-import { CopyOutlined } from "@ant-design/icons";
-import { useStreamVideoClient, Call } from "@stream-io/video-react-sdk";
+import { useStreamVideoClient } from "@stream-io/video-react-sdk";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 

@@ -8,15 +8,17 @@ import { Message } from '@/types/datatypes';
 // Global variable to store Socket.IO instance
 let io: Server | null = null;
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   return NextResponse.json({ status: 'Socket.IO endpoint' });
 }
 
 export async function POST(req: NextRequest) {
   try {
     const res = new NextResponse();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reqSocket = (req as any).socket;
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!reqSocket.server.io) {
       console.log('Initializing Socket.IO server...');
       

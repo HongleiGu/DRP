@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Modal, Form, Input, Button, Typography, message, DatePicker } from "antd";
 import { CopyOutlined } from "@ant-design/icons";
-import { useStreamVideoClient, Call } from "@stream-io/video-react-sdk";
+import { useStreamVideoClient } from "@stream-io/video-react-sdk";
 import { useUser } from "@clerk/nextjs";
 
 interface Props {
@@ -59,7 +59,7 @@ const MeetingForm = ({
 
   const handleStartMeeting = async (values: { 
     description: string;
-    dateTime: any; 
+    dateTime: Date
   }) => {
     if (!client || !user) return;
     

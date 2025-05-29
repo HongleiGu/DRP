@@ -1,7 +1,5 @@
 "use client";
 import { useState } from "react";
-// import { FaLink, FaVideo } from "react-icons/fa";
-import Image from 'next/image';
 import InstantMeeting from "@/components/MeetingPage/InstantMeeting";
 import CreateLink from "@/components/MeetingPage/CreateLink";
 import JoinMeeting from "@/components/MeetingPage/JoinMeeting";

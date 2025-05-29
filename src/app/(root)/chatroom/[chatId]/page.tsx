@@ -22,13 +22,21 @@ import {
 import '@stream-io/video-react-sdk/dist/css/styles.css';
 import 'antd/dist/reset.css';
 
-const MeetingRoom = async ({ params }: { params: Promise<{ callId: string }>}) => {
-  const {callId} = await params
+const MeetingRoom = ({ params }: { params: Promise<{ callId: string }>}) => {
+  const [callId, setCallId] = useState<string>('')
   const { user, isLoaded } = useUser();
   const [videoClient, setVideoClient] = useState<StreamVideoClient | null>(null);
   const [call, setCall] = useState<Call | null>(null);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
+
+  useEffect(() => {
+    const helper = async () => {
+      const {callId} = await params
+      setCallId(callId)
+    }
+    helper()
+  }, [params])
 
   useEffect(() => {
     if (!isLoaded || !user?.id) return;
