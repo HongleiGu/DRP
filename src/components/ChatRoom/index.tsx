@@ -9,62 +9,72 @@ import { insertChatHistory } from '@/utils/api';
 import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
 import { getUserId } from '@/utils/user';
 
-
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const [userId, setUserId] = useState<string>("");
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [users, setUsers] = useState<string[]>([]);
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const helper = async () => {
-      const data = await getMessagesFromChatroom(chatroomId)
-      setMessages(data)
-    }
-    helper()
-  })
+    const loadInitialMessages = async () => {
+      try {
+        const data = await getMessagesFromChatroom(chatroomId);
+        setMessages(data);
+      } catch (error) {
+        console.error('Failed to load messages:', error);
+        message.error('Failed to load initial messages');
+      }
+    };
+    loadInitialMessages();
+  }, [chatroomId]);
 
   // Initialize socket connection
   useEffect(() => {
-    const helper = async () => {
-      setUserId(await getUserId())
-    }
-    helper()
-    const newSocket = io({
-      path: '/api/socket/io',
-    });
+    const initSocket = async () => {
+      const id = await getUserId();
+      setUserId(id);
+      
+      const newSocket = io({
+        path: '/api/socket/io',
+      });
 
-    setSocket(newSocket);
+      setSocket(newSocket);
 
-    // Join room on connection
-    newSocket.on('connect', () => {
-      newSocket.emit('join', chatroomId);
-    });
+      // Join room on connection
+      newSocket.on('connect', () => {
+        newSocket.emit('join', chatroomId);
+      });
 
-    // Listen for messages
-    // this should not need to update to psql as it is updated on the other side when they send the msg
-    newSocket.on('receive-message', (msg: Message) => {
-      setMessages((prev) => [...prev, msg]);
-    });
+      // Listen for messages
+      newSocket.on('receive-message', (msg: Message) => {
+        // Skip if this is our own optimistic message
+        if (!msg.isOptimistic) {
+          setMessages((prev) => [...prev, msg]);
+        }
+      });
 
-    // Listen for user connections
-    newSocket.on('user-connected', (userId: string) => {
-      setUsers((prev) => [...prev, userId]);
-      message.info(`User ${userId.substring(0, 6)} joined`);
-    });
+      // Listen for user connections
+      newSocket.on('user-connected', (userId: string) => {
+        setUsers((prev) => [...prev, userId]);
+        message.info(`User ${userId.substring(0, 6)} joined`);
+      });
 
-    // Listen for user disconnections
-    newSocket.on('user-disconnected', (userId: string) => {
-      setUsers((prev) => prev.filter(id => id !== userId));
-      message.info(`User ${userId.substring(0, 6)} left`);
-    });
+      // Listen for user disconnections
+      newSocket.on('user-disconnected', (userId: string) => {
+        setUsers((prev) => prev.filter(id => id !== userId));
+        message.info(`User ${userId.substring(0, 6)} left`);
+      });
 
-    // Clean up on unmount
-    return () => {
-      newSocket.disconnect();
+      // Clean up on unmount
+      return () => {
+        newSocket.disconnect();
+      };
     };
+
+    initSocket();
   }, [chatroomId]);
 
   // Scroll to bottom when new messages arrive
@@ -73,34 +83,56 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || !socket) return;
+    if (!newMessage.trim() || !socket || isSending) return;
 
-    // Send message to server
-    socket.emit('send-message', {
-      chatroomId,
+    setIsSending(true);
+    
+    // Create message object with optimistic flag
+    const messageObj: Message = {
+      speaker: userId,
       chat_message: newMessage,
-    });
+      time: new Date().toISOString(),
+      isOptimistic: true  // Mark as optimistic
+    };
 
-    const messageObj = {
-      speaker: userId,
-      chat_message: newMessage
-    } as Message
+    try {
+      // 1. Add to Redis immediately (fast operation)
+      await addMessageToChatroom(chatroomId, messageObj);
+      
+      // 2. Add to local messages immediately (optimistic UI)
+      setMessages((prev) => [...prev, messageObj]);
+      setNewMessage('');
 
-    // update to psql
-    await insertChatHistory({
-      speaker: userId,
-      chat_message: newMessage
-    } as Message);
+      // 3. Send message to server via socket
+      socket.emit('send-message', {
+        chatroomId,
+        chat_message: newMessage,
+      });
 
-    await addMessageToChatroom(chatroomId, messageObj)
-
-    // Add to local messages immediately
-    setMessages((prev) => [
-      ...prev,
-      messageObj
-    ]);
-
-    setNewMessage('');
+      // 4. Queue PostgreSQL insertion in the background
+      setTimeout(async () => {
+        try {
+          await insertChatHistory({
+            speaker: userId,
+            chat_message: newMessage,
+            isOptimistic: false // this is not stored anyway
+          });
+          
+          // Update message to remove optimistic flag
+          setMessages(prev => prev.map(msg => 
+            msg === messageObj ? {...msg, isOptimistic: false} : msg
+          ));
+        } catch (psqlError) {
+          console.error('Failed to persist to PostgreSQL:', psqlError);
+          message.warning('Message saved temporarily but failed to persist long-term');
+        }
+      }, 0);
+    } catch (redisError) {
+      console.error('Failed to save to Redis:', redisError);
+      message.error('Failed to send message');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -118,15 +150,25 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         <List
           dataSource={messages}
           renderItem={(item) => (
-            <List.Item className={item.speaker === 'You' ? 'bg-blue-50' : ''}>
+            <List.Item 
+              className={item.speaker === userId ? 'bg-blue-50' : ''}
+              style={item.isOptimistic ? { opacity: 0.7 } : {}}
+            >
               <List.Item.Meta
                 avatar={<Avatar>{item.speaker.charAt(0)}</Avatar>}
                 title={item.speaker}
                 description={item.chat_message}
               />
-              {item.time ? <div className="text-xs text-gray-400">
-                {new Date(item.time).toLocaleTimeString()}
-              </div> : null}
+              <div className="flex flex-col items-end">
+                {item.time && (
+                  <div className="text-xs text-gray-400">
+                    {new Date(item.time).toLocaleTimeString()}
+                  </div>
+                )}
+                {item.isOptimistic && (
+                  <div className="text-xs text-yellow-500">Sending...</div>
+                )}
+              </div>
             </List.Item>
           )}
         />
@@ -140,12 +182,14 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onPressEnter={handleSend}
+          disabled={isSending}
         />
         <Button
           type="primary"
           onClick={handleSend}
           className="ml-2"
-          disabled={!newMessage.trim()}
+          disabled={!newMessage.trim() || isSending}
+          loading={isSending}
         >
           Send
         </Button>
