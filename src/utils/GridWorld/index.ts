@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 
 export class GridWorld extends Phaser.Scene
 {
@@ -10,9 +10,19 @@ export class GridWorld extends Phaser.Scene
     create ()
     {
         const map = this.make.tilemap({ key: 'map', tileWidth: 32, tileHeight: 32 });
-        const tileset = map.addTilesetImage('tiles', 'gridworld', 32, 32, 1, 2);
-        // unsure what to do when tileset not found, throw error?
-        const layer = map.createLayer(0, tileset!!, 0, 0);
+        const createTileLayer = () => {
+            const tileset = map.addTilesetImage('tiles', 'gridworld', 32, 32, 1, 2);
+            
+            if (!tileset) {
+                console.error('Tileset missing. Using fallback tiles');
+                // we dont have the tileset now, this actually should throw an error
+                return map.createBlankLayer('fallback-layer', '', 32, 32, 64, 64);
+            }
+
+            return map.createLayer(0, tileset, 0, 0);
+        }
+
+        const layer = createTileLayer();
 
         const player = this.add.image(32 + 16, 32 + 16, 'car');
 
