@@ -1,0 +1,25 @@
+{
+	"identifier": "Level_0",
+	"uniqueIdentifer": "09d43c50-3740-11f0-b097-b50efddac007",
+	"x": 0,
+	"y": 0,
+	"width": 800,
+	"height": 608,
+	"bgColor": "#696A79",
+	"neighbourLevels": [],
+	"customFields" : {},
+	"layers": [
+		"Water.png",
+		"Grass.png",
+		"WoodenHouseRoof.png",
+		"Dirt.png",
+		"WoodenHouseWalls.png",
+		"Plants.png",
+		"Furniture.png",
+		"Door.png",
+		"Fence.png",
+		"Paths.png",
+		"Fruits.png"
+	],
+	"entities" : {}
+}

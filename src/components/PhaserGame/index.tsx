@@ -19,6 +19,10 @@ const PhaserGame = () => {
             disableWebAudio: false,
             noAudio: false,
             context: audioContextRef.current || undefined
+          },
+          scale: {
+            mode: Phaser.Scale.RESIZE,
+            autoCenter: Phaser.Scale.CENTER_BOTH
           }
         });
 
