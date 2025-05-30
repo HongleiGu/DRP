@@ -20,7 +20,7 @@ export default function ProtectedContent() {
 
   return (
     <div className="protected-content">
-      <h1>Welcome back, {user.fullName ?? "User"}!</h1>
+      <h1>Welcome back, HI DRP {user.fullName ?? "User"}!</h1>
       <div className="user-details">
         {user.imageUrl && (
           <Image
