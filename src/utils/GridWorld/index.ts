@@ -82,18 +82,18 @@ export class GridWorld extends Phaser.Scene {
         );
     }
 
-    update() {
-        // Handle continuous movement with cooldown
-        if (this.cursors.left.isDown) {
-            this.movePlayer(-1, 0, 180);
-        } else if (this.cursors.right.isDown) {
-            this.movePlayer(1, 0, 0);
-        } else if (this.cursors.up.isDown) {
-            this.movePlayer(0, -1, 0);
-        } else if (this.cursors.down.isDown) {
-            this.movePlayer(0, 1, 0);
-        }
-    }
+    // update() {
+    //     // Handle continuous movement with cooldown
+    //     if (this.cursors.left.isDown) {
+    //         this.movePlayer(-1, 0, 180);
+    //     } else if (this.cursors.right.isDown) {
+    //         this.movePlayer(1, 0, 0);
+    //     } else if (this.cursors.up.isDown) {
+    //         this.movePlayer(0, -1, 0);
+    //     } else if (this.cursors.down.isDown) {
+    //         this.movePlayer(0, 1, 0);
+    //     }
+    // }
 
     private createTilesets() {
         // Create tilesets for all required textures

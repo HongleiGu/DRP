@@ -13,6 +13,7 @@ const PhaserGame = () => {
         // Create game instance
         gameRef.current = new Game({
           ...gridWorldConfig,
+          // overwritting some game config for better encapsulation
           parent: gameContainer.current,
           audio: {
             // Add audio-specific config
@@ -21,7 +22,7 @@ const PhaserGame = () => {
             context: audioContextRef.current || undefined
           },
           scale: {
-            mode: Phaser.Scale.RESIZE,
+            mode: Phaser.Scale.FIT,
             autoCenter: Phaser.Scale.CENTER_BOTH
           }
         });
