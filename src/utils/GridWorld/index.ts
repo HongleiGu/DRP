@@ -161,13 +161,13 @@ export class GridWorld extends Phaser.Scene {
 
     private setupKeyboardControls() {
         // Setup WASD controls
-        this.input.keyboard?.on('keydown-A', () => this.movePlayer(-1, 0, 180));
-        this.input.keyboard?.on('keydown-D', () => this.movePlayer(1, 0, 0));
-        this.input.keyboard?.on('keydown-W', () => this.movePlayer(0, -1, 0));
-        this.input.keyboard?.on('keydown-S', () => this.movePlayer(0, 1, 0));
+        this.input.keyboard?.on('keydown-A', () => this.movePlayer(-1, 0, true));
+        this.input.keyboard?.on('keydown-D', () => this.movePlayer(1, 0, false));
+        this.input.keyboard?.on('keydown-W', () => this.movePlayer(0, -1, null));
+        this.input.keyboard?.on('keydown-S', () => this.movePlayer(0, 1, null));
     }
 
-    private movePlayer(dx: number, dy: number, angle: number) {
+    private movePlayer(dx: number, dy: number, flip: boolean | null) {
         const targetX = this.player.x + dx * GRID_SIZE / 4;
         const targetY = this.player.y + dy * GRID_SIZE / 4;
 
@@ -184,7 +184,9 @@ export class GridWorld extends Phaser.Scene {
         // Move to new position if clear
         if (canMove) {
             this.player.setPosition(targetX, targetY);
-            this.player.setAngle(angle);
+            if (flip != null) {
+                this.player.flipX = flip;
+            }
         }
     }
     resize(gameSize: Phaser.Structs.Size) {
