@@ -20,7 +20,7 @@ export class GridWorld extends Phaser.Scene {
         this.load.image('character', '/game/assets/tilemaps/sprout/Characters/character.png');
         
         // Corrected file extension for Tiled JSON map
-        this.load.tilemapTiledJSON('map', '/game/example/tiled/Level_0.json');
+        this.load.tilemapTiledJSON('map', '/game/example/tiled/Level_0.tmx');
         
         // Other assets
         this.load.image('Dirt', '/game/assets/tilemaps/sprout/Tilesets/Tilled_Dirt_Wide_v2.png');
