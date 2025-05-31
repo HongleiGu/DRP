@@ -47,7 +47,10 @@ export default function ProtectedContent() {
         </div>
         <Button
           onClick={() => router.push("/chatroom")}
-        />
+        >Chatroom</Button>
+        <Button
+          onClick={() => router.push("/game")}
+        >Game</Button>
       </div>
     </div>
   );
