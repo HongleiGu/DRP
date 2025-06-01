@@ -11,7 +11,6 @@ const PhaserGame = dynamic(() => import('@/components/PhaserGame'), {
 export default function GamePage() {
   return (
     <div>
-      <h1>Phaser Game</h1>
       <PhaserGame />
     </div>
   );
