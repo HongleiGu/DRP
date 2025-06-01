@@ -31,7 +31,7 @@ export async function registerUser(
     if (error) {
       // Enhanced error logging
       console.error("SUPABASE ERROR DETAILS:", error);
-      
+
       throw new Error("Database insert failed");
     }
 
