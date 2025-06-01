@@ -29,6 +29,48 @@
 	"fieldInstances": [],
 	"layerInstances": [
 		{
+			"__identifier": "Entities",
+			"__type": "Entities",
+			"__cWid": 50,
+			"__cHei": 38,
+			"__gridSize": 16,
+			"__opacity": 1,
+			"__pxTotalOffsetX": 0,
+			"__pxTotalOffsetY": 0,
+			"__tilesetDefUid": null,
+			"__tilesetRelPath": null,
+			"iid": "d90f9e40-3740-11f0-b097-bda418b78dfb",
+			"levelId": 0,
+			"layerDefUid": 24,
+			"pxOffsetX": 0,
+			"pxOffsetY": 0,
+			"visible": true,
+			"optionalRules": [],
+			"intGridCsv": [],
+			"autoLayerTiles": [],
+			"seed": 3218507,
+			"overrideTilesetUid": null,
+			"gridTiles": [],
+			"entityInstances": [
+				{
+					"__identifier": "PlayerStart",
+					"__grid": [15,15],
+					"__pivot": [0.5,0.5],
+					"__tags": [],
+					"__tile": null,
+					"__smartColor": "#BE4A2F",
+					"iid": "daf7cc90-3740-11f0-8929-ffaea8015348",
+					"width": 16,
+					"height": 16,
+					"defUid": 23,
+					"px": [248,248],
+					"fieldInstances": [],
+					"__worldX": 248,
+					"__worldY": 248
+				}
+			]
+		},
+		{
 			"__identifier": "Fruits",
 			"__type": "Tiles",
 			"__cWid": 50,
@@ -180,7 +222,7 @@
 			"entityInstances": []
 		},
 		{
-			"__identifier": "Fence",
+			"__identifier": "Fences",
 			"__type": "Tiles",
 			"__cWid": 50,
 			"__cHei": 38,
@@ -249,7 +291,7 @@
 			"entityInstances": []
 		},
 		{
-			"__identifier": "Door",
+			"__identifier": "Doors",
 			"__type": "Tiles",
 			"__cWid": 50,
 			"__cHei": 38,
@@ -746,32 +788,7 @@
 			"entityInstances": []
 		},
 		{
-			"__identifier": "Entities",
-			"__type": "Entities",
-			"__cWid": 50,
-			"__cHei": 38,
-			"__gridSize": 16,
-			"__opacity": 1,
-			"__pxTotalOffsetX": 0,
-			"__pxTotalOffsetY": 0,
-			"__tilesetDefUid": null,
-			"__tilesetRelPath": null,
-			"iid": "d90f9e40-3740-11f0-b097-bda418b78dfb",
-			"levelId": 0,
-			"layerDefUid": 24,
-			"pxOffsetX": 0,
-			"pxOffsetY": 0,
-			"visible": true,
-			"optionalRules": [],
-			"intGridCsv": [],
-			"autoLayerTiles": [],
-			"seed": 3218507,
-			"overrideTilesetUid": null,
-			"gridTiles": [],
-			"entityInstances": []
-		},
-		{
-			"__identifier": "WoodenHouseRoof",
+			"__identifier": "WoodenHouseRoofs",
 			"__type": "Tiles",
 			"__cWid": 50,
 			"__cHei": 38,

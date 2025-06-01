@@ -11,15 +11,29 @@
 	"layers": [
 		"Water.png",
 		"Grass.png",
-		"WoodenHouseRoof.png",
+		"WoodenHouseRoofs.png",
 		"Dirt.png",
 		"WoodenHouseWalls.png",
 		"Plants.png",
 		"Furniture.png",
-		"Door.png",
-		"Fence.png",
+		"Doors.png",
+		"Fences.png",
 		"Paths.png",
 		"Fruits.png"
 	],
-	"entities" : {}
+	"entities": {
+		"PlayerStart": [
+			{
+				"id": "PlayerStart",
+				"iid": "daf7cc90-3740-11f0-8929-ffaea8015348",
+				"layer": "Entities",
+				"x": 248,
+				"y": 248,
+				"width": 16,
+				"height": 16,
+				"color": 12470831,
+				"customFields" : {}
+			}
+		]
+	}
 }
