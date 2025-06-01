@@ -5,6 +5,7 @@ import {
   SignUpButton,
   SignedIn,
   SignedOut,
+  UserButton,
   // UserButton,
 } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
@@ -38,15 +39,6 @@ export default function RootLayout({
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} style={{ margin: 0 }}>
           <StreamVideoProvider>
-            <header className="flex justify-end items-center p-4 gap-4 h-16">
-              <SignedOut>
-                <SignInButton />
-                <SignUpButton />
-              </SignedOut>
-              <SignedIn>
-                {/* <UserButton /> */}
-              </SignedIn>
-            </header>
             <AntdRegistry>{children}</AntdRegistry>
           </StreamVideoProvider>
         </body>

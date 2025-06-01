@@ -1,6 +1,6 @@
 // components/ProtectedContent.tsx
 "use client";
-import { useUser } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 import { RedirectToSignIn } from "@clerk/nextjs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Layout, Card, Avatar, Typography, Space, Button, Flex } from "antd";
@@ -19,9 +19,32 @@ export default function ProtectedContent() {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Header style={{ color: "white", fontSize: "20px" }}>
-        Welcome back, {user.fullName ?? "User"}!
-      </Header>
+      <Header
+      style={{
+        background: "#001529",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "0 24px",
+        height: 64,
+      }}
+    >
+      <Text style={{ color: "#fff", fontSize: 18 }}>
+        {user ? `Welcome back, ${user.fullName ?? "User"}!` : "Welcome!"}
+      </Text>
+
+      <UserButton
+        afterSignOutUrl="/"
+        appearance={{
+          elements: {
+            userButtonAvatarBox: {
+              borderRadius: "50%",
+              border: "2px solid white",
+            },
+          },
+        }}
+      />
+    </Header>
 
       <Content style={{ padding: "24px", display: "flex", justifyContent: "center", alignItems: "center" }}>
         <Card
