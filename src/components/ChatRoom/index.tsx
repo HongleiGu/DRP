@@ -69,9 +69,9 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       // Listen for messages
       newSocket.on('receive-message', (msg: Message) => {
         // Skip if this is our own optimistic message
-        if (!msg.is_optimistic) {
+        // if (!msg.is_optimistic) {
           setMessages((prev) => [...prev, msg]);
-        }
+        // }
       });
 
       // Listen for user connections
