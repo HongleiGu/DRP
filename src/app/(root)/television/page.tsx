@@ -18,15 +18,21 @@ export default function Television() {
     document.body.appendChild(tag);
 
     (window as any).onYouTubeIframeAPIReady = () => {
-      ytPlayer.current = new (window as any).YT.Player('yt-player', {
-        height: '480',
-        width: '853',
-        videoId: 'loWA5o1RdTY', // Default video
-        events: {
-          onReady: () => console.log('YouTube Player is ready'),
-          onStateChange: (e: any) => console.log('Player state changed:', e.data),
-        },
-      });
+        ytPlayer.current = new (window as any).YT.Player('yt-player', {
+            height: '480',
+            width: '853',
+            videoId: 'loWA5o1RdTY',
+            playerVars: {
+              controls: 0,           // ❗️关闭 YouTube 控制条
+              disablekb: 1,          // 可选：禁用键盘控制（防止空格播放）
+              modestbranding: 1,     // 去掉 YouTube logo
+              rel: 0,                // 视频播放结束后不显示推荐
+            },
+            events: {
+              onReady: () => console.log('YouTube Player is ready'),
+              onStateChange: (e: any) => console.log('Player state changed:', e.data),
+            },
+          });
     };
 
     return () => {
