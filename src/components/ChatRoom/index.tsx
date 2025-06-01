@@ -7,9 +7,6 @@ import { io, Socket } from 'socket.io-client';
 import { Message } from '@/types/datatypes';
 import { insertChatHistory } from '@/utils/api';
 import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
-import { getUserId } from '@/utils/user';
-// import { isValidUUID } from '@/utils/utils';
-import { clerkClient } from '@clerk/nextjs/server';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 
@@ -54,7 +51,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         alert("your nickname is nor set")
         router.push("/onboarding")
       }
-      
+
       const newSocket = io({
         path: '/api/socket/io',
       });

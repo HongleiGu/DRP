@@ -7,6 +7,7 @@ const { Title } = Typography;
 
 export default function Television() {
   const playerRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ytPlayer = useRef<any>(null);
 
   const [timeInput, setTimeInput] = useState<string>('');
@@ -17,7 +18,9 @@ export default function Television() {
     tag.src = 'https://www.youtube.com/iframe_api';
     document.body.appendChild(tag);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).onYouTubeIframeAPIReady = () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ytPlayer.current = new (window as any).YT.Player('yt-player', {
             height: '480',
             width: '853',
@@ -26,10 +29,11 @@ export default function Television() {
               controls: 0,           // ❗️关闭 YouTube 控制条
               disablekb: 1,          // 可选：禁用键盘控制（防止空格播放）
               modestbranding: 1,     // 去掉 YouTube logo
-              rel: 0,                // 视频播放结束后不显示推荐
+              rel: 1,                // 视频播放结束后不显示推荐
             },
             events: {
               onReady: () => console.log('YouTube Player is ready'),
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onStateChange: (e: any) => console.log('Player state changed:', e.data),
             },
           });
