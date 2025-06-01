@@ -38,7 +38,7 @@ export default function ProtectedContent() {
               </Space>
               <Flex gap="small" style={{ marginTop: "16px" }}>
                 <Button type="primary" onClick={() => router.push("/chatroom")}>Chatroom</Button>
-                <Button onClick={() => router.push("/game")}>Game</Button>
+                <Button onClick={() => router.push("/game")}>Lumiroom</Button>
               </Flex>
             </Flex>
           </Flex>
