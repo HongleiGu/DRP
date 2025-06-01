@@ -1,57 +1,49 @@
 // components/ProtectedContent.tsx
-"use client"
+"use client";
 import { useUser } from "@clerk/nextjs";
 import { RedirectToSignIn } from "@clerk/nextjs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import Image from "next/image";
+import { Layout, Card, Avatar, Typography, Space, Button, Flex } from "antd";
+import { UserOutlined, MailOutlined, IdcardOutlined, SmileOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { Button } from "antd";
+
+const { Header, Content } = Layout;
+const { Title, Text } = Typography;
 
 export default function ProtectedContent() {
-  // Properly access user data
   const { isLoaded, user } = useUser();
   const router = useRouter();
 
-  // Handle loading state
   if (!isLoaded) return <LoadingSpinner />;
-  
-  // Redirect if no user
   if (!user) return <RedirectToSignIn />;
 
   return (
-    <div className="protected-content">
-      <h1>Welcome back, HI DRP {user.fullName ?? "User"}!</h1>
-      <div className="user-details">
-        {user.imageUrl && (
-          <Image
-            src={user.imageUrl}
-            alt="Profile"
-            className="avatar"
-            width={80}
-            height={80}
-          />
-        )}
-        <div className="user-info">
-          <p>
-            <strong>Email:</strong>{" "}
-            {user.primaryEmailAddress?.emailAddress ?? "No email"}
-          </p>
-          <p>
-            <strong>User ID:</strong> {user.id}
-          </p>
-          {user.publicMetadata && (
-            <p>
-              <strong>Role: {user?.publicMetadata.nickname as string}</strong>
-            </p>
-          )}
-        </div>
-        <Button
-          onClick={() => router.push("/chatroom")}
-        >Chatroom</Button>
-        <Button
-          onClick={() => router.push("/game")}
-        >Game</Button>
-      </div>
-    </div>
+    <Layout style={{ minHeight: "100vh" }}>
+      <Header style={{ color: "white", fontSize: "20px" }}>
+        Welcome back, {user.fullName ?? "User"}!
+      </Header>
+
+      <Content style={{ padding: "24px", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <Card
+          style={{ maxWidth: 600, width: "100%" }}
+        >
+          <Flex gap="large" align="center">
+            <Avatar size={100} src={user.imageUrl} icon={<UserOutlined />} />
+            <Flex vertical style={{ flex: 1 }}>
+              <Title level={4}>Welcome back, {user.fullName ?? "User"}!</Title>
+              <Space direction="vertical" size="small">
+                <Text><MailOutlined /> <strong>Email:</strong> {user.primaryEmailAddress?.emailAddress ?? "No email"}</Text>
+                <Text><IdcardOutlined /> <strong>User ID:</strong> {user.id}</Text>
+                <Text><SmileOutlined /> <strong>Nickname:</strong> {user.publicMetadata?.nickname as string ?? "None"}</Text>
+              </Space>
+              <Flex gap="small" style={{ marginTop: "16px" }}>
+                <Button type="primary" onClick={() => router.push("/chatroom")}>Chatroom</Button>
+                <Button onClick={() => router.push("/game")}>Game</Button>
+              </Flex>
+            </Flex>
+          </Flex>
+        </Card>
+      </Content>
+    </Layout>
   );
 }

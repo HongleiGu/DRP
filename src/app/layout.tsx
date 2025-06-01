@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} style={{ margin: 0 }}>
           <StreamVideoProvider>
             <header className="flex justify-end items-center p-4 gap-4 h-16">
               <SignedOut>
@@ -44,7 +44,7 @@ export default function RootLayout({
                 <SignUpButton />
               </SignedOut>
               <SignedIn>
-                <UserButton />
+                {/* <UserButton /> */}
               </SignedIn>
             </header>
             <AntdRegistry>{children}</AntdRegistry>
