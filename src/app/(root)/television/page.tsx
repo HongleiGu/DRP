@@ -1,7 +1,9 @@
 'use client';
 
-import { Button, Input } from 'antd';
+import { Button, Input, Typography, Divider } from 'antd';
 import { useEffect, useRef, useState } from 'react';
+
+const { Title } = Typography;
 
 export default function Television() {
   const playerRef = useRef<HTMLDivElement>(null);
@@ -32,14 +34,8 @@ export default function Television() {
     };
   }, []);
 
-  const handlePlay = () => {
-    ytPlayer.current?.playVideo();
-  };
-
-  const handlePause = () => {
-    ytPlayer.current?.pauseVideo();
-  };
-
+  const handlePlay = () => ytPlayer.current?.playVideo();
+  const handlePause = () => ytPlayer.current?.pauseVideo();
   const handleSeek = () => {
     const seconds = parseFloat(timeInput);
     if (!isNaN(seconds)) {
@@ -69,32 +65,48 @@ export default function Television() {
   };
 
   return (
-    <div>
-      <div id="yt-player" ref={playerRef}></div>
+    <div style={{ padding: 32, maxWidth: 1000, margin: '0 auto' }}>
+      <Title level={3}>Lumiroom Cinema</Title>
 
-      <div style={{ marginTop: '1rem' }}>
+      <div
+        id="yt-player"
+        ref={playerRef}
+        style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}
+      ></div>
+
+      <Divider />
+
+      {/* Video URL input */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
         <Input
-          type="text"
           placeholder="Enter YouTube video URL"
           value={videoUrl}
           onChange={(e) => setVideoUrl(e.target.value)}
-          style={{ width: '400px', marginRight: '10px' }}
+          style={{ flex: 1, marginRight: 12 }}
         />
-        <Button onClick={handleLoadVideo}>Load Video</Button>
+        <Button type="primary" onClick={handleLoadVideo}>
+          Load Video
+        </Button>
       </div>
 
-      <div style={{ marginTop: '1rem' }}>
-        <Button onClick={handlePlay}>Play</Button>
-        <Button onClick={handlePause}>Pause</Button>
+      {/* Playback controls */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+        <Button onClick={handlePlay} type="default">
+          ▶ Play
+        </Button>
+        <Button onClick={handlePause} type="default">
+          ⏸ Pause
+        </Button>
       </div>
 
-      <div style={{ marginTop: '1rem' }}>
+      {/* Seek input */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <Input
           type="number"
-          placeholder="Seek to (seconds)"
+          placeholder="Seek (sec)"
           value={timeInput}
           onChange={(e) => setTimeInput(e.target.value)}
-          style={{ width: '100px', marginRight: '10px' }}
+          style={{ width: 120 }}
         />
         <Button onClick={handleSeek}>Seek</Button>
       </div>
