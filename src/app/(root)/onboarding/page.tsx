@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { completeOnboarding } from '@/actions/onboarding'
@@ -24,6 +24,13 @@ export default function OnboardingComponent() {
   const router = useRouter()
   const [form] = Form.useForm()
 
+  useEffect(() => {
+    if (user?.publicMetadata?.nickname) {
+      router.replace("/")
+      return
+    }
+  }, [user, router]);
+
   const onFinish = async (values: Omit<OnboardingFormValues, 'onboardingComplete'>) => {
     try {
       // Validate with Zod
@@ -33,7 +40,7 @@ export default function OnboardingComponent() {
       })
 
       const res = await completeOnboarding({metadata: validatedValues} as CustomJwtSessionClaims)
-      
+
       if (res?.message) {
         await user?.reload()
         router.push('/')
