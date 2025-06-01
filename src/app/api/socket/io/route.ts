@@ -45,19 +45,22 @@ export async function POST(req: NextRequest) {
         
         // Handle sending messages
         socket.on('send-message', async (data: {
-          chatroomId: string;
+          chat_room_id: string;
           speaker: string;
+          speaker_name: string;
           chat_message: string;
           time?: string;
-          isOptimistic: boolean
+          is_optimistic: boolean;
         }) => {
           try {
-            const chatroomId = data.chatroomId;
+            const chatroomId = data.chat_room_id;
             const messageObj: Message = {
               speaker: data.speaker,
               chat_message: data.chat_message,
               time: data.time || new Date().toISOString(),
-              isOptimistic: data.isOptimistic
+              is_optimistic: data.is_optimistic,
+              speaker_name: data.speaker_name,
+              chat_room_id: data.chat_room_id
             };
             
             console.log(`New message in ${chatroomId} from ${data.speaker}`);
@@ -73,9 +76,11 @@ export async function POST(req: NextRequest) {
               try {
                 await insertChatHistory({
                   speaker: messageObj.speaker,
+                  speaker_name: messageObj.speaker_name,
                   chat_message: messageObj.chat_message,
                   time: messageObj.time,
-                  isOptimistic: messageObj.isOptimistic
+                  is_optimistic: messageObj.is_optimistic,
+                  chat_room_id: messageObj.chat_room_id
                 });
               } catch (error) {
                 console.error('Error persisting to PostgreSQL:', error);
@@ -193,17 +198,17 @@ process.on('SIGTERM', () => {
 //         socket.on('send-message', async (data: {
 //           chatroomId: string;
 //           speaker: string;
-//           chat_message: string;
+//           chatMessage: string;
 //           time?: string;
-//           isOptimistic: boolean;
+//           is_optimistic: boolean;
 //         }) => {
 //           try {
 //             const chatroomId = data.chatroomId;
 //             const messageObj: Message = {
 //               speaker: data.speaker,
-//               chat_message: data.chat_message,
+//               chatMessage: data.chatMessage,
 //               time: data.time || new Date().toISOString(),
-//               isOptimistic: data.isOptimistic
+//               is_optimistic: data.is_optimistic
 //             };
             
 //             // Add to Redis immediately
@@ -216,9 +221,9 @@ process.on('SIGTERM', () => {
 //             setTimeout(async () => {
 //               await insertChatHistory({
 //                 speaker: messageObj.speaker,
-//                 chat_message: messageObj.chat_message,
+//                 chatMessage: messageObj.chatMessage,
 //                 time: messageObj.time,
-//                 isOptimistic: messageObj.isOptimistic
+//                 is_optimistic: messageObj.is_optimistic
 //               });
 //             }, 0);
 //           } catch (error) {

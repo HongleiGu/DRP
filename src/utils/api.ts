@@ -4,7 +4,7 @@ import { User, auth } from '@clerk/nextjs/server'
 // import { PoolClient } from '@neondatabase/serverless'
 import { supabase } from './sql'
 import { Message } from '@/types/datatypes';
-import { convertKeysToCamelCase } from './utils';
+// import { convertKeysToCamelCase } from './utils';
 
 export async function registerUser(
   userId: string,
@@ -104,8 +104,8 @@ export async function getChatHistory(
       .order('created_at', { ascending: true }); // Or your preferred order
 
     if (error) throw error;
-    
-    return data.map(it => convertKeysToCamelCase(it) as Message);
+    console.log(data)
+    return data.map(it => it as Message);
   } catch (error) {
     console.error('Error getting chat history');
     throw error;

@@ -8,15 +8,23 @@ import { Message } from '@/types/datatypes';
 import { insertChatHistory } from '@/utils/api';
 import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
 import { getUserId } from '@/utils/user';
+// import { isValidUUID } from '@/utils/utils';
+import { clerkClient } from '@clerk/nextjs/server';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const [userId, setUserId] = useState<string>("");
+  const [nickname, setNickname] = useState<string>("")
+  // ;
+  const { user }= useUser();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [users, setUsers] = useState<string[]>([]);
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const loadInitialMessages = async () => {
@@ -34,8 +42,18 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   // Initialize socket connection
   useEffect(() => {
     const initSocket = async () => {
-      const id = await getUserId();
-      setUserId(id);
+      if (!user?.id) {
+        alert("user invalid")
+        router.push("/")
+      } else {
+        setUserId(user?.id);
+      }
+      if (user?.publicMetadata?.nickname) {
+        setNickname(user.publicMetadata?.nickname as string)
+      } else {
+        alert("your nickname is nor set")
+        router.push("/onboarding")
+      }
       
       const newSocket = io({
         path: '/api/socket/io',
@@ -51,7 +69,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       // Listen for messages
       newSocket.on('receive-message', (msg: Message) => {
         // Skip if this is our own optimistic message
-        if (!msg.isOptimistic) {
+        if (!msg.is_optimistic) {
           setMessages((prev) => [...prev, msg]);
         }
       });
@@ -90,9 +108,12 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
     // Create message object with optimistic flag
     const messageObj: Message = {
       speaker: userId,
+      speaker_name: nickname,
       chat_message: newMessage,
       time: new Date().toISOString(),
-      isOptimistic: true  // Mark as optimistic
+      is_optimistic: true // Mark as optimistic
+      ,
+      chat_room_id: chatroomId
     };
 
     try {
@@ -115,12 +136,16 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           await insertChatHistory({
             speaker: userId,
             chat_message: newMessage,
-            isOptimistic: false // this is not stored anyway
+            is_optimistic: false // this is not stored anyway
+            ,
+
+            speaker_name: nickname,
+            chat_room_id: chatroomId
           });
           
           // Update message to remove optimistic flag
           setMessages(prev => prev.map(msg => 
-            msg === messageObj ? {...msg, isOptimistic: false} : msg
+            msg === messageObj ? {...msg, is_optimistic: false} : msg
           ));
         } catch (psqlError) {
           console.error('Failed to persist to PostgreSQL:', psqlError);
@@ -152,11 +177,11 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           renderItem={(item) => (
             <List.Item 
               className={item.speaker === userId ? 'bg-blue-50' : ''}
-              style={item.isOptimistic ? { opacity: 0.7 } : {}}
+              style={item.is_optimistic ? { opacity: 0.7 } : {}}
             >
               <List.Item.Meta
-                avatar={<Avatar>{item.speaker.charAt(0)}</Avatar>}
-                title={item.speaker}
+                avatar={<Avatar>{item.speaker_name ? item.speaker_name.charAt(0) : ""}</Avatar>}
+                title={item.speaker_name}
                 description={item.chat_message}
               />
               <div className="flex flex-col items-end">
@@ -165,7 +190,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
                     {new Date(item.time).toLocaleTimeString()}
                   </div>
                 )}
-                {item.isOptimistic && (
+                {item.is_optimistic && (
                   <div className="text-xs text-yellow-500">Sending...</div>
                 )}
               </div>

@@ -2,6 +2,8 @@
 
 import { Message, PlayerPosition } from '@/types/datatypes';
 import { createClient } from 'redis';
+// import { convertKeysToCamelCase } from './utils';
+
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 
