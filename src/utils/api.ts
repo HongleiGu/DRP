@@ -56,7 +56,8 @@ export const createRoom = async (roomName?: string) => {
     throw error;
   }
 
-  return data as string;
+  // console.log(data)
+  return data.id as string;
 };
 
 export async function registerUser(userId: string, user: User, formData: CustomJwtSessionClaims) {
