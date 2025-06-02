@@ -1,5 +1,6 @@
 'use server'
 
+// this needs fix, but later, right now we will use a dummy function
 import { registerUser } from '@/utils/api'
 import { auth, clerkClient } from '@clerk/nextjs/server'
 

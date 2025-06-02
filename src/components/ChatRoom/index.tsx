@@ -5,9 +5,12 @@ import { Input, Button, List, Avatar, message } from 'antd';
 import { Message } from '@/types/datatypes';
 import { insertChatHistory } from '@/utils/api';
 import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
-import { useUser } from '@clerk/nextjs';
+// import { getUserId } from '@/utils/user';
+// import { isValidUUID } from '@/utils/utils';
+// import { clerkClient } from '@clerk/nextjs/server';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useUser } from '@clerk/nextjs';
 
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const [userId, setUserId] = useState<string>("");
@@ -62,7 +65,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         const userIds = Object.keys(state);
         setOnlineUsers(userIds);
       })
-      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+      .on('presence', { event: 'join' }, ({ key }) => {
         message.info(`User ${key.substring(0, 6)} joined`);
       })
       .on('presence', { event: 'leave' }, ({ key }) => {

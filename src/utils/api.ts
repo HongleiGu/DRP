@@ -2,7 +2,7 @@
 
 
 import { supabase } from '@/lib/supabase';
-import { currentUser } from '@clerk/nextjs/server';
+import { currentUser, User } from '@clerk/nextjs/server';
 
 
 export const insertChatHistory = async (message: {
@@ -58,3 +58,7 @@ export const createRoom = async (roomName?: string) => {
 
   return data as string;
 };
+
+export async function registerUser(userId: string, user: User, formData: CustomJwtSessionClaims) {
+  console.log(userId, user, formData)
+}

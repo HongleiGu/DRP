@@ -1,5 +1,6 @@
 "use server"
 
+import { Message } from '@/types/datatypes';
 // src/utils/redis.ts
 import { createClient } from 'redis';
 
@@ -27,7 +28,7 @@ export const getMessagesFromChatroom = async (chatroomId: string) => {
   }
 };
 
-export const addMessageToChatroom = async (chatroomId: string, message: any) => {
+export const addMessageToChatroom = async (chatroomId: string, message: Message) => {
   const client = await getRedisClient();
   try {
     await client.rPush(`chatroom:${chatroomId}`, JSON.stringify(message));
