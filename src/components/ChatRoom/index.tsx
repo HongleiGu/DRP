@@ -197,9 +197,9 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
                     {new Date(item.time).toLocaleTimeString()}
                   </div>
                 )}
-                {item.is_optimistic && (
+                {/* {item.is_optimistic && (
                   <div className="text-xs text-yellow-500">Sending...</div>
-                )}
+                )} */}
               </div>
             </List.Item>
           )}
