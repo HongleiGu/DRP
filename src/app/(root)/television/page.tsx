@@ -26,10 +26,10 @@ export default function Television() {
             width: '853',
             videoId: 'loWA5o1RdTY',
             playerVars: {
-              controls: 0,           // ❗️关闭 YouTube 控制条
-              disablekb: 1,          // 可选：禁用键盘控制（防止空格播放）
-              modestbranding: 1,     // 去掉 YouTube logo
-              rel: 1,                // 视频播放结束后不显示推荐
+              controls: 0,
+              disablekb: 1,
+              modestbranding: 1,
+              rel: 0,
             },
             events: {
               onReady: () => console.log('YouTube Player is ready'),
