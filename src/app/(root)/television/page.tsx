@@ -79,14 +79,37 @@ export default function Television() {
       <Title level={3}>Lumiroom Cinema</Title>
 
       <div
-        id="yt-player"
-        ref={playerRef}
-        style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}
-      ></div>
+        style={{
+          position: 'relative',
+          display: 'flex',
+          justifyContent: 'center',
+          marginBottom: 24,
+        }}
+      >
+        <div id="yt-player" ref={playerRef}></div>
+
+        {/* 🛡️ Transparent overlay to block clicks */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '1000px',
+            height: '480px',
+            zIndex: 10,
+            backgroundColor: 'transparent',
+            pointerEvents: 'all',
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Click blocked on video area');
+          }}
+        />
+      </div>
 
       <Divider />
 
-      {/* Video URL input */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
         <Input
           placeholder="Enter YouTube video URL"
@@ -99,17 +122,11 @@ export default function Television() {
         </Button>
       </div>
 
-      {/* Playback controls */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-        <Button onClick={handlePlay} type="default">
-          ▶ Play
-        </Button>
-        <Button onClick={handlePause} type="default">
-          ⏸ Pause
-        </Button>
+        <Button onClick={handlePlay}>▶ Play</Button>
+        <Button onClick={handlePause}>⏸ Pause</Button>
       </div>
 
-      {/* Seek input */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <Input
           type="number"
