@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Input, Typography, Divider } from 'antd';
+import { Button, Input, Typography, Divider, message } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 
 const { Title } = Typography;
@@ -103,7 +103,7 @@ export default function Television() {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Click blocked on video area');
+            message.info('This is a shared screen. Please use the buttons below to control the video together 😊');
           }}
         />
       </div>
