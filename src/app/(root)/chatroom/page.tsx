@@ -4,7 +4,7 @@ import { Button, Input, message } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { z } from 'zod';
-import { createChatRoom, getChatRoom } from '@/utils/api';
+import { createRoom, getRoom } from '@/utils/api';
 
 const uuidSchema = z.string().uuid({
   message: "Invalid UUID format"
@@ -41,7 +41,7 @@ export default function Page() {
     
     setJoinLoading(true);
     try {
-      const chatroom = await getChatRoom(value);
+      const chatroom = await getRoom(value);
       if (chatroom) {
         router.push(`/chatroom/${value}`);
       } else {
@@ -57,7 +57,7 @@ export default function Page() {
   const handleCreateChatRoom = async () => {
     setCreateLoading(true);
     try {
-      const chatroomId = await createChatRoom();
+      const chatroomId = await createRoom();
       if (chatroomId) {
         router.push(`/chatroom/${chatroomId}`);
       }
