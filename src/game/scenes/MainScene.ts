@@ -1,4 +1,4 @@
-import { Actor, Scene, vec, Engine, SceneActivationContext } from "excalibur";
+import { Scene, vec } from "excalibur";
 import { Resources } from "../config/resources";
 import { Player } from "../actors/Player";
 import { Television } from "../actors/Television";
@@ -21,10 +21,9 @@ export class MainScene extends Scene {
     // Store reference to the engine
     // private engineRef: Engine;
 
-    onInitialize(engine: Engine): void {
+    onInitialize(): void {
         // this.engineRef = engine;
         // this.interactButton = new InteractButton(engine)
-        
         // Add LDTK level to the scene
         Resources.LdtkResource.addToScene(this, {
             pos: vec(0, 0),
