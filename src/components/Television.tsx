@@ -5,13 +5,15 @@ import { useEffect, useRef, useState } from 'react';
 
 const { Title } = Typography;
 
-export default function Television() {
+export default function Television({sendMessage, addReceiver}: any) {
   const playerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ytPlayer = useRef<any>(null);
 
   const [timeInput, setTimeInput] = useState<string>('');
   const [videoUrl, setVideoUrl] = useState<string>('');
+
+  const [connected, setConnected] = useState<boolean>(false);
 
   useEffect(() => {
     const tag = document.createElement('script');
@@ -44,13 +46,39 @@ export default function Television() {
     };
   }, []);
 
-  const handlePlay = () => ytPlayer.current?.playVideo();
-  const handlePause = () => ytPlayer.current?.pauseVideo();
+  addReceiver((msg: any) => {
+    // console.log(msg)
+    const message: string = msg.chat_message;
+    if (message.startsWith("/play")) {
+      const seconds = message.split(" ")[1]
+      ytPlayer.current?.seekTo(seconds)
+      ytPlayer.current?.playVideo();
+    } else if (message.startsWith("/seek")) {
+      const seconds = message.split(" ")[1]
+      ytPlayer.current?.seekTo(seconds)
+    } else if (message.startsWith("/load")) {
+      const videoId = message.split(" ")[1]
+      if (videoId && ytPlayer.current?.loadVideoById) {
+        ytPlayer.current.loadVideoById(videoId);
+      } else {
+        alert('Invalid YouTube URL');
+      }
+    } else if (message == "/pause") {
+      ytPlayer.current?.pauseVideo();
+    }
+  })
+
+  const handlePlay = () => {
+    sendMessage(`/play ${ytPlayer.current?.getCurrentTime()}`)
+    // ytPlayer.current?.playVideo();
+  }
+  const handlePause = () => {
+    sendMessage("/pause")
+    // ytPlayer.current?.pauseVideo();
+  }
   const handleSeek = () => {
     const seconds = parseFloat(timeInput);
-    if (!isNaN(seconds)) {
-      ytPlayer.current?.seekTo(seconds, true);
-    }
+    sendMessage(`/seek ${seconds}`)
   };
 
   const extractVideoId = (url: string): string | null => {
@@ -67,11 +95,7 @@ export default function Television() {
 
   const handleLoadVideo = () => {
     const videoId = extractVideoId(videoUrl);
-    if (videoId && ytPlayer.current?.loadVideoById) {
-      ytPlayer.current.loadVideoById(videoId);
-    } else {
-      alert('Invalid YouTube URL');
-    }
+    sendMessage(`/load ${videoId}`)
   };
 
   return (
@@ -94,18 +118,29 @@ export default function Television() {
             position: 'absolute',
             top: 0,
             left: 0,
-            width: '1000px',
-            height: '480px',
+            width: '100%',
+            height: '100%',
             zIndex: 10,
-            backgroundColor: 'transparent',
+            backgroundColor: connected ? 'transparent' : 'white',
             pointerEvents: 'all',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 24,
+            color: '#888',
+            textAlign: 'center',
           }}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            message.info('This is a shared screen. Please use the buttons below to control the video together 😊');
-          }}
-        />
+            if (!connected) {
+              var context = new AudioContext();
+              context.resume();
+              setConnected(true);
+            } else {
+              message.info('This is a shared screen. Please use the buttons below to control the video together 😊');
+            }
+          }}>{!connected && "Click to connect to shared screen"}</div>
       </div>
 
       <Divider />

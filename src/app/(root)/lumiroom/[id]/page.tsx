@@ -36,7 +36,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         setRoom(roomData);
       } catch (error) {
         console.error('Error loading room:', error);
-        redirect(`/chatroom/${DEFAULT_ROOM}`);
+        redirect(`/lumiroom/${DEFAULT_ROOM}`);
       } finally {
         setIsLoading(false);
       }
@@ -50,7 +50,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   }
 
   if (!room) {
-    redirect(`/chatroom/${DEFAULT_ROOM}`);
+    redirect(`/lumiroom/${DEFAULT_ROOM}`);
   }
 
   return <ChatRoom chatroomId={param} />;

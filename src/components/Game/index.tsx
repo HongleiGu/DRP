@@ -8,7 +8,7 @@ import { Button } from 'antd';
 import { YoutubeOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation'
 
-export default function Game() {
+export default function Game({sendMessage, addReceiver}: any) {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [showButton, setShowButton] = useState(false);
@@ -62,6 +62,7 @@ export default function Game() {
   }, [])
 
   const handleButtonClick = () => {
+    sendMessage("我已经去看电视了，欢迎你也来")
     router.push("/television")
   };
 

@@ -60,8 +60,8 @@ export default function ProtectedContent() {
                 <Text><SmileOutlined /> <strong>Nickname:</strong> {user.publicMetadata?.nickname as string ?? "None"}</Text>
               </Space>
               <Flex gap="small" style={{ marginTop: "16px" }}>
-                <Button type="primary" onClick={() => router.push("/chatroom")}>Chatroom</Button>
-                <Button onClick={() => router.push("/game")}>Lumiroom</Button>
+                <Button type="primary" onClick={() => router.push("/lumiroom")}>Lumiroom</Button>
+                {/* <Button onClick={() => router.push("/game")}>Lumiroom</Button> */}
               </Flex>
             </Flex>
           </Flex>

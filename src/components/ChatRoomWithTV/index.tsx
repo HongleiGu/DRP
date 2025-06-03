@@ -10,6 +10,7 @@ import { insertChatHistory } from '@/utils/api';
 import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
 import { supabase } from '@/lib/supabase';
 import { GameStateProvider } from '@/game/state/GameState';
+import Television from '../Television';
 
 const HUD = dynamic(() => import('@/components/Game/UI/Overlay/HUD'), { ssr: false });
 const Game = dynamic(() => import('@/components/Game'), {
@@ -30,7 +31,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const [receivers, setReceivers] = useState<any[]>([]);
+  let theReceiver: any = null;
 
   // 初始化聊天
   useEffect(() => {
@@ -93,9 +94,9 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           if (newMsg.speaker !== user.id) {
             setMessages(prev => [...prev, newMsg]);
           }
-          receivers.forEach((receiver) => {
-            receiver(newMsg)
-          })
+          if (theReceiver) {
+            theReceiver(newMsg)
+          }
         })
         .subscribe();
 
@@ -116,7 +117,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   }, [messages]);
 
   const addReceiver = (receiver: any) => {
-    receivers.push(receiver)
+    theReceiver = receiver;
   }
 
   const handleSend = async (theMessage: string) => {
@@ -232,12 +233,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       {/* 右侧游戏栏 */}
       <Layout>
         <Content style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
-          <GameStateProvider>
-            <Suspense fallback={<div className="text-center p-8">Initializing game engine...</div>}>
-              <HUD />
-              <Game sendMessage={handleSend} addReceiver={addReceiver} />
-            </Suspense>
-          </GameStateProvider>
+          <Television sendMessage={handleSend} addReceiver={addReceiver}></Television>
         </Content>
       </Layout>
     </Layout>
