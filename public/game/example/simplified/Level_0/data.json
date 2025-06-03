@@ -21,7 +21,8 @@
 		"Door2.png",
 		"Fences.png",
 		"Paths.png",
-		"Fruits.png"
+		"Fruits.png",
+		"Tele.png"
 	],
 	"entities": {
 		"PlayerStart": [
@@ -34,6 +35,30 @@
 				"width": 16,
 				"height": 16,
 				"color": 12470831,
+				"customFields" : {}
+			}
+		],
+		"Television": [
+			{
+				"id": "Television",
+				"iid": "77391750-3740-11f0-9dcd-83b13637dcc8",
+				"layer": "Entities",
+				"x": 208,
+				"y": 304,
+				"width": 16,
+				"height": 16,
+				"color": 14120515,
+				"customFields" : {}
+			},
+			{
+				"id": "Television",
+				"iid": "7935d1b0-3740-11f0-9dcd-69b55f0645d1",
+				"layer": "Entities",
+				"x": 224,
+				"y": 304,
+				"width": 16,
+				"height": 16,
+				"color": 14120515,
 				"customFields" : {}
 			}
 		]
