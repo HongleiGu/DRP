@@ -6,13 +6,14 @@ import { initializeGame } from './engine'
 import { Resources } from '@/game/config/resources'
 import { Button } from 'antd';
 import { YoutubeOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 export default function Game() {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [showButton, setShowButton] = useState(false);
   const gameRef = useRef<Engine | null>(null);
+  const params = useParams<{ id: string }>()
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -62,7 +63,7 @@ export default function Game() {
   }, [])
 
   const handleButtonClick = () => {
-    router.push("/television")
+    router.push(`/television/${params.id}`)
   };
 
   return (

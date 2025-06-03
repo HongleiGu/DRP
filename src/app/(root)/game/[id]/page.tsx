@@ -1,4 +1,5 @@
 // app/page.tsx
+// currently this does not fetch data from supabase, so that it uses predefined layout
 'use client'
 
 import { Suspense } from 'react'

@@ -60,8 +60,9 @@ export default function ProtectedContent() {
                 <Text><SmileOutlined /> <strong>Nickname:</strong> {user.publicMetadata?.nickname as string ?? "None"}</Text>
               </Space>
               <Flex gap="small" style={{ marginTop: "16px" }}>
-                <Button type="primary" onClick={() => router.push("/chatroom")}>Chatroom</Button>
-                <Button onClick={() => router.push("/game")}>Lumiroom</Button>
+                {/* <Button type="primary" onClick={() => router.push("/chatroom")}>Chatroom</Button> */}
+                {/* since we were to combine the lumiroom and chat room features, hereby I only keep the lumiroom button */}
+                <Button onClick={() => router.push("/chatroom")}>Lumiroom</Button>
               </Flex>
             </Flex>
           </Flex>

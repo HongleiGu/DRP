@@ -63,3 +63,46 @@ export const createRoom = async (roomName?: string) => {
 export async function registerUser(userId: string, user: User, formData: CustomJwtSessionClaims) {
   console.log(userId, user, formData)
 }
+
+export async function getChannel(roomId: string): Promise<string> {
+  try {
+    const {data, error} = await supabase
+      .from('tv_channel')
+      .select('channel')
+      .eq('room_id', roomId)
+      .single()
+    if (error) {
+      console.error('Detailed Supabase error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details
+      });
+      throw error;
+    }
+    return data.channel as string
+  } catch (error) {
+    console.log("error getting channel")
+    throw error;
+  }
+}
+
+export async function updateChannel(roomId: string, videoId: string): Promise<void> {
+  console.log("updating channel", roomId, videoId)
+  try {
+    const {error} = await supabase
+      .from('tv_channel')
+      .update({channel: videoId})
+      .eq('room_id', roomId)
+    if (error) {
+      console.error('Detailed Supabase error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details
+      });
+      throw error;
+    }
+  } catch (error) {
+    console.log("error updating channel")
+    throw error;
+  }
+}

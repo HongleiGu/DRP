@@ -1,3 +1,7 @@
+// so the design is, when the user logins enter and confirms entering the app, this is the page they should join
+// room id == chat id ==(in the furture)== call id
+
+
 'use client'
 
 import { Button, Input, message } from 'antd';
@@ -43,7 +47,8 @@ export default function Page() {
     try {
       const chatroom = await getRoom(value);
       if (chatroom) {
-        router.push(`/chatroom/${value}`);
+        // so the chat room should be included in the game page
+        router.push(`/game/${value}`);
       } else {
         message.error('Chatroom does not exist');
       }
@@ -59,10 +64,11 @@ export default function Page() {
     try {
       const chatroomId = await createRoom();
       if (chatroomId) {
-        router.push(`/chatroom/${chatroomId}`);
+        // so the chat room should be included in the game page
+        router.push(`/game/${chatroomId}`);
       }
     } catch {
-      message.error('Failed to create chatroom');
+      message.error('Failed to create room');
     } finally {
       setCreateLoading(false);
     }
@@ -70,7 +76,7 @@ export default function Page() {
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-xl font-bold mb-4">Enter Chatroom ID</h1>
+      <h1 className="text-xl font-bold mb-4">Enter Room ID</h1>
       
       <Input
         placeholder="Enter UUID chatroom ID"
