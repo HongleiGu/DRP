@@ -4,7 +4,8 @@ import { LdtkResource } from '@excaliburjs/plugin-ldtk'
 const paths = {
   Sprites: {
     CharacterSpritePath: "/game/assets/tilemaps/sprout/Characters/Basic Charakter Spritesheet.png",
-    Hero01: "/game/assets/Hero 01.png"
+    Hero01: "/game/assets/Hero 01.png",
+    Television: "/game/assets/television.png"
   },
   Ldtk: {
     LdtkResourcePath: "/game/example.ldtk",
@@ -28,6 +29,7 @@ const paths = {
 export const Resources = {
     CharacterSpriteSheet: new ImageSource(paths.Sprites.CharacterSpritePath),
     HeroSpriteSheetPng: new ImageSource(paths.Sprites.Hero01),
+    TelevisionSprite: new ImageSource(paths.Sprites.Television),
     LdtkResource: new LdtkResource(paths.Ldtk.LdtkResourcePath, {
         useTilemapCameraStrategy: true,
         useMapBackgroundColor: true,

@@ -13,3 +13,13 @@ export interface Room {
   name?: string;
   created_at: string;
 }
+
+// not necessarily data types, but useful
+
+// Define a type for scene callbacks
+export type SceneCallbacks = {
+    showInteractButton?: (show: boolean) => void;
+    // Add more callback methods as needed
+    // onPlayerPositionChange?: (position: Vector) => void;
+    // onGameEvent?: (event: string, data: any) => void;
+}

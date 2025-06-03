@@ -2,7 +2,7 @@
 "use client";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { RedirectToSignIn } from "@clerk/nextjs";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { LoadingSpinner } from "@/components/Game/LoadingSpinner";
 import { Layout, Card, Avatar, Typography, Space, Button, Flex } from "antd";
 import { UserOutlined, MailOutlined, IdcardOutlined, SmileOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";

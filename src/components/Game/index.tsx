@@ -1,17 +1,22 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Engine, DisplayMode, Color, FadeInOut, Loader } from 'excalibur'
 import { initializeGame } from './engine'
 import { Resources } from '@/game/config/resources'
+import { Button } from 'antd';
+import { YoutubeOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation'
 
 export default function Game() {
+  const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [showButton, setShowButton] = useState(false);
+  const gameRef = useRef<Engine | null>(null);
 
   useEffect(() => {
     if (!canvasRef.current) return
 
-    // 1. Create game instance
     const game = new Engine({
       resolution: { width: 256, height: 256 },
       suppressPlayButton: true,
@@ -20,25 +25,30 @@ export default function Game() {
       pixelArt: true,
       pixelRatio: 4,
     })
+    
+    gameRef.current = game;
 
-    // 2. Initialize game systems
-    initializeGame(game)
+    // Create callbacks object
+    const sceneCallbacks = {
+        showInteractButton: setShowButton,
+        // Add more callbacks as needed:
+        // onPlayerPositionChange: handlePositionChange,
+    };
 
-    // 3. Set up transition
-    const inTransition = new FadeInOut({
-      duration: 1000,
-      direction: 'in',
-      color: Color.ExcaliburBlue
-    })
-
-    // 4. Use the ENGINE'S loader (not standalone loader)
+    // Initialize game with callbacks
+    initializeGame(game, sceneCallbacks);
 
     const loader = new Loader();
     for (const resource of Object.values(Resources)) {
         loader.addResource(resource);
     }
 
-    // 5. Start with the engine's loader
+    const inTransition = new FadeInOut({
+      duration: 1000,
+      direction: 'in',
+      color: Color.ExcaliburBlue
+    });
+
     game.start('overworld', {loader, inTransition}).then(() => {
       console.log('Game started successfully')
     }).catch((err) => {
@@ -47,8 +57,34 @@ export default function Game() {
 
     return () => {
       game.stop()
+      gameRef.current = null;
     }
   }, [])
 
-  return <canvas ref={canvasRef} className="w-full h-full" />
+  const handleButtonClick = () => {
+    router.push("/television")
+  };
+
+  return (
+    <div className="relative w-full h-full">
+      <canvas ref={canvasRef} className="w-full h-full" />
+      
+      {/* External DOM Button - positioned in bottom right */}
+      {showButton && (
+        <Button
+          type="primary"
+          icon={<YoutubeOutlined />}
+          onClick={handleButtonClick}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            borderRadius: '8px',
+            padding: '10px 20px',
+          }}
+        >
+          Open Television Page
+        </Button>
+      )}
+    </div>
+  )
 }
