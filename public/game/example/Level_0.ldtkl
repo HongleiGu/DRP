@@ -29,36 +29,6 @@
 	"fieldInstances": [],
 	"layerInstances": [
 		{
-			"__identifier": "Tele",
-			"__type": "Tiles",
-			"__cWid": 50,
-			"__cHei": 38,
-			"__gridSize": 16,
-			"__opacity": 1,
-			"__pxTotalOffsetX": 0,
-			"__pxTotalOffsetY": 0,
-			"__tilesetDefUid": 54,
-			"__tilesetRelPath": "assets/tilemaps/Modern tiles_Free/Interiors_free/16x16/Interiors_free_16x16.png",
-			"iid": "b9bf8970-3740-11f0-9dcd-6f429dc98910",
-			"levelId": 0,
-			"layerDefUid": 53,
-			"pxOffsetX": 0,
-			"pxOffsetY": 0,
-			"visible": true,
-			"optionalRules": [],
-			"intGridCsv": [],
-			"autoLayerTiles": [],
-			"seed": 4799038,
-			"overrideTilesetUid": 54,
-			"gridTiles": [
-				{ "px": [208,288], "src": [0,224], "f": 0, "t": 224, "d": [913], "a": 1 },
-				{ "px": [224,288], "src": [16,224], "f": 0, "t": 225, "d": [914], "a": 1 },
-				{ "px": [208,304], "src": [0,240], "f": 0, "t": 240, "d": [963], "a": 1 },
-				{ "px": [224,304], "src": [16,240], "f": 0, "t": 241, "d": [964], "a": 1 }
-			],
-			"entityInstances": []
-		},
-		{
 			"__identifier": "IntGrid",
 			"__type": "IntGrid",
 			"__cWid": 200,
@@ -1026,6 +996,36 @@
 					"__worldY": 304
 				}
 			]
+		},
+		{
+			"__identifier": "Tele",
+			"__type": "Tiles",
+			"__cWid": 50,
+			"__cHei": 38,
+			"__gridSize": 16,
+			"__opacity": 1,
+			"__pxTotalOffsetX": 0,
+			"__pxTotalOffsetY": 0,
+			"__tilesetDefUid": 54,
+			"__tilesetRelPath": "assets/tilemaps/Modern tiles_Free/Interiors_free/16x16/Interiors_free_16x16.png",
+			"iid": "b9bf8970-3740-11f0-9dcd-6f429dc98910",
+			"levelId": 0,
+			"layerDefUid": 53,
+			"pxOffsetX": 0,
+			"pxOffsetY": 0,
+			"visible": true,
+			"optionalRules": [],
+			"intGridCsv": [],
+			"autoLayerTiles": [],
+			"seed": 4799038,
+			"overrideTilesetUid": 54,
+			"gridTiles": [
+				{ "px": [208,288], "src": [0,224], "f": 0, "t": 224, "d": [913], "a": 1 },
+				{ "px": [224,288], "src": [16,224], "f": 0, "t": 225, "d": [914], "a": 1 },
+				{ "px": [208,304], "src": [0,240], "f": 0, "t": 240, "d": [963], "a": 1 },
+				{ "px": [224,304], "src": [16,240], "f": 0, "t": 241, "d": [964], "a": 1 }
+			],
+			"entityInstances": []
 		},
 		{
 			"__identifier": "Fruits",
