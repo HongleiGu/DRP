@@ -235,7 +235,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           <GameStateProvider>
             <Suspense fallback={<div className="text-center p-8">Initializing game engine...</div>}>
               <HUD />
-              <Game sendMessage={handleSend} addReceiver={addReceiver} />
+              <Game sendMessage={handleSend} addReceiver={addReceiver} chatroomId={chatroomId} />
             </Suspense>
           </GameStateProvider>
         </Content>
