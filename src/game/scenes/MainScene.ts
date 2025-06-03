@@ -24,7 +24,6 @@ export class MainScene extends Scene {
     onInitialize(): void {
         // this.engineRef = engine;
         // this.interactButton = new InteractButton(engine)
-        
         // Add LDTK level to the scene
         Resources.LdtkResource.addToScene(this, {
             pos: vec(0, 0),
