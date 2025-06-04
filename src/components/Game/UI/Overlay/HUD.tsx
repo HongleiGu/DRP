@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 // components/UI/Overlay/HUD.tsx
 'use client'
 

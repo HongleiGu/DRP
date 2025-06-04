@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { Button, Input, Typography, Divider, message } from 'antd';
@@ -134,7 +136,7 @@ export default function Television({sendMessage, addReceiver}: any) {
             e.preventDefault();
             e.stopPropagation();
             if (!connected) {
-              var context = new AudioContext();
+              const context = new AudioContext();
               context.resume();
               setConnected(true);
             } else {

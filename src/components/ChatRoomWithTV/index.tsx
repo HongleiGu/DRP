@@ -1,6 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
@@ -9,7 +12,6 @@ import { Message } from '@/types/datatypes';
 import { insertChatHistory } from '@/utils/api';
 import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
 import { supabase } from '@/lib/supabase';
-import { GameStateProvider } from '@/game/state/GameState';
 import Television from '../Television';
 
 const HUD = dynamic(() => import('@/components/Game/UI/Overlay/HUD'), { ssr: false });
@@ -109,7 +111,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
     };
 
     setupRealtime();
-  }, [chatroomId, user, router]);
+  }, [chatroomId, user, router, theReceiver]);
 
   // 滚动到底部
   useEffect(() => {

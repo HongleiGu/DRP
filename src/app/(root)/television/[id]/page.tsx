@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client"
 
-import ChatRoom from '@/components/ChatRoom/index';
 import ChatRoomWithTV from '@/components/ChatRoomWithTV';
 import { Message } from '@/types/datatypes';
 import { getRoom } from '@/utils/api';
