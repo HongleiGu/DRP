@@ -53,7 +53,13 @@ export default function Television({sendMessage, addReceiver}: any) {
     const message: string = msg.chat_message;
     if (message.startsWith("/play")) {
       const seconds = message.split(" ")[1]
-      ytPlayer.current?.seekTo(seconds)
+      const id = message.split(" ")[2]
+      if (extractVideoId(ytPlayer.current?.getVideoUrl()) != id) {
+        ytPlayer.current?.loadVideoById(id, seconds)
+      } else {
+        ytPlayer.current?.seekTo(seconds)
+        ytPlayer.current?.pauseVideo()
+      }
       ytPlayer.current?.playVideo();
     } else if (message.startsWith("/seek")) {
       const seconds = message.split(" ")[1]
@@ -71,7 +77,7 @@ export default function Television({sendMessage, addReceiver}: any) {
   })
 
   const handlePlay = () => {
-    sendMessage(`/play ${ytPlayer.current?.getCurrentTime()}`)
+    sendMessage(`/play ${ytPlayer.current?.getCurrentTime()} ${extractVideoId(ytPlayer.current?.getVideoUrl())}`)
     // ytPlayer.current?.playVideo();
   }
   const handlePause = () => {
@@ -83,16 +89,18 @@ export default function Television({sendMessage, addReceiver}: any) {
     sendMessage(`/seek ${seconds}`)
   };
 
-  const extractVideoId = (url: string): string | null => {
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/,
-      /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/,
-    ];
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match && match[1]) return match[1];
+  const extractVideoId = (videoId: string): string => {
+    if (videoId.startsWith("http")) {
+      const url = new URL(videoId)
+      console.log(url)
+      if (url.origin == "https://www.youtube.com") {
+        return url.searchParams.get("v") as string
+      } else {
+        return url.pathname.substring(1)
+      }
+    } else {
+      return videoId
     }
-    return null;
   };
 
   const handleLoadVideo = () => {
