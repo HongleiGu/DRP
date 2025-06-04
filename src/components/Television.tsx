@@ -16,7 +16,7 @@ export default function Television({sendMessage, addReceiver}: any) {
   const [videoUrl, setVideoUrl] = useState<string>('');
 
   const [connected, setConnected] = useState<boolean>(false);
-
+  const [messageApi, contextHolder] = message.useMessage()
   useEffect(() => {
     const tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
@@ -103,7 +103,7 @@ export default function Television({sendMessage, addReceiver}: any) {
   return (
     <div style={{ padding: 32, maxWidth: 1000, margin: '0 auto' }}>
       <Title level={3}>Lumiroom Cinema</Title>
-
+      {contextHolder}
       <div
         style={{
           position: 'relative',
