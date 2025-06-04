@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Input, Button, List, Avatar, message } from 'antd';
+import { Input, Button, List, Avatar, message, Layout, Card, Typography } from 'antd';
 import { Message } from '@/types/datatypes';
 import { insertChatHistory } from '@/utils/api';
 import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
@@ -11,6 +11,8 @@ import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@clerk/nextjs';
+import { Content, Header } from 'antd/es/layout/layout';
+const { Text } = Typography;
 
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const [userId, setUserId] = useState<string>("");
@@ -168,64 +170,93 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      {/* Header */}
-      <div className="p-4 bg-white shadow">
-        <h1 className="text-xl font-bold">Chat Room: {chatroomId}</h1>
-        <p className="text-sm text-gray-500">
-          {onlineUsers.length} user{onlineUsers.length !== 1 ? 's' : ''} online
-        </p>
-      </div>
+  <Layout style={{ minHeight: '100vh' }}>
+    <Header
+      style={{
+        background: '#001529',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '12px 24px',
+      }}
+    >
+      <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>
+        💬 Chat Room: {chatroomId}
+      </Text>
+      <Text style={{ color: '#d9d9d9', fontSize: 14 }}>
+        {onlineUsers.length} user{onlineUsers.length !== 1 ? 's' : ''} online
+      </Text>
+    </Header>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4">
+    <Content style={{ padding: '24px', background: '#f0f2f5' }}>
+      <Card
+        style={{
+          maxWidth: 800,
+          margin: '0 auto',
+          height: '70vh',
+          display: 'flex',
+          flexDirection: 'column',
+          borderRadius: 12,
+        }}
+        bodyStyle={{ padding: '16px', overflowY: 'auto', flex: 1 }}
+      >
         <List
           dataSource={messages}
           renderItem={(item) => (
-            <List.Item 
-              className={item.speaker === userId ? 'bg-blue-50' : ''}
-              style={item.is_optimistic ? { opacity: 0.7 } : {}}
+            <List.Item
+              style={{
+                backgroundColor: item.speaker === userId ? '#e6f7ff' : 'white',
+                borderRadius: 8,
+                opacity: item.is_optimistic ? 0.6 : 1,
+                marginBottom: 8,
+                padding: 12,
+              }}
             >
               <List.Item.Meta
-                avatar={<Avatar>{item.speaker_name ? item.speaker_name.charAt(0) : ""}</Avatar>}
-                title={item.speaker_name}
+                avatar={<Avatar>{item.speaker_name?.charAt(0)}</Avatar>}
+                title={
+                  <Text strong>
+                    {item.speaker_name}{' '}
+                    <Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
+                      {new Date(item.time).toLocaleTimeString()}
+                    </Text>
+                  </Text>
+                }
                 description={item.chat_message}
               />
-              <div className="flex flex-col items-end">
-                {item.time && (
-                  <div className="text-xs text-gray-400">
-                    {new Date(item.time).toLocaleTimeString()}
-                  </div>
-                )}
-                {/* {item.is_optimistic && (
-                  <div className="text-xs text-yellow-500">Sending...</div>
-                )} */}
-              </div>
             </List.Item>
           )}
         />
         <div ref={messagesEndRef} />
-      </div>
+      </Card>
 
-      {/* Message Input */}
-      <div className="p-4 bg-white border-t flex">
+      <Card
+        style={{
+          maxWidth: 800,
+          margin: '16px auto 0',
+          borderRadius: 12,
+        }}
+        bodyStyle={{ display: 'flex', padding: '16px' }}
+      >
         <Input
           placeholder="Type a message..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onPressEnter={handleSend}
           disabled={isSending}
+          style={{ borderRadius: 8 }}
         />
         <Button
           type="primary"
           onClick={handleSend}
-          className="ml-2"
           disabled={!newMessage.trim() || isSending}
           loading={isSending}
+          style={{ marginLeft: 12, borderRadius: 8 }}
         >
           Send
         </Button>
-      </div>
-    </div>
-  );
+      </Card>
+    </Content>
+  </Layout>
+);
 }
