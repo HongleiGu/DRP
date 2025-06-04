@@ -5,6 +5,7 @@ import { Message, TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
 import { currentUser, User } from '@clerk/nextjs/server';
 
+const DEFAULT_VIDEO = "loWA5o1RdTY"
 
 export const insertChatHistory = async (message: Message) => {
   const { data, error } = await supabase
@@ -25,7 +26,13 @@ export const getRoom = async (roomId: string) => {
   return data;
 };
 
-export const createRoom = async (roomName?: string) => {
+export async function createRoom(): Promise<string> {
+  const roomId = await createChatRoom()
+  await createTVRoom(roomId)
+  return roomId;
+}
+
+export const createChatRoom = async (roomName?: string): Promise<string> => {
   // Get Clerk user instead of Supabase session
   const user = await currentUser();
   
@@ -51,9 +58,29 @@ export const createRoom = async (roomName?: string) => {
     throw error;
   }
 
-  // console.log(data)
+  // we need psql to generate room_id without conflict
   return data.id as string;
 };
+
+export async function createTVRoom(roomId: string): Promise<void> {
+  const { error } = await supabase
+    .from('tv_channel')
+    .insert({
+      room_id: roomId,
+      channel: DEFAULT_VIDEO,
+      is_playing: false,
+      time: 0
+    } as TVState)
+
+  if (error) {
+    console.error('Detailed Supabase error:', {
+      message: error.message,
+      code: error.code,
+      details: error.details
+    });
+    throw error;
+  }
+}
 
 export async function registerUser(userId: string, user: User, formData: CustomJwtSessionClaims) {
   console.log(userId, user, formData)
