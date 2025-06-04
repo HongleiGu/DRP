@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
     "start": "next start",
     "lint": "next lint"
   },
@@ -28,9 +28,6 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "redis": "^5.1.1",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1",
-    "socketio": "link:",
     "stream-chat": "^9.3.0",
     "zod": "^3.25.32"
   },
@@ -40,6 +37,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "tailwindcss": "^4",
