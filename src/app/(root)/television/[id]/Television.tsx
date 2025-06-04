@@ -18,7 +18,8 @@ export default function Television() {
 
   const [timeInput, setTimeInput] = useState<string>("");
   const [videoId, setVideoId] = useState<string>("");
-  const [doSync, setDoSync] = useState<boolean>(true);
+  const shouldSync = useRef<boolean>(true);
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const stateRef = useRef<TVState>({
     channel: "",
     is_playing: false,
@@ -47,20 +48,32 @@ export default function Television() {
           setVideoId(newVideoId);
 
           if (newVideoId !== currentVideoId.current) {
-            setDoSync(false); // Disable sync for this update
+            shouldSync.current = false; // Disable sync for this update
             manualLoadVideo(newVideoId);
             currentVideoId.current = newVideoId;
           }
 
-          // Sync player state
-          setDoSync(false); // Prevent recursive sync
+          // Cancel any pending sync re-enable
+          if (syncTimeoutRef.current) {
+            clearTimeout(syncTimeoutRef.current);
+          }
+          
+          shouldSync.current = false; // Prevent recursive sync
           syncPlayerState(newState);
+          
+          // Re-enable syncing after cooldown
+          syncTimeoutRef.current = setTimeout(() => {
+            shouldSync.current = true;
+          }, 500);
         }
       )
       .subscribe();
 
     return () => {
       channel.unsubscribe();
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
     };
   }, [params.id]);
 
@@ -89,7 +102,6 @@ export default function Television() {
   useEffect(() => {
     const helper = async () => {
       const tvstate = await getChannel(params.id);
-      console.log(tvstate);
       stateRef.current = tvstate;
       setVideoId(tvstate.channel);
       currentVideoId.current = tvstate.channel;
@@ -105,7 +117,6 @@ export default function Television() {
           videoId: tvstate.channel || "",
           events: {
             onReady: () => {
-              console.log("YouTube Player ready");
               // Set initial state
               if (tvstate.is_playing) {
                 ytPlayer.current.playVideo();
@@ -123,79 +134,83 @@ export default function Television() {
 
     return () => {
       ytPlayer.current?.destroy();
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
     };
   }, [params.id]);
 
   const handlePlay = () => {
     ytPlayer.current?.playVideo();
-    stateRef.current.is_playing = true;
-    setDoSync(true); // Enable sync for this action
-    updateChannel(stateRef.current);
   };
 
   const handlePause = () => {
     ytPlayer.current?.pauseVideo();
-    stateRef.current.is_playing = false;
-    stateRef.current.time = ytPlayer.current?.getCurrentTime() || 0;
-    setDoSync(true); // Enable sync for this action
-    updateChannel(stateRef.current);
   };
 
   const handleSeek = () => {
     const seconds = parseFloat(timeInput);
     if (!isNaN(seconds)) {
       ytPlayer.current?.seekTo(seconds, true);
-      stateRef.current.time = seconds;
-      setDoSync(true); // Enable sync for this action
-      updateChannel(stateRef.current);
     }
   };
 
   const handlePlayerStateChange = (event: any) => {
-    if (!doSync) {
-      // Skip processing if sync is disabled
-      setDoSync(true); // Re-enable sync for next actions
-      return;
-    }
-
+    // Skip if sync is disabled
+    if (!shouldSync.current) return;
+    
     const YT = (window as any).YT;
-    console.log("Player state changed:", event.data, stateRef.current);
-
-    // Update state based on player events
-    switch (event.data) {
-      case YT.PlayerState.PLAYING:
-        stateRef.current.is_playing = true;
-        stateRef.current.time = ytPlayer.current.getCurrentTime().toFixed(0);
-        setDoSync(false); // Disable sync to prevent loop
-        updateChannel(stateRef.current);
-        break;
-
-      case YT.PlayerState.PAUSED:
-        stateRef.current.is_playing = false;
-        stateRef.current.time = ytPlayer.current.getCurrentTime().toFixed(0);
-        setDoSync(false); // Disable sync to prevent loop
-        updateChannel(stateRef.current);
-        break;
-
-      case YT.PlayerState.CUED:
-        stateRef.current.time = 0;
-        stateRef.current.is_playing = false;
-        setDoSync(false); // Disable sync to prevent loop
-        updateChannel(stateRef.current);
-        break;
-
-      case YT.PlayerState.ENDED:
-        // Loop video when ended
-        setDoSync(false); // Disable sync during loop sequence
-        ytPlayer.current.seekTo(0, true);
-        ytPlayer.current.playVideo();
-        stateRef.current.time = 0;
-        stateRef.current.is_playing = true;
-        updateChannel(stateRef.current);
-        break;
-
-      default:
-        break;
+    const currentTime = ytPlayer.current.getCurrentTime().toFixed(0);
+    
+    // Disable sync during state processing
+    shouldSync.current = false;
+    
+    try {
+      switch (event.data) {
+        case YT.PlayerState.PLAYING:
+          updateChannel({
+            ...stateRef.current,
+            is_playing: true,
+            time: currentTime
+          });
+          break;
+          
+        case YT.PlayerState.PAUSED:
+          updateChannel({
+            ...stateRef.current,
+            is_playing: false,
+            time: currentTime
+          });
+          break;
+          
+        case YT.PlayerState.ENDED:
+          // Loop video when ended
+          ytPlayer.current.seekTo(0, true);
+          ytPlayer.current.playVideo();
+          updateChannel({
+            ...stateRef.current,
+            time: 0,
+            is_playing: true
+          });
+          break;
+          
+        case YT.PlayerState.BUFFERING:
+        case YT.PlayerState.CUED:
+          // Update time but maintain play state
+          updateChannel({
+            ...stateRef.current,
+            time: currentTime
+          });
+          break;
+      }
+    } finally {
+      // Re-enable sync after cooldown
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+      syncTimeoutRef.current = setTimeout(() => {
+        shouldSync.current = true;
+      }, 500);
     }
   };
 
@@ -205,8 +220,7 @@ export default function Television() {
     let video = ""
     if (videoId.startsWith("http")) {
       const url = new URL(videoId)
-      console.log(url)
-      if (url.origin == "https://www.youtube.com") {
+      if (url.origin === "https://www.youtube.com") {
         video = url.searchParams.get("v") as string
       } else {
         video = url.pathname.substring(1)
@@ -215,22 +229,34 @@ export default function Television() {
       video = videoId
     }
 
-    console.log(video)
-
     if (ytPlayer.current) {
+      // Disable sync during video load
+      shouldSync.current = false;
+      
       ytPlayer.current.loadVideoById(video);
       currentVideoId.current = video;
-      stateRef.current.channel = video;
-      stateRef.current.time = 0;
-      stateRef.current.is_playing = true;
-      setDoSync(false); // Disable sync for initial load
-      await updateChannel(stateRef.current);
+      
+      // Update database directly
+      await updateChannel({
+        ...stateRef.current,
+        channel: video,
+        time: 0,
+        is_playing: true
+      });
+      
+      // Re-enable sync after cooldown
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+      syncTimeoutRef.current = setTimeout(() => {
+        shouldSync.current = true;
+      }, 500);
     }
   };
 
   const manualLoadVideo = (vid: string) => {
     if (ytPlayer.current) {
-      setDoSync(false); // Disable sync for this external load
+      shouldSync.current = false;
       ytPlayer.current.loadVideoById(vid);
       currentVideoId.current = vid;
     }
