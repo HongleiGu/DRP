@@ -60,12 +60,7 @@ export default function ProtectedContent() {
                 <Text><SmileOutlined /> <strong>Nickname:</strong> {user.publicMetadata?.nickname as string ?? "None"}</Text>
               </Space>
               <Flex gap="small" style={{ marginTop: "16px" }}>
-<<<<<<< HEAD
                 <Button onClick={() => router.push("/lobby")}>Lumiroom Lobby</Button>
-=======
-                <Button type="primary" onClick={() => router.push("/lumiroom")}>Lumiroom</Button>
-                {/* <Button onClick={() => router.push("/game")}>Lumiroom</Button> */}
->>>>>>> 00c35588a9775a810d97696e0bcf2f82a7c6910e
               </Flex>
             </Flex>
           </Flex>
