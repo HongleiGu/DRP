@@ -1,30 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use client';
+"use client";
 
-import { getChannel, updateChannel } from '@/utils/api';
-import { Button, Input, Typography, Divider } from 'antd';
-import { useParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { TVState } from '@/types/datatypes';
+import { getChannel, updateChannel } from "@/utils/api";
+import { Button, Input, Typography, Divider } from "antd";
+import { useParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { TVState } from "@/types/datatypes";
 
 const { Title } = Typography;
 
 export default function Television() {
   const playerRef = useRef<HTMLDivElement>(null);
-  const params = useParams<{id: string}>();
+  const params = useParams<{ id: string }>();
   const ytPlayer = useRef<any>(null);
-  const currentVideoId = useRef(''); // Track loaded video
+  const currentVideoId = useRef(""); // Track loaded video
 
-  const [timeInput, setTimeInput] = useState<string>('');
-  const [videoId, setVideoId] = useState<string>('');
+  const [timeInput, setTimeInput] = useState<string>("");
+  const [videoId, setVideoId] = useState<string>("");
   const [doSync, setDoSync] = useState<boolean>(true);
   const stateRef = useRef<TVState>({
     channel: "",
     is_playing: false,
     room_id: params.id as string,
-    time: 0
+    time: 0,
   } as TVState);
 
   // Realtime updates
@@ -33,27 +33,31 @@ export default function Television() {
 
     const channel = supabase
       .channel(`tv-room:${params.id}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'tv_channel',
-        filter: `room_id=eq.${params.id}`
-      }, (payload) => {
-        const newState = payload.new as TVState;
-        stateRef.current = newState;
-        const newVideoId = newState.channel;
-        setVideoId(newVideoId);
-        
-        if (newVideoId !== currentVideoId.current) {
-          setDoSync(false); // Disable sync for this update
-          manualLoadVideo(newVideoId);
-          currentVideoId.current = newVideoId;
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "tv_channel",
+          filter: `room_id=eq.${params.id}`,
+        },
+        (payload) => {
+          const newState = payload.new as TVState;
+          stateRef.current = newState;
+          const newVideoId = newState.channel;
+          setVideoId(newVideoId);
+
+          if (newVideoId !== currentVideoId.current) {
+            setDoSync(false); // Disable sync for this update
+            manualLoadVideo(newVideoId);
+            currentVideoId.current = newVideoId;
+          }
+
+          // Sync player state
+          setDoSync(false); // Prevent recursive sync
+          syncPlayerState(newState);
         }
-        
-        // Sync player state
-        setDoSync(false); // Prevent recursive sync
-        syncPlayerState(newState);
-      })
+      )
       .subscribe();
 
     return () => {
@@ -64,17 +68,17 @@ export default function Television() {
   // Sync player with state from server
   const syncPlayerState = (newState: TVState) => {
     if (!ytPlayer.current) return;
-    
+
     const YT = (window as any).YT;
     const playerState = ytPlayer.current.getPlayerState();
-    
+
     // Sync play/pause state
     if (newState.is_playing && playerState !== YT.PlayerState.PLAYING) {
       ytPlayer.current.playVideo();
     } else if (!newState.is_playing && playerState !== YT.PlayerState.PAUSED) {
       ytPlayer.current.pauseVideo();
     }
-    
+
     // Sync video time if difference is significant
     const currentTime = ytPlayer.current.getCurrentTime();
     if (Math.abs(currentTime - newState.time) > 1) {
@@ -86,23 +90,23 @@ export default function Television() {
   useEffect(() => {
     const helper = async () => {
       const tvstate = await getChannel(params.id);
-      console.log(tvstate)
+      console.log(tvstate);
       stateRef.current = tvstate;
       setVideoId(tvstate.channel);
       currentVideoId.current = tvstate.channel;
 
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
       document.body.appendChild(tag);
 
       (window as any).onYouTubeIframeAPIReady = () => {
-        ytPlayer.current = new (window as any).YT.Player('yt-player', {
-          height: '480',
-          width: '853',
-          videoId: tvstate.channel || '',
+        ytPlayer.current = new (window as any).YT.Player("yt-player", {
+          height: "480",
+          width: "853",
+          videoId: tvstate.channel || "",
           events: {
             onReady: () => {
-              console.log('YouTube Player ready');
+              console.log("YouTube Player ready");
               // Set initial state
               if (tvstate.is_playing) {
                 ytPlayer.current.playVideo();
@@ -110,7 +114,7 @@ export default function Television() {
                 ytPlayer.current.pauseVideo();
               }
             },
-            onStateChange: handlePlayerStateChange
+            onStateChange: handlePlayerStateChange,
           },
         });
       };
@@ -137,7 +141,7 @@ export default function Television() {
     setDoSync(true); // Enable sync for this action
     updateChannel(stateRef.current);
   };
-  
+
   const handleSeek = () => {
     const seconds = parseFloat(timeInput);
     if (!isNaN(seconds)) {
@@ -154,10 +158,10 @@ export default function Television() {
       setDoSync(true); // Re-enable sync for next actions
       return;
     }
-    
+
     const YT = (window as any).YT;
-    console.log('Player state changed:', event.data, stateRef.current);
-    
+    console.log("Player state changed:", event.data, stateRef.current);
+
     // Update state based on player events
     switch (event.data) {
       case YT.PlayerState.PLAYING:
@@ -166,21 +170,21 @@ export default function Television() {
         setDoSync(false); // Disable sync to prevent loop
         updateChannel(stateRef.current);
         break;
-        
+
       case YT.PlayerState.PAUSED:
         stateRef.current.is_playing = false;
         stateRef.current.time = ytPlayer.current.getCurrentTime().toFixed(0);
         setDoSync(false); // Disable sync to prevent loop
         updateChannel(stateRef.current);
         break;
-        
+
       case YT.PlayerState.CUED:
         stateRef.current.time = 0;
         stateRef.current.is_playing = false;
         setDoSync(false); // Disable sync to prevent loop
         updateChannel(stateRef.current);
         break;
-        
+
       case YT.PlayerState.ENDED:
         // Loop video when ended
         setDoSync(false); // Disable sync during loop sequence
@@ -190,7 +194,7 @@ export default function Television() {
         stateRef.current.is_playing = true;
         updateChannel(stateRef.current);
         break;
-        
+
       default:
         break;
     }
@@ -198,7 +202,7 @@ export default function Television() {
 
   const handleLoadVideo = async () => {
     if (!videoId) return;
-    
+
     if (ytPlayer.current) {
       ytPlayer.current.loadVideoById(videoId);
       currentVideoId.current = videoId;
@@ -219,16 +223,23 @@ export default function Television() {
   };
 
   return (
-    <div style={{ padding: 32, maxWidth: 1000, margin: '0 auto' }}>
+    <div style={{ padding: 32, maxWidth: 1000, margin: "0 auto" }}>
       <Title level={3}>Lumiroom Cinema</Title>
 
-      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          justifyContent: "center",
+          marginBottom: 24,
+        }}
+      >
         <div id="yt-player" ref={playerRef}></div>
       </div>
 
       <Divider />
 
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
         <Input
           placeholder="Enter YouTube video ID"
           value={videoId}
@@ -240,12 +251,16 @@ export default function Television() {
         </Button>
       </div>
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 16,
+        }}
+      >
         <Button onClick={handlePlay}>▶ Play</Button>
         <Button onClick={handlePause}>⏸ Pause</Button>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <Input
           type="number"
           placeholder="Seek (sec)"
