@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import React from 'react';
 import { Modal, Button, Form, Input, Row, Col, Image } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
