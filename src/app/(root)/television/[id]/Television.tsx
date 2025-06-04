@@ -10,7 +10,6 @@ import { supabase } from "@/lib/supabase";
 import { TVState } from "@/types/datatypes";
 
 const { Title } = Typography;
-
 export default function Television() {
   const playerRef = useRef<HTMLDivElement>(null);
   const params = useParams<{ id: string }>();
@@ -203,10 +202,25 @@ export default function Television() {
   const handleLoadVideo = async () => {
     if (!videoId) return;
 
+    let video = ""
+    if (videoId.startsWith("http")) {
+      const url = new URL(videoId)
+      console.log(url)
+      if (url.origin == "https://www.youtube.com") {
+        video = url.searchParams.get("v") as string
+      } else {
+        video = url.pathname.substring(1)
+      }
+    } else {
+      video = videoId
+    }
+
+    console.log(video)
+
     if (ytPlayer.current) {
-      ytPlayer.current.loadVideoById(videoId);
-      currentVideoId.current = videoId;
-      stateRef.current.channel = videoId;
+      ytPlayer.current.loadVideoById(video);
+      currentVideoId.current = video;
+      stateRef.current.channel = video;
       stateRef.current.time = 0;
       stateRef.current.is_playing = true;
       setDoSync(false); // Disable sync for initial load
@@ -241,9 +255,10 @@ export default function Television() {
 
       <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
         <Input
-          placeholder="Enter YouTube video ID"
+          placeholder="Enter YouTube video link"
           value={videoId}
           onChange={(e) => setVideoId(e.target.value)}
+          onFocus={(e) => e.target.select()}
           style={{ flex: 1, marginRight: 12 }}
         />
         <Button type="primary" onClick={handleLoadVideo}>
@@ -266,6 +281,7 @@ export default function Television() {
           placeholder="Seek (sec)"
           value={timeInput}
           onChange={(e) => setTimeInput(e.target.value)}
+          onFocus={(e) => e.target.select()}
           style={{ width: 120 }}
         />
         <Button onClick={handleSeek}>Seek</Button>
