@@ -3,7 +3,7 @@
 'use client';
 
 import { getChannel, updateChannel } from '@/utils/api';
-import { Button, Input, Typography, Divider, message } from 'antd';
+import { Button, Input, Typography, Divider } from 'antd';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
