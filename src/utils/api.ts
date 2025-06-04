@@ -1,22 +1,16 @@
 "use server"
 
 
-import { TVState } from '@/types/datatypes';
+import { Message, TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
 import { currentUser, User } from '@clerk/nextjs/server';
 
 
-export const insertChatHistory = async (message: {
-  speaker: string;
-  speaker_name: string;
-  chat_message: string;
-  chat_room_id: string;
-}) => {
+export const insertChatHistory = async (message: Message) => {
   const { data, error } = await supabase
     .from('chat_history')
     .insert(message)
     .select();
-
   if (error) throw error;
   return data;
 };
@@ -107,4 +101,21 @@ export async function updateChannel(state: TVState): Promise<void> {
     console.log("error updating channel")
     throw error;
   }
+}
+
+export async function getMessages(roomId: string): Promise<Message[]> {
+  console.log("fetch messages from room", roomId)
+  const {data, error} = await supabase
+    .from('chat_history')
+    .select('*')
+    .eq('chat_room_id', roomId)
+  if (error) {
+    console.error('Detailed Supabase error:', {
+      message: error.message,
+      code: error.code,
+      details: error.details
+    });
+    throw error;
+  }
+  return data.map(it => it as Message)
 }

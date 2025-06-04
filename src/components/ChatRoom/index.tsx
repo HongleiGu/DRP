@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Input, Button, List, Avatar, message, Layout, Card, Typography } from 'antd';
 import { Message } from '@/types/datatypes';
-import { insertChatHistory } from '@/utils/api';
-import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
+import { getMessages, insertChatHistory } from '@/utils/api';
+// import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
 // import { getUserId } from '@/utils/user';
 // import { isValidUUID } from '@/utils/utils';
 // import { clerkClient } from '@clerk/nextjs/server';
@@ -29,7 +29,8 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   useEffect(() => {
     const loadInitialMessages = async () => {
       try {
-        const data = await getMessagesFromChatroom(chatroomId);
+        const data = await getMessages(chatroomId);
+        console.log(data[0].created_at, data[0].created_at instanceof Date)
         setMessages(data);
       } catch (error) {
         console.error('Failed to load messages:', error);
@@ -94,6 +95,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
             filter: `chat_room_id=eq.${chatroomId}`,
           },
           (payload) => {
+            console.log(payload.new)
             const newMessage = payload.new as Message;
             // Skip if this is our own optimistic message
             if (newMessage.speaker !== user.id) {
@@ -129,14 +131,15 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       speaker: userId,
       speaker_name: nickname,
       chat_message: newMessage,
-      time: new Date().toISOString(),
+      created_at: new Date(),
       is_optimistic: true, // Mark as optimistic
       chat_room_id: chatroomId
     };
 
     try {
       // 1. Add to Redis immediately (fast operation)
-      await addMessageToChatroom(chatroomId, messageObj);
+      // no supabase should be fast enough
+      // await addMessageToChatroom(chatroomId, messageObj);
       
       // 2. Add to local messages immediately (optimistic UI)
       setMessages((prev) => [...prev, messageObj]);
@@ -149,12 +152,13 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
             speaker: userId,
             chat_message: newMessage,
             speaker_name: nickname,
-            chat_room_id: chatroomId
-          });
+            chat_room_id: chatroomId,
+            created_at: new Date(),
+          } as Message);
           
           // Update message to remove optimistic flag
           setMessages(prev => prev.map(msg => 
-            msg.time === messageObj.time ? {...msg, is_optimistic: false} : msg
+            msg.created_at === messageObj.created_at ? {...msg, is_optimistic: false} : msg
           ));
         } catch (psqlError) {
           console.error('Failed to persist to PostgreSQL:', psqlError);
@@ -198,7 +202,13 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           flexDirection: 'column',
           borderRadius: 12,
         }}
-        bodyStyle={{ padding: '16px', overflowY: 'auto', flex: 1 }}
+        styles={{
+          body:{
+            padding: '16px', 
+            overflowY: 'auto',
+            flex: 1 
+          }
+        }}
       >
         <List
           dataSource={messages}
@@ -218,7 +228,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
                   <Text strong>
                     {item.speaker_name}{' '}
                     <Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
-                      {new Date(item.time).toLocaleTimeString()}
+                      {item.created_at.toLocaleTimeString()}
                     </Text>
                   </Text>
                 }
@@ -236,7 +246,9 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           margin: '16px auto 0',
           borderRadius: 12,
         }}
-        bodyStyle={{ display: 'flex', padding: '16px' }}
+        styles={{
+          body: { display: 'flex', padding: '16px' }
+        }}
       >
         <Input
           placeholder="Type a message..."

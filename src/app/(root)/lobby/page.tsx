@@ -94,14 +94,19 @@ export default function LumiroomPage() {
         }}
       >
         <Card
-          title={<Title level={3} style={{ marginBottom: 0 }}>Enter or Create a Lumiroom</Title>}
+          title={
+            <Title level={3} style={{ marginBottom: 0 }}>Enter or Create a Lumiroom</Title>
+          }
           style={{
             width: '100%',
             maxWidth: 480,
             borderRadius: 16,
             boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
           }}
-          headStyle={{ textAlign: 'center' }}
+          // Update styles to use the new syntax
+          styles={{
+            header: { textAlign: 'center' },
+          }}
         >
           <Space direction="vertical" style={{ width: '100%' }} size="large">
             <div>

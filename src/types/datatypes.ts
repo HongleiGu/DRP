@@ -3,7 +3,7 @@ export interface Message {
   speaker: string;
   speaker_name: string;
   chat_message: string;
-  time: string;
+  created_at: Date;
   is_optimistic?: boolean;
   chat_room_id: string;
 }
