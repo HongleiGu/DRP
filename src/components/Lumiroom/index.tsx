@@ -62,30 +62,60 @@ export default function Game() {
     }
   }, [])
 
-  const handleButtonClick = () => {
+  const handleButtonClickTele = () => {
     router.push(`/television/${params.id}`)
   };
 
+  const handleButtonClickChat = () => {
+    router.push(`/chatroom/${params.id}`)
+  };
+
   return (
-    <div className="relative w-full h-full">
-      <canvas ref={canvasRef} className="w-full h-full" />
-      
-      {/* External DOM Button - positioned in bottom right */}
+  <div className="relative w-full h-full">
+    <canvas ref={canvasRef} className="w-full h-full" />
+
+    {/* Buttons container - positioned bottom right */}
+    <div
+      style={{
+        position: 'absolute',
+        bottom: 20,
+        left: 20,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px', // spacing between buttons
+        zIndex: 10
+      }}
+    >
       {showButton && (
         <Button
           type="primary"
           icon={<YoutubeOutlined />}
-          onClick={handleButtonClick}
+          onClick={handleButtonClickTele}
           style={{
             display: 'flex',
             alignItems: 'center',
             borderRadius: '8px',
             padding: '10px 20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
           }}
         >
           Open Television Page
         </Button>
       )}
+      <Button
+        type="default"
+        onClick={handleButtonClickChat}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          borderRadius: '8px',
+          padding: '10px 20px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}
+      >
+        Open Chatroom
+      </Button>
     </div>
-  )
+  </div>
+)
 }
