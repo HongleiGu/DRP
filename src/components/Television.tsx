@@ -58,6 +58,7 @@ export default function Television({sendMessage, addReceiver}: any) {
         ytPlayer.current?.loadVideoById(id, seconds)
       } else {
         ytPlayer.current?.seekTo(seconds)
+        ytPlayer.current?.pauseVideo()
       }
       ytPlayer.current?.playVideo();
     } else if (message.startsWith("/seek")) {
