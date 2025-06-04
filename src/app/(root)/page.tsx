@@ -2,7 +2,7 @@
 "use client";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { RedirectToSignIn } from "@clerk/nextjs";
-import { LoadingSpinner } from "@/components/Game/LoadingSpinner";
+import { LoadingSpinner } from "@/components/Lumiroom/LoadingSpinner";
 import { Layout, Card, Avatar, Typography, Space, Button, Flex } from "antd";
 import { UserOutlined, MailOutlined, IdcardOutlined, SmileOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
@@ -60,9 +60,7 @@ export default function ProtectedContent() {
                 <Text><SmileOutlined /> <strong>Nickname:</strong> {user.publicMetadata?.nickname as string ?? "None"}</Text>
               </Space>
               <Flex gap="small" style={{ marginTop: "16px" }}>
-                {/* <Button type="primary" onClick={() => router.push("/chatroom")}>Chatroom</Button> */}
-                {/* since we were to combine the lumiroom and chat room features, hereby I only keep the lumiroom button */}
-                <Button onClick={() => router.push("/chatroom")}>Lumiroom</Button>
+                <Button onClick={() => router.push("/lobby")}>Lumiroom Lobby</Button>
               </Flex>
             </Flex>
           </Flex>

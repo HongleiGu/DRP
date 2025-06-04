@@ -65,12 +65,12 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         const userIds = Object.keys(state);
         setOnlineUsers(userIds);
       })
-      .on('presence', { event: 'join' }, ({ key }) => {
-        message.info(`User ${key.substring(0, 6)} joined`);
-      })
-      .on('presence', { event: 'leave' }, ({ key }) => {
-        message.info(`User ${key.substring(0, 6)} left`);
-      })
+      // .on('presence', { event: 'join' }, ({ key }) => {
+      //   message.info(`User ${key.substring(0, 6)} joined`);
+      // })
+      // .on('presence', { event: 'leave' }, ({ key }) => {
+      //   message.info(`User ${key.substring(0, 6)} left`);
+      // })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           await presenceTrack.track({

@@ -6,9 +6,9 @@ import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import { GameStateProvider } from '@/game/state/GameState'
 // import { HUD } from '../components/Game/UI/Overlay/HUD'
-const HUD = dynamic(() => import('@/components/Game/UI/Overlay/HUD'), { ssr: false })
+// const HUD = dynamic(() => import('@/components/Lumiroom/UI/Overlay/HUD'), { ssr: false })
 
-const Game = dynamic(() => import('@/components/Game'), {
+const Game = dynamic(() => import('@/components/Lumiroom'), {
   ssr: false,
   loading: () => <div className="text-center p-8">Loading game...</div>
 })
@@ -18,7 +18,6 @@ export default function Home() {
     <main className="relative w-full h-screen overflow-hidden">
       <GameStateProvider>
         <Suspense fallback={<div className="text-center p-8">Initializing game engine...</div>}>
-          <HUD />
           <Game />
         </Suspense>
       </GameStateProvider>
