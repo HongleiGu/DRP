@@ -2,6 +2,7 @@
 // room id == chat id ==(in the furture)== call id
 
 "use client";
+
 import { useState } from "react";
 import InstantMeeting from "@/components/MeetingPage/InstantMeeting";
 import CreateLink from "@/components/MeetingPage/CreateLink";
