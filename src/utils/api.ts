@@ -132,10 +132,12 @@ export async function updateChannel(state: TVState): Promise<void> {
 
 export async function getMessages(roomId: string): Promise<Message[]> {
   console.log("fetch messages from room", roomId)
-  const {data, error} = await supabase
-    .from('chat_history')
-    .select('*')
-    .eq('chat_room_id', roomId)
+const { data, error } = await supabase
+  .from('chat_history')
+  .select('*')
+  .eq('chat_room_id', roomId)
+  .not('chat_message', 'ilike', '/%');
+
   if (error) {
     console.error('Detailed Supabase error:', {
       message: error.message,

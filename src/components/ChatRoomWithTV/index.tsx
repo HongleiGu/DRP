@@ -137,7 +137,12 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
 
     try {
       await insertChatHistory(messageObj);
-      setMessages((prev) => [...prev, messageObj]);
+      setMessages((prev) => {
+        if (messageObj.chat_message.startsWith("/")) {
+          return prev
+        }
+        return [...prev, messageObj]
+      });
       setNewMessage('');
 
       setTimeout(async () => {
