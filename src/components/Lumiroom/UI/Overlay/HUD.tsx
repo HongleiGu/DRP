@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 // components/UI/Overlay/HUD.tsx
 'use client'
 
@@ -8,8 +10,8 @@ export default function HUD () {
   
   return (
     <div className="fixed top-0 left-0 p-4">
-      <div>Score: {state.score}</div>
-      <div>Lives: {state.lives}</div>
+      {/* <div>Score: {state.score}</div> */}
+      {/* <div>Lives: {state.lives}</div> */}
     </div>
   )
 }

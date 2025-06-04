@@ -3,16 +3,16 @@
 
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { Layout, Input, Button, List, Avatar, Typography, Badge, Space, message } from 'antd';
 import { Message } from '@/types/datatypes';
-import { getMessages, insertChatHistory } from '@/utils/api';
+import { getRoom, insertChatHistory } from '@/utils/api';
 // import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
 import { supabase } from '@/lib/supabase';
-import { GameStateProvider } from '@/game/state/GameState';
+import Television from '../Television';
 
 const HUD = dynamic(() => import('@/components/Lumiroom/UI/Overlay/HUD'), { ssr: false });
 const Game = dynamic(() => import('@/components/Lumiroom'), {
@@ -33,13 +33,13 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const [receivers, setReceivers] = useState<any[]>([]);
+  let theReceiver: any = null;
 
   // 初始化聊天
   useEffect(() => {
     const loadInitialMessages = async () => {
       try {
-        const data = await getMessages(chatroomId);
+        const data = await getRoom(chatroomId);
         setMessages(data);
       } catch (err) {
         message.error('Failed to load initial messages');
@@ -96,9 +96,9 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           if (newMsg.speaker !== user.id) {
             setMessages(prev => [...prev, newMsg]);
           }
-          receivers.forEach((receiver) => {
-            receiver(newMsg)
-          })
+          if (theReceiver) {
+            theReceiver(newMsg)
+          }
         })
         .subscribe();
 
@@ -111,7 +111,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
     };
 
     setupRealtime();
-  }, [chatroomId, user, router]);
+  }, [chatroomId, user, router, theReceiver]);
 
   // 滚动到底部
   useEffect(() => {
@@ -119,7 +119,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   }, [messages]);
 
   const addReceiver = (receiver: any) => {
-    receivers.push(receiver)
+    theReceiver = receiver;
   }
 
   const handleSend = async (theMessage: string) => {
@@ -132,7 +132,6 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       speaker_name: nickname,
       chat_message: theMessage,
       created_at: new Date().toISOString(),
-      is_optimistic: true,
       chat_room_id: chatroomId
     };
 
@@ -152,9 +151,8 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           });
 
           setMessages(prev =>
-            prev.map(msg =>
-              msg.created_at === messageObj.created_at ? { ...msg, is_optimistic: false } : msg
-            )
+            prev.map(msg => msg
+           )
           );
         } catch {
           message.warning('Saved locally but failed to persist');
@@ -187,7 +185,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
               <List.Item
                 style={{
                   backgroundColor: item.speaker === userId ? "#e6f7ff" : undefined,
-                  opacity: item.is_optimistic ? 0.6 : 1,
+                  opacity: 1,
                   borderRadius: 8,
                   marginBottom: 8,
                   padding: 12,
@@ -236,12 +234,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       {/* 右侧游戏栏 */}
       <Layout>
         <Content style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
-          <GameStateProvider>
-            <Suspense fallback={<div className="text-center p-8">Initializing game engine...</div>}>
-              <HUD />
-              <Game sendMessage={handleSend} addReceiver={addReceiver} chatroomId={chatroomId} />
-            </Suspense>
-          </GameStateProvider>
+          <Television sendMessage={handleSend} addReceiver={addReceiver}></Television>
         </Content>
       </Layout>
     </Layout>

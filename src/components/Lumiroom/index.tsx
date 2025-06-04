@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
@@ -8,7 +11,7 @@ import { Button } from 'antd';
 import { YoutubeOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation'
 
-export default function Game() {
+export default function Game({sendMessage, addReceiver, chatroomId}: any) {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [showButton, setShowButton] = useState(false);
@@ -62,12 +65,8 @@ export default function Game() {
     }
   }, [])
 
-  const handleButtonClickTele = () => {
-    router.push(`/television/${params.id}`)
-  };
-
-  const handleButtonClickChat = () => {
-    router.push(`/chatroom/${params.id}`)
+  const handleButtonClick = () => {
+    router.push(`/television/${chatroomId}`)
   };
 
   return (
