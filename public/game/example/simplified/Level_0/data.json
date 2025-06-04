@@ -5,7 +5,7 @@
 	"y": 0,
 	"width": 800,
 	"height": 608,
-	"bgColor": "#696A79",
+	"bgColor": "#FFFFFF",
 	"neighbourLevels": [],
 	"customFields" : {},
 	"layers": [
@@ -27,10 +27,10 @@
 		"PlayerStart": [
 			{
 				"id": "PlayerStart",
-				"iid": "daf7cc90-3740-11f0-8929-ffaea8015348",
+				"iid": "9c166d50-3740-11f0-a92e-7f84d1cba94d",
 				"layer": "Entities",
-				"x": 248,
-				"y": 248,
+				"x": 280,
+				"y": 360,
 				"width": 16,
 				"height": 16,
 				"color": 12470831,
@@ -40,12 +40,12 @@
 		"Television": [
 			{
 				"id": "Television",
-				"iid": "2037a7f0-3740-11f0-b653-97529f2f6dfc",
+				"iid": "ebc96780-3740-11f0-95ac-87f6be4d5b7d",
 				"layer": "Entities",
 				"x": 232,
 				"y": 296,
-				"width": 32,
-				"height": 16,
+				"width": 24,
+				"height": 15,
 				"color": 14120515,
 				"customFields" : {}
 			}

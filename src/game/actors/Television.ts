@@ -13,8 +13,8 @@ export class Television extends ex.Actor {
       image: Resources.TelevisionSprite,
       sourceView: {
         x: 0, y: 0,
-        width: 32, //Resources.TelevisionSprite.width,
-        height: 20// Resources.TelevisionSprite.height
+        width: Resources.TelevisionSprite.width,
+        height: Resources.TelevisionSprite.height
       },
     });
     this.graphics.add(sprite);
