@@ -31,6 +31,7 @@ export function isUUID(str: string): str is string {
   return uuidSchema.safeParse(str).success;
 }
 
+
 // Alternative version that returns boolean
 export function isValidUUID(str: string): boolean {
   return uuidSchema.safeParse(str).success;
