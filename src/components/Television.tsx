@@ -49,7 +49,7 @@ export default function Television({sendMessage, addReceiver}: any) {
   }, []);
 
   addReceiver((msg: any) => {
-    // console.log(msg)
+    console.log("add",msg)
     const message: string = msg.chat_message;
     if (message.startsWith("/play")) {
       const seconds = message.split(" ")[1]

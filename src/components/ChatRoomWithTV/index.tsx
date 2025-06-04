@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { Layout, Input, Button, List, Avatar, Typography, Badge, Space, message } from 'antd';
 import { Message } from '@/types/datatypes';
-import { getRoom, insertChatHistory } from '@/utils/api';
+import { getMessages, insertChatHistory } from '@/utils/api';
 // import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
 import { supabase } from '@/lib/supabase';
 import Television from '../Television';
@@ -39,7 +39,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   useEffect(() => {
     const loadInitialMessages = async () => {
       try {
-        const data = await getRoom(chatroomId);
+        const data = await getMessages(chatroomId);
         setMessages(data);
       } catch (err) {
         message.error('Failed to load initial messages');
@@ -63,27 +63,27 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         return;
       }
 
-      const presenceTrack = supabase.channel(`room:${chatroomId}`, {
-        config: { presence: { key: user.id } }
-      })
-        .on('presence', { event: 'sync' }, () => {
-          const state = presenceTrack.presenceState();
-          setOnlineUsers(Object.keys(state));
-        })
-        .on('presence', { event: 'join' }, ({ key }) => {
-          // message.info(`User ${key.slice(0, 6)} joined`);
-        })
-        .on('presence', { event: 'leave' }, ({ key }) => {
-          // message.info(`User ${key.slice(0, 6)} left`);
-        })
-        .subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            await presenceTrack.track({
-              user_id: user.id,
-              online_at: new Date().toISOString(),
-            });
-          }
-        });
+      // const presenceTrack = supabase.channel(`room:${chatroomId}`, {
+      //   config: { presence: { key: user.id } }
+      // })
+      //   .on('presence', { event: 'sync' }, () => {
+      //     const state = presenceTrack.presenceState();
+      //     setOnlineUsers(Object.keys(state));
+      //   })
+      //   .on('presence', { event: 'join' }, ({ key }) => {
+      //     // message.info(`User ${key.slice(0, 6)} joined`);
+      //   })
+      //   .on('presence', { event: 'leave' }, ({ key }) => {
+      //     // message.info(`User ${key.slice(0, 6)} left`);
+      //   })
+      //   .subscribe(async (status) => {
+      //     if (status === 'SUBSCRIBED') {
+      //       await presenceTrack.track({
+      //         user_id: user.id,
+      //         online_at: new Date().toISOString(),
+      //       });
+      //     }
+      //   });
 
       const messageSub = supabase.channel(`messages:${chatroomId}`)
         .on('postgres_changes', {
@@ -93,8 +93,11 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           filter: `chat_room_id=eq.${chatroomId}`,
         }, (payload) => {
           const newMsg = payload.new as Message;
+          console.log(newMsg)
           if (newMsg.speaker !== user.id) {
-            setMessages(prev => [...prev, newMsg]);
+            if (!newMsg.chat_message.startsWith("/")) {
+              setMessages(prev => [...prev, newMsg]);
+            }
           }
           if (theReceiver) {
             theReceiver(newMsg)
@@ -105,7 +108,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       loadInitialMessages();
 
       return () => {
-        presenceTrack.unsubscribe();
+        // presenceTrack.unsubscribe();
         messageSub.unsubscribe();
       };
     };
@@ -136,8 +139,9 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
     };
 
     try {
-      await insertChatHistory(messageObj);
+      // await insertChatHistory(messageObj);
       setMessages((prev) => {
+        console.log(prev)
         if (messageObj.chat_message.startsWith("/")) {
           return prev
         }
@@ -147,13 +151,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
 
       setTimeout(async () => {
         try {
-          await insertChatHistory({
-            speaker: userId,
-            chat_message: theMessage,
-            speaker_name: nickname,
-            chat_room_id: chatroomId,
-            created_at: new Date().toISOString()
-          });
+          await insertChatHistory(messageObj);
 
           setMessages(prev =>
             prev.map(msg => msg

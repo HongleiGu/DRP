@@ -8,6 +8,7 @@ import { currentUser, User } from '@clerk/nextjs/server';
 const DEFAULT_VIDEO = "loWA5o1RdTY"
 
 export const insertChatHistory = async (message: Message) => {
+  console.log("insertChatHistory")
   const { data, error } = await supabase
     .from('chat_history')
     .insert(message)

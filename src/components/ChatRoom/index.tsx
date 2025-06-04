@@ -132,12 +132,10 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       speaker_name: nickname,
       chat_message: theMessage,
       created_at: new Date().toISOString(),
-      is_optimistic: true,
       chat_room_id: chatroomId
     };
 
     try {
-      await insertChatHistory(messageObj);
       setMessages((prev) => [...prev, messageObj]);
       setNewMessage('');
 
@@ -152,9 +150,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           });
 
           setMessages(prev =>
-            prev.map(msg =>
-              msg.created_at === messageObj.created_at ? { ...msg, is_optimistic: false } : msg
-            )
+            prev.map(msg => msg)
           );
         } catch {
           message.warning('Saved locally but failed to persist');
@@ -187,7 +183,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
               <List.Item
                 style={{
                   backgroundColor: item.speaker === userId ? "#e6f7ff" : undefined,
-                  opacity: item.is_optimistic ? 0.6 : 1,
+                  opacity: 1,
                   borderRadius: 8,
                   marginBottom: 8,
                   padding: 12,
