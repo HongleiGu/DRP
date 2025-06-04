@@ -23,3 +23,10 @@ export type SceneCallbacks = {
     // onPlayerPositionChange?: (position: Vector) => void;
     // onGameEvent?: (event: string, data: any) => void;
 }
+
+export interface TVState {
+  room_id: string,
+  channel: string,
+  is_playing: boolean,
+  time: number; // the number of seconds in the video, only updated when paused, reload, seek
+}

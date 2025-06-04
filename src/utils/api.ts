@@ -1,6 +1,7 @@
 "use server"
 
 
+import { TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
 import { currentUser, User } from '@clerk/nextjs/server';
 
@@ -64,13 +65,14 @@ export async function registerUser(userId: string, user: User, formData: CustomJ
   console.log(userId, user, formData)
 }
 
-export async function getChannel(roomId: string): Promise<string> {
+export async function getChannel(roomId: string): Promise<TVState> {
   try {
     const {data, error} = await supabase
       .from('tv_channel')
-      .select('channel')
+      .select('*')
       .eq('room_id', roomId)
       .single()
+    console.log("data", data)
     if (error) {
       console.error('Detailed Supabase error:', {
         message: error.message,
@@ -79,20 +81,20 @@ export async function getChannel(roomId: string): Promise<string> {
       });
       throw error;
     }
-    return data.channel as string
+    return data as TVState
   } catch (error) {
     console.log("error getting channel")
     throw error;
   }
 }
 
-export async function updateChannel(roomId: string, videoId: string): Promise<void> {
-  console.log("updating channel", roomId, videoId)
+export async function updateChannel(state: TVState): Promise<void> {
+  console.log("updating channel", state.room_id, state.channel)
   try {
     const {error} = await supabase
       .from('tv_channel')
-      .update({channel: videoId})
-      .eq('room_id', roomId)
+      .update(state)
+      .eq('room_id', state.room_id)
     if (error) {
       console.error('Detailed Supabase error:', {
         message: error.message,

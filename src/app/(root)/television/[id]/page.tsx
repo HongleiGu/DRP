@@ -1,16 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-
 'use client';
-
-
-// note, this page allows the use of explicit any as youtube need it
 
 import { getChannel, updateChannel } from '@/utils/api';
 import { Button, Input, Typography, Divider, message } from 'antd';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { TVState } from '@/types/datatypes';
 
 const { Title } = Typography;
 
@@ -22,10 +19,16 @@ export default function Television() {
 
   const [timeInput, setTimeInput] = useState<string>('');
   const [videoId, setVideoId] = useState<string>('');
+  const [doSync, setDoSync] = useState<boolean>(true);
+  const stateRef = useRef<TVState>({
+    channel: "",
+    is_playing: false,
+    room_id: params.id as string,
+    time: 0
+  } as TVState);
 
   // Realtime updates
   useEffect(() => {
-    console.log(params.id)
     if (!params.id) return;
 
     const channel = supabase
@@ -36,43 +39,78 @@ export default function Television() {
         table: 'tv_channel',
         filter: `room_id=eq.${params.id}`
       }, (payload) => {
-        const newVideoId = payload.new.channel;
+        const newState = payload.new as TVState;
+        stateRef.current = newState;
+        const newVideoId = newState.channel;
         setVideoId(newVideoId);
-        manualLoadVideo(newVideoId)
+        
+        if (newVideoId !== currentVideoId.current) {
+          setDoSync(false); // Disable sync for this update
+          manualLoadVideo(newVideoId);
+          currentVideoId.current = newVideoId;
+        }
+        
+        // Sync player state
+        setDoSync(false); // Prevent recursive sync
+        syncPlayerState(newState);
       })
       .subscribe();
 
     return () => {
       channel.unsubscribe();
     };
-  }, []);
+  }, [params.id]);
+
+  // Sync player with state from server
+  const syncPlayerState = (newState: TVState) => {
+    if (!ytPlayer.current) return;
+    
+    const YT = (window as any).YT;
+    const playerState = ytPlayer.current.getPlayerState();
+    
+    // Sync play/pause state
+    if (newState.is_playing && playerState !== YT.PlayerState.PLAYING) {
+      ytPlayer.current.playVideo();
+    } else if (!newState.is_playing && playerState !== YT.PlayerState.PAUSED) {
+      ytPlayer.current.pauseVideo();
+    }
+    
+    // Sync video time if difference is significant
+    const currentTime = ytPlayer.current.getCurrentTime();
+    if (Math.abs(currentTime - newState.time) > 1) {
+      ytPlayer.current.seekTo(newState.time, true);
+    }
+  };
 
   // Player initialization
   useEffect(() => {
     const helper = async () => {
-      const vid = await getChannel(params.id);
-      setVideoId(vid);
-      currentVideoId.current = vid;
+      const tvstate = await getChannel(params.id);
+      console.log(tvstate)
+      stateRef.current = tvstate;
+      setVideoId(tvstate.channel);
+      currentVideoId.current = tvstate.channel;
 
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
       document.body.appendChild(tag);
 
-      
       (window as any).onYouTubeIframeAPIReady = () => {
-        
         ytPlayer.current = new (window as any).YT.Player('yt-player', {
           height: '480',
           width: '853',
-          videoId: vid || '',
-          playerVars: {
-            controls: 0,
-            disablekb: 1,
-            modestbranding: 1,
-            rel: 0,
-          },
+          videoId: tvstate.channel || '',
           events: {
-            onReady: () => console.log('YouTube Player ready'),
+            onReady: () => {
+              console.log('YouTube Player ready');
+              // Set initial state
+              if (tvstate.is_playing) {
+                ytPlayer.current.playVideo();
+              } else {
+                ytPlayer.current.pauseVideo();
+              }
+            },
+            onStateChange: handlePlayerStateChange
           },
         });
       };
@@ -85,31 +123,100 @@ export default function Television() {
     };
   }, [params.id]);
 
-  const handlePlay = () => ytPlayer.current?.playVideo();
-  const handlePause = () => ytPlayer.current?.pauseVideo();
+  const handlePlay = () => {
+    ytPlayer.current?.playVideo();
+    stateRef.current.is_playing = true;
+    setDoSync(true); // Enable sync for this action
+    updateChannel(stateRef.current);
+  };
+
+  const handlePause = () => {
+    ytPlayer.current?.pauseVideo();
+    stateRef.current.is_playing = false;
+    stateRef.current.time = ytPlayer.current?.getCurrentTime() || 0;
+    setDoSync(true); // Enable sync for this action
+    updateChannel(stateRef.current);
+  };
   
   const handleSeek = () => {
     const seconds = parseFloat(timeInput);
     if (!isNaN(seconds)) {
       ytPlayer.current?.seekTo(seconds, true);
+      stateRef.current.time = seconds;
+      setDoSync(true); // Enable sync for this action
+      updateChannel(stateRef.current);
+    }
+  };
+
+  const handlePlayerStateChange = (event: any) => {
+    if (!doSync) {
+      // Skip processing if sync is disabled
+      setDoSync(true); // Re-enable sync for next actions
+      return;
+    }
+    
+    const YT = (window as any).YT;
+    console.log('Player state changed:', event.data, stateRef.current);
+    
+    // Update state based on player events
+    switch (event.data) {
+      case YT.PlayerState.PLAYING:
+        stateRef.current.is_playing = true;
+        stateRef.current.time = ytPlayer.current.getCurrentTime().toFixed(0);
+        setDoSync(false); // Disable sync to prevent loop
+        updateChannel(stateRef.current);
+        break;
+        
+      case YT.PlayerState.PAUSED:
+        stateRef.current.is_playing = false;
+        stateRef.current.time = ytPlayer.current.getCurrentTime().toFixed(0);
+        setDoSync(false); // Disable sync to prevent loop
+        updateChannel(stateRef.current);
+        break;
+        
+      case YT.PlayerState.CUED:
+        stateRef.current.time = 0;
+        stateRef.current.is_playing = false;
+        setDoSync(false); // Disable sync to prevent loop
+        updateChannel(stateRef.current);
+        break;
+        
+      case YT.PlayerState.ENDED:
+        // Loop video when ended
+        setDoSync(false); // Disable sync during loop sequence
+        ytPlayer.current.seekTo(0, true);
+        ytPlayer.current.playVideo();
+        stateRef.current.time = 0;
+        stateRef.current.is_playing = true;
+        updateChannel(stateRef.current);
+        break;
+        
+      default:
+        break;
     }
   };
 
   const handleLoadVideo = async () => {
-    if (videoId && videoId !== currentVideoId.current && ytPlayer.current) {
-      currentVideoId.current = videoId;
+    if (!videoId) return;
+    
+    if (ytPlayer.current) {
       ytPlayer.current.loadVideoById(videoId);
-    } else {
-      return
+      currentVideoId.current = videoId;
+      stateRef.current.channel = videoId;
+      stateRef.current.time = 0;
+      stateRef.current.is_playing = true;
+      setDoSync(false); // Disable sync for initial load
+      await updateChannel(stateRef.current);
     }
-    console.log("updating", videoId)
-    await updateChannel(params.id, videoId); // Triggers realtime update
-    // Local load handled by useEffect
   };
 
   const manualLoadVideo = (vid: string) => {
-    ytPlayer.current.loadVideoById(vid);
-  }
+    if (ytPlayer.current) {
+      setDoSync(false); // Disable sync for this external load
+      ytPlayer.current.loadVideoById(vid);
+      currentVideoId.current = vid;
+    }
+  };
 
   return (
     <div style={{ padding: 32, maxWidth: 1000, margin: '0 auto' }}>
@@ -117,23 +224,6 @@ export default function Television() {
 
       <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
         <div id="yt-player" ref={playerRef}></div>
-        
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '1000px',
-            height: '480px',
-            zIndex: 10,
-            backgroundColor: 'transparent',
-            pointerEvents: 'all',
-          }}
-          onClick={(e) => {
-            e.preventDefault();
-            message.info('Shared screen - use controls below');
-          }}
-        />
       </div>
 
       <Divider />
