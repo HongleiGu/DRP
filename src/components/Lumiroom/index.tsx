@@ -89,7 +89,7 @@ export default function Game({sendMessage, addReceiver, chatroomId}: any) {
         <Button
           type="primary"
           icon={<YoutubeOutlined />}
-          onClick={handleButtonClickTele}
+          onClick={handleButtonClick}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -101,7 +101,7 @@ export default function Game({sendMessage, addReceiver, chatroomId}: any) {
           Open Television Page
         </Button>
       )}
-      <Button
+      {/* <Button
         type="default"
         onClick={handleButtonClickChat}
         style={{
@@ -113,7 +113,7 @@ export default function Game({sendMessage, addReceiver, chatroomId}: any) {
         }}
       >
         Open Chatroom
-      </Button>
+      </Button> */}
     </div>
   </div>
 )
