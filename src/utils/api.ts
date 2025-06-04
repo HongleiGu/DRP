@@ -117,5 +117,7 @@ export async function getMessages(roomId: string): Promise<Message[]> {
     });
     throw error;
   }
-  return data.map(it => it as Message)
+  return data.map(it => {
+    return it as Message
+  })
 }

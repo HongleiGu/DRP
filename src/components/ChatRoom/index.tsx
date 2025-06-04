@@ -30,7 +30,6 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
     const loadInitialMessages = async () => {
       try {
         const data = await getMessages(chatroomId);
-        console.log(data[0].created_at, data[0].created_at instanceof Date)
         setMessages(data);
       } catch (error) {
         console.error('Failed to load messages:', error);
@@ -131,7 +130,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       speaker: userId,
       speaker_name: nickname,
       chat_message: newMessage,
-      created_at: new Date(),
+      created_at: new Date().toISOString(),
       is_optimistic: true, // Mark as optimistic
       chat_room_id: chatroomId
     };
@@ -153,7 +152,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
             chat_message: newMessage,
             speaker_name: nickname,
             chat_room_id: chatroomId,
-            created_at: new Date(),
+            created_at: new Date().toISOString(),
           } as Message);
           
           // Update message to remove optimistic flag
@@ -228,7 +227,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
                   <Text strong>
                     {item.speaker_name}{' '}
                     <Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
-                      {item.created_at.toLocaleTimeString()}
+                      {item.created_at}
                     </Text>
                   </Text>
                 }
