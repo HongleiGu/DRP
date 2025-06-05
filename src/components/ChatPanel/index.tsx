@@ -61,7 +61,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   useEffect(() => {
     if (!userId) return;
 
-    const presenceTrack = supabase.channel(`room:${chatroomId}`, {
+    const presenceTrack = supabase.channel(`room:${chatroomId} `, {
       config: { presence: { key: userId } }
     })
     .on('presence', { event: 'sync' }, () => {
@@ -178,7 +178,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   const header = (
     <div className="p-4 border-b z-1000">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Chat Room</h3>
+        <h3 className="text-lg font-semibold">Room Id: {chatroomId}</h3>
         <Badge status="success" text={`${onlineUsers.length} online`} />
       </div>
     </div>
