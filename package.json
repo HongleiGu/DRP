@@ -27,6 +27,7 @@
     "phaser": "^3.90.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-infinite-scroll-component": "^6.1.0",
     "redis": "^5.1.1",
     "stream-chat": "^9.3.0",
     "zod": "^3.25.32"

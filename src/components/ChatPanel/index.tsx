@@ -6,6 +6,7 @@ import { Message } from "@/types/datatypes";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import EmojiGrid from "../EmojiGrids";
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 // Independent ChatPanel component
 interface ChatPanelProps {
@@ -140,24 +141,68 @@ export default function ChatPanel({ chatroomId, onSend }: ChatPanelProps) {
     handleSend(emoji);
   }, [handleSend]);
 
+  const header = (
+    <div className="p-4 border-b">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Chat Room</h3>
+        <Badge status="success" text={`${onlineUsers.length} online`} />
+      </div>
+    </div>
+  )
+
+  const footer = (
+    <div className="bg-white border-t p-4" style={{ position: 'fixed', bottom: 0 }}>
+      <div className="flex items-center space-x-2">
+        <Input
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type a message..."
+          disabled={isSending}
+          onPressEnter={(e) => {
+            if (!e.shiftKey) {
+              e.preventDefault();
+              handleSend(newMessage);
+            }
+          }}
+        />
+        <Popover 
+          content={<EmojiGrid onSelect={handleEmojiSelect} />}
+          trigger="click"
+          placement="topRight"
+        >
+          <Button className="text-xl">😊</Button>
+        </Popover>
+        <Button
+          type="primary"
+          onClick={() => handleSend(newMessage)}
+          loading={isSending}
+          disabled={!newMessage.trim()}
+        >
+          Send
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
     <div 
       className="flex flex-col h-full bg-white border-r" 
       style={{ width: 300, position: 'fixed', left: 0, top: 0, bottom: 0 }}
     >
-      <div className="p-4 border-b">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Chat Room</h3>
-          <Badge status="success" text={`${onlineUsers.length} online`} />
-        </div>
-      </div>
-
-      <div className="flex flex-col h-full">
-        {/* Messages container with scroll */}
-        <div className="flex-grow overflow-y-auto p-4" style={{ height: 'calc(100% - 64px)' }}>
+      <div className="relative flex flex-col h-full" id="scrollableDiv" style={{ overflowY: 'auto', maxHeight: 'calc(100% - 80px)' }}>
+        <InfiniteScroll 
+          dataLength={memoizedMessages.length} 
+          next={() => {}} 
+          hasMore={false} 
+          loader={undefined} 
+          scrollableTarget="scrollableDiv"
+        >
           <List
             itemLayout="horizontal"
             dataSource={memoizedMessages}
+            className="overflow-y-auto"
+            header={header}
+            footer={footer}
             renderItem={(msg) => (
               <List.Item className={msg.speaker === userId ? 'bg-blue-50' : ''}>
                 <List.Item.Meta
@@ -169,41 +214,8 @@ export default function ChatPanel({ chatroomId, onSend }: ChatPanelProps) {
             )}
           />
           <div ref={messagesEndRef} />
-        </div>
-
-        {/* Fixed input at bottom */}
-        <div className="bg-white border-t p-4" style={{ position: 'sticky', bottom: 0 }}>
-          <div className="flex items-center space-x-2">
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              disabled={isSending}
-              onPressEnter={(e) => {
-                if (!e.shiftKey) {
-                  e.preventDefault();
-                  handleSend(newMessage);
-                }
-              }}
-            />
-            <Popover 
-              content={<EmojiGrid onSelect={handleEmojiSelect} />}
-              trigger="click"
-              placement="topRight"
-            >
-              <Button className="text-xl">😊</Button>
-            </Popover>
-            <Button
-              type="primary"
-              onClick={() => handleSend(newMessage)}
-              loading={isSending}
-              disabled={!newMessage.trim()}
-            >
-              Send
-            </Button>
-          </div>
-        </div>
+        </InfiniteScroll>
       </div>
     </div>
   );
-};
+}

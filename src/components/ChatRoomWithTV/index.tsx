@@ -80,10 +80,14 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       
       {/* Left Chat Panel */}
       {chatPanelVisible && (
-        <ChatPanel
-          chatroomId={chatroomId}
-          onSend={handleSend}
-        />
+        <div 
+          className="flex-1 overflow-y-auto h-max-[80%]" 
+        >
+          <ChatPanel
+            chatroomId={chatroomId}
+            onSend={handleSend}
+          />
+        </div>
       )}
 
       {/* Right Game Panel */}
