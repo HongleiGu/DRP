@@ -7,6 +7,7 @@ import { Button, Input, Typography, Divider, message, Popover } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { VideoElement } from './PlayList';
 import { EllipsisOutlined } from '@ant-design/icons';
+import Image from 'next/image';
 
 const { Title } = Typography;
 
@@ -290,8 +291,8 @@ export default function Television({onMount, sendMessage, playList}: any) {
                       padding: 4
                     }}>
                       {/* Example chat bubbles */}
-                      <div style={chatBubbleStyle('😊', 20, 30)} />
-                      <div style={chatBubbleStyle('👍', 60, 50)} />
+                      {/* <div style={chatBubbleStyle('😊', 20, 30)} /> */}
+                      {/* <div style={chatBubbleStyle('👍', 60, 50)} /> */}
                     </div>
                   </div>
                   
@@ -315,7 +316,7 @@ export default function Television({onMount, sendMessage, playList}: any) {
                   <h4 style={{ marginBottom: 8 }}>All Moments</h4>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {[1, 2, 3, 4, 5, 6].map(item => (
-                      <img 
+                      <Image
                         key={item}
                         src={`https://picsum.photos/80/45?random=${item}`}
                         alt={`Thumb ${item}`}

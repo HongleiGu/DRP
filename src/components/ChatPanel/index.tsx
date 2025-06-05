@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { getMessages, insertChatHistory } from "@/utils/api";
 import { useUser } from "@clerk/nextjs";
-import { message, Badge, List, Avatar, Input, Button, Popover } from "antd";
+import { message, Badge, List, Avatar, Input, Button, Popover, Modal } from "antd";
 import { Message } from "@/types/datatypes";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
@@ -25,6 +25,8 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const router = useRouter();
+  const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
+  const [invitationData, setInvitationData] = useState<{ from: string; roomId: string } | null>(null);
 
   // Memoize messages to prevent unnecessary re-renders
   const memoizedMessages = useMemo(() => messages, [messages]);
@@ -88,12 +90,17 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
         table: 'chat_history',
         filter: `chat_room_id=eq.${chatroomId}`,
       }, (payload) => {
+        console.log("payload", payload.new)
         if (payload.new.speaker !== userId) {
           if (payload.new.chat_message.startsWith("/invite")) {
             const msgUserId = payload.new.chat_message.split(" ")[1]
+            // const roomId = payload.new.chat_message.split(" ")[2]
+
             if (msgUserId === userId) {
-              const newMsg = payload.new as Message;
-              setMessages(prev => [...prev, newMsg]);
+              // const newMsg = payload.new as Message;
+              // setMessages(prev => [...prev, newMsg]);
+              setInvitationData({from: msgUserId, roomId: chatroomId})
+              setIsInviteModalVisible(true)
               // should pop up an invite
             }
           }
@@ -119,23 +126,34 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
 
   const handleSend = useCallback(async (theMessage: string) => {
     if (!theMessage.trim() || isSending || !userId || !nickname) return;
+    let messageObj: Message;
+    if (theMessage.startsWith("/invite")) {
+      // const roomId = theMessage.split(" ")[2]
+      messageObj = {
+        speaker: userId,
+        speaker_name: nickname,
+        chat_message: theMessage,
+        created_at: new Date().toISOString(),
+        chat_room_id: chatroomId
+      }
+    } else {
+      messageObj = {
+        speaker: userId,
+        speaker_name: nickname,
+        chat_message: theMessage,
+        created_at: new Date().toISOString(),
+        chat_room_id: chatroomId
+      };
+    }
 
     setIsSending(true);
-
-    const messageObj: Message = {
-      speaker: userId,
-      speaker_name: nickname,
-      chat_message: theMessage,
-      created_at: new Date().toISOString(),
-      chat_room_id: chatroomId
-    };
 
     try {
       // Optimistically update UI
       if (!theMessage.startsWith("/")) {
         setMessages(prev => [...prev, messageObj]);
-        setNewMessage('');
       }
+      setNewMessage('');
 
       // Persist to database
       await insertChatHistory(messageObj);
@@ -153,6 +171,18 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   useEffect(()=> {
     onMount(handleSend)
   })
+
+  // Add modal handlers
+  const handleAcceptInvite = () => {
+    setIsInviteModalVisible(false);
+    if (invitationData) {
+      router.push(`/television/${chatroomId}`);
+    }
+  };
+
+  const handleDeclineInvite = () => {
+    setIsInviteModalVisible(false);
+  };
 
   const header = (
     <div className="p-4 border-b z-1000">
@@ -229,6 +259,28 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
           <div ref={messagesEndRef} />
         </InfiniteScroll>
       </div>
+
+      <Modal
+        title="Room Invitation"
+        open={isInviteModalVisible}
+        onOk={handleAcceptInvite}
+        onCancel={handleDeclineInvite}
+        footer={[
+          <Button key="decline" onClick={handleDeclineInvite}>
+            Decline
+          </Button>,
+          <Button key="accept" type="primary" onClick={handleAcceptInvite}>
+            Accept
+          </Button>
+        ]}
+      >
+        {invitationData && (
+          <p>
+            <strong>{invitationData.from}</strong> has invited you to join room: 
+            <strong> {invitationData.roomId}</strong>
+          </p>
+        )}
+      </Modal>
     </div>
   );
 }

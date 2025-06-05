@@ -2,8 +2,8 @@
 
 
 import { useEffect, useRef, useState } from "react";
-import { PlayList, VideoElement } from "../PlayList";
-import { addVideoToPlaylist, getPlaylist, removeVideoFromPlaylist } from "@/utils/api";
+import { VideoElement } from "../PlayList";
+import { getPlaylist } from "@/utils/api";
 import { Button, Layout, message} from "antd";
 // import { Content } from "antd/es/layout/layout";
 import Television from "../Television";
@@ -64,18 +64,18 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   //   }
   // };
 
-  const addVideo = async (video: VideoElement) => {
-    const newVideos = [...videos, video];
-    setVideos(newVideos);
-    await addVideoToPlaylist(chatroomId, video);
-  };
+  // const addVideo = async (video: VideoElement) => {
+  //   const newVideos = [...videos, video];
+  //   setVideos(newVideos);
+  //   await addVideoToPlaylist(chatroomId, video);
+  // };
 
-  const removeVideo = async (index: number) => {
-    const newVideos = videos.filter((_, i) => i !== index);
-    const deleted = videos.filter((_, i) => i === index)[0];
-    setVideos(newVideos);
-    await removeVideoFromPlaylist(chatroomId, deleted.vid);
-  };
+  // const removeVideo = async (index: number) => {
+  //   const newVideos = videos.filter((_, i) => i !== index);
+  //   const deleted = videos.filter((_, i) => i === index)[0];
+  //   setVideos(newVideos);
+  //   await removeVideoFromPlaylist(chatroomId, deleted.vid);
+  // };
 
   return (
     <Layout style={{ height: '100vh', width: '100vw', position: 'fixed' }}>
