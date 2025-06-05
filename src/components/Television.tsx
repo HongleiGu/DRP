@@ -7,12 +7,14 @@ import { Button, Input, Typography, Divider, message, Popover } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { VideoElement } from './PlayList';
 import { EllipsisOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 const { Title } = Typography;
 
-export default function Television({onMount, sendMessage, playList, chatPanelVisible, setChatPanelVisible}: any) {
+export default function Television({onMount, sendMessage, playList, chatPanelVisible, setChatPanelVisible, chatroomId}: any) {
   const playerRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
   const ytPlayer = useRef<any>(null);
   const [timeInput, setTimeInput] = useState<string>('');
   const [videoUrl, setVideoUrl] = useState<string>('');
@@ -174,6 +176,18 @@ export default function Television({onMount, sendMessage, playList, chatPanelVis
       <Title level={3} style={{ flex: 0, margin: "10px" }}>
         Lumiroom Cinema
       </Title>
+      <Button
+      type="primary"
+      onClick={() => router.push(`/lumiroom/${chatroomId}`)}
+      style={{
+        position: "absolute",
+        top: 16,
+        right: 16, // ← 改成 right 取代 left
+        zIndex: 1000
+      }}
+    >
+      Return
+    </Button>
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div
           style={{
