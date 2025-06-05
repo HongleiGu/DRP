@@ -11,7 +11,7 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 // Independent ChatPanel component
 interface ChatPanelProps {
   chatroomId: string;
-  onMount: (msg: any)=> void
+  onMount: (fn: any)=> void
   receiveMessage: (msg: any)=> void
 }
 
