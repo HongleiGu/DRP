@@ -2,11 +2,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 "use client";
-
-import { Button, Input, Typography, Divider, message, Popover, Card, Row, Col } from 'antd';
+import "@/app/global.css"
+import { Button, Input, Typography, Divider, message, Popover, Card, Row, Col, Space } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { VideoElement } from './PlayList';
-import { CopyOutlined, EllipsisOutlined } from '@ant-design/icons';
+import { CopyOutlined, SendOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { isEmoji } from '@/utils/utils';
@@ -43,6 +43,7 @@ export default function Television({
   const [sendEmojis, setSendEmojis] = useState<Record<string, string>>({});
   const router = useRouter();
   const [userId, setUserId] = useState<string>("");
+  const [inputUserId, setInputUserId] = useState<string>("");
 
   // Initialize YouTube Player
   useEffect(() => {
@@ -146,6 +147,10 @@ export default function Television({
     }
   };
 
+  const handleInvite = (userId: string) => {
+    sendMessage(`/invite ${userId}`)
+  }
+
   const extractVideoId = (videoUrl: string): string => {
     if (!videoUrl) return '';
     try {
@@ -174,17 +179,41 @@ export default function Television({
   };
 
   const popoverContent = (
-    <div style={{ display: 'flex', gap: '8px' }}>
-      <Input
-        value={`http://drp-nu.vercel.app/television/${chatroomId}`}
-        readOnly
+    <div style={{ display: 'flex', gap: '8px'}} className='flex flex-col'>
+      <p>Copy invitation link</p>
+      <Space.Compact className="w-full">
+         <Input
+          value={`http://drp-nu.vercel.app/television/${chatroomId}`}
+          readOnly
+          // style={{ width: 200, cursor: 'pointer' }}
+          onClick={handleCopy}
+        />
+        <Button 
+          icon={<CopyOutlined />}
+          iconPosition="end"
+          onClick={handleCopy}
+        />
+      </Space.Compact>
+      <p>OR enter userId and we will send the invitation directly</p>
+      <Space.Compact className="w-full">
+        <Input placeholder="userId" value={inputUserId} onChange={(e) => setInputUserId(e.target.value)}/>
+        <Button 
+          icon={<SendOutlined />}
+          iconPosition="end"
+          onClick={() => handleInvite(inputUserId)}
+        />
+      </Space.Compact>
+      {/* <Input
+        value={userId}
         style={{ width: 200, cursor: 'pointer' }}
-        onClick={handleCopy}
       />
-      <Button 
-        icon={<CopyOutlined />}
-        onClick={handleCopy}
-      />
+      <div className="flex-row">
+        <Button 
+          icon={<SendOutlined />}
+          iconPosition="end"
+          onClick={handleCopy}
+        />
+      </div> */}
     </div>
   );
 
@@ -277,16 +306,37 @@ export default function Television({
 
         <div style={{ display: 'flex', marginBottom: 16, gap: 12, alignItems: 'center' }}>
           {/* URL Input & Load Button */}
-          <div style={{ flex: 3, display: 'flex', alignItems: 'center' }}>
-            <Input
-              placeholder="YouTube URL"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              style={{ flex: 1, marginRight: 12 }}
-            />
-            <Button type="primary" onClick={handleLoadVideo}>
-              Load
-            </Button>
+          
+          <div style={{ flex: 3, display: 'flex', flexDirection: 'column', alignItems: 'left' }} className='flex-col'>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Button color="cyan" size="large" onClick={() => setChatPanelVisible(!chatPanelVisible)}>
+                {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
+              </Button>
+              <div style={{ display: 'flex', alignItems: 'center', marginTop: 8 }}>
+                <Button color="cyan" size="large" onClick={handlePlay}>▶️ Play</Button>
+                <Button color="cyan" size="large" onClick={handlePause}>⏸️ Pause</Button>
+                <Input
+                  type="number"
+                  placeholder="Seek (sec)"
+                  value={timeInput}
+                  onChange={(e) => setTimeInput(e.target.value)}
+                  style={{ width: 120, marginRight: 8 }}
+                />
+                <Button size="large" onClick={handleSeek}>⏩ Seek</Button>
+              </div>
+            </div>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+              <Input
+                placeholder="YouTube URL"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                style={{ flex: 5, marginRight: 12 }}
+              />
+              <Button type="primary" size="large" onClick={handleLoadVideo}>
+                Load
+              </Button>
+            </div>
           </div>
 
           {/* Emoji display area */}
@@ -298,12 +348,12 @@ export default function Television({
             gap: 12 
           }}>
             <Popover 
-      content={popoverContent}
-      title="Copy Invitation Link"
-      trigger="click"
-    >
-      <Button type="primary">Show Invitation Link</Button>
-    </Popover>
+              content={popoverContent}
+              title="Invite others to join"
+              trigger="click"
+            >
+              <Button size="large" type="primary">Show Invitation Link</Button>
+            </Popover>
 
             <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
               {Object.entries(sendEmojis).map(([userId, emoji]) => (
@@ -341,21 +391,6 @@ export default function Television({
           </div>
         </div>
 
-        <div style={{ flex: 0, display: "flex", gap: 12, marginBottom: 16 }}>
-          <Button onClick={() => setChatPanelVisible(!chatPanelVisible)}>
-            {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
-          </Button>
-          <Button onClick={handlePlay}>▶️ Play</Button>
-          <Button onClick={handlePause}>⏸️ Pause</Button>
-          <Input
-            type="number"
-            placeholder="Seek (sec)"
-            value={timeInput}
-            onChange={(e) => setTimeInput(e.target.value)}
-            style={{ width: 120 }}
-          />
-          <Button onClick={handleSeek}>⏩ Seek</Button>
-        </div>
       </div>
     </div>
   );
