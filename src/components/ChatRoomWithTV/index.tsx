@@ -105,20 +105,11 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
             onMount={(receiveFn: any) => (receiveMessage.current = receiveFn)}
             sendMessage={(msg: any) => sendMessage.current?.(msg)}
             playList={videos}
+            chatPanelVisible={chatPanelVisible}
+            setChatPanelVisible={setChatPanelVisible}
           />
         </Content>
       </Layout>
-
-      {/* Chat Panel Toggle Button */}
-      <Button
-        type="primary"
-        shape="circle"
-        size="large"
-        style={{ position: 'fixed', top: 20, left: chatPanelVisible ? 320 : 20, zIndex: 1000 }}
-        onClick={() => setChatPanelVisible(!chatPanelVisible)}
-      >
-        {chatPanelVisible ? '<' : '>'}
-      </Button>
 
       {/* Playlist Floating Button
       <PlayList

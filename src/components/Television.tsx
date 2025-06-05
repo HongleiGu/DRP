@@ -11,7 +11,7 @@ import Image from 'next/image';
 
 const { Title } = Typography;
 
-export default function Television({onMount, sendMessage, playList}: any) {
+export default function Television({onMount, sendMessage, playList, chatPanelVisible, setChatPanelVisible}: any) {
   const playerRef = useRef<HTMLDivElement>(null);
   const ytPlayer = useRef<any>(null);
   const [timeInput, setTimeInput] = useState<string>('');
@@ -351,7 +351,10 @@ export default function Television({onMount, sendMessage, playList}: any) {
         </div>
 
         <div style={{ flex: 0, display: "flex", gap: 12, marginBottom: 16 }}>
-          {/* Existing playback controls remain unchanged */}
+          {/* Chat Panel Toggle Button */}
+          <Button onClick={() => setChatPanelVisible(!chatPanelVisible)}>
+            {chatPanelVisible ? 'hide chatbox' : 'show chatbox'}
+          </Button>
           <Button onClick={handlePlay}>▶ Play</Button>
           <Button onClick={handlePause}>⏸ Pause</Button>
             <Input

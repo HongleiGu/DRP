@@ -1,3 +1,4 @@
+// ChatPanel.tsx
 import { supabase } from "@/lib/supabase";
 import { getMessages, insertChatHistory } from "@/utils/api";
 import { useUser } from "@clerk/nextjs";
@@ -8,11 +9,10 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import EmojiGrid from "../EmojiGrids";
 import InfiniteScroll from 'react-infinite-scroll-component';
 
-// Independent ChatPanel component
 interface ChatPanelProps {
   chatroomId: string;
-  onMount: (fn: (msg: string) => void)=> void
-  receiveMessage: (msg: Message)=> void
+  onMount: (fn: (msg: string) => void) => void;
+  receiveMessage: (msg: Message) => void;
 }
 
 export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatPanelProps) {
@@ -28,10 +28,8 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
   const [invitationData, setInvitationData] = useState<{ from: string; roomId: string } | null>(null);
 
-  // Memoize messages to prevent unnecessary re-renders
   const memoizedMessages = useMemo(() => messages, [messages]);
 
-  // Initialize user data
   useEffect(() => {
     if (!user?.id) {
       message.error("User invalid");
@@ -49,7 +47,6 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
     }
   }, [user, router]);
 
-  // Load initial messages
   useEffect(() => {
     const loadMessages = async () => {
       const messageData = await getMessages(chatroomId);
@@ -61,11 +58,9 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
     }
   }, [chatroomId, userId]);
 
-  // Setup real-time subscriptions
   useEffect(() => {
     if (!userId) return;
 
-    // Presence tracking
     const presenceTrack = supabase.channel(`room:${chatroomId}`, {
       config: { presence: { key: userId } }
     })
@@ -82,7 +77,6 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
       }
     });
 
-    // Message subscription
     const messageSub = supabase.channel(`messages:${chatroomId}`)
       .on('postgres_changes', {
         event: 'INSERT',
@@ -109,7 +103,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
             setMessages(prev => [...prev, newMsg]);
           }
         }
-        receiveMessage(payload.new as Message)
+        receiveMessage(payload.new as Message);
       })
       .subscribe();
 
@@ -119,7 +113,6 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
     };
   }, [chatroomId, userId]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [memoizedMessages]);
@@ -149,13 +142,11 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
     setIsSending(true);
 
     try {
-      // Optimistically update UI
       if (!theMessage.startsWith("/")) {
         setMessages(prev => [...prev, messageObj]);
       }
       setNewMessage('');
 
-      // Persist to database
       await insertChatHistory(messageObj);
     } catch {
       message.error('Failed to send message');
@@ -168,9 +159,9 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
     handleSend(emoji);
   }, [handleSend]);
 
-  useEffect(()=> {
-    onMount(handleSend)
-  })
+  useEffect(() => {
+    onMount(handleSend);
+  });
 
   // Add modal handlers
   const handleAcceptInvite = () => {
@@ -191,7 +182,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
         <Badge status="success" text={`${onlineUsers.length} online`} />
       </div>
     </div>
-  )
+  );
 
   const footer = (
     <div className="bg-white border-t p-4" style={{ position: 'fixed', bottom: 0 }}>
@@ -225,11 +216,11 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
         </Button>
       </div>
     </div>
-  )
+  );
 
   return (
     <div 
-      className="flex flex-col h-full bg-white border-r" 
+      className="flex flex-col h-full bg-white border-r p-4" // ← Added p-4 padding here
       style={{ width: 300, position: 'fixed', left: 0, top: 0, bottom: 0 }}
     >
       <div className="relative flex flex-col h-full" id="scrollableDiv" style={{ overflowY: 'auto', maxHeight: 'calc(100% - 80px)' }}>
