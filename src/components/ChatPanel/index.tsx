@@ -142,7 +142,7 @@ export default function ChatPanel({ chatroomId, onSend }: ChatPanelProps) {
   }, [handleSend]);
 
   const header = (
-    <div className="p-4 border-b">
+    <div className="p-4 border-b z-1000">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Chat Room</h3>
         <Badge status="success" text={`${onlineUsers.length} online`} />
