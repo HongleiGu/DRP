@@ -27,6 +27,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   const router = useRouter();
   const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
   const [invitationData, setInvitationData] = useState<{ from: string; roomId: string } | null>(null);
+  const [emojiPopoverOpen, setEmojiPopoverOpen] = useState(false);
 
   const memoizedMessages = useMemo(() => messages, [messages]);
 
@@ -157,6 +158,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
 
   const handleEmojiSelect = useCallback((emoji: string) => {
     handleSend(emoji);
+    setEmojiPopoverOpen(false);
   }, [handleSend]);
 
   useEffect(() => {
@@ -201,11 +203,12 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
         />
         <Popover 
           content={<EmojiGrid onSelect={handleEmojiSelect} />}
-          trigger="click"
+          open={emojiPopoverOpen}
           placement="topRight"
-        >
-          <Button className="text-xl">😊</Button>
-        </Popover>
+        ></Popover>
+        <Button 
+          className="text-xl"
+          onClick={()=>setEmojiPopoverOpen(true)}>😊</Button>
         <Button
           type="primary"
           onClick={() => handleSend(newMessage)}
