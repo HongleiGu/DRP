@@ -1,0 +1,74 @@
+import { Button } from "antd";
+import { useMemo } from "react";
+
+// Emoji component
+interface EmojiProps {
+  emoji: string;
+  onSend: (emoji: string) => void;
+}
+
+const Emoji = ({ emoji, onSend }: EmojiProps) => (
+  <Button 
+    className="cursor-pointer text-xl hover:scale-125 transition-transform"
+    onClick={() => onSend(emoji)}
+  >
+    {emoji}
+  </Button>
+);
+
+// Emoji grid component
+interface EmojiGridProps {
+  onSelect: (emoji: string) => void;
+}
+
+export default function EmojiGrid({ onSelect }: EmojiGridProps) {
+  const categories = useMemo(() => [
+    {
+      name: "Smileys & People",
+      emojis: ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "🥲", "☺️", "😊", "😇", "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘"]
+    },
+    {
+      name: "Animals & Nature",
+      emojis: ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🦄", "🐝", "🦋", "🐞"]
+    },
+    {
+      name: "Food & Drink",
+      emojis: ["🍏", "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆"]
+    },
+    {
+      name: "Activity",
+      emojis: ["⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱", "🪀", "🏓", "🏸", "🏒", "🏑", "🥍", "🏏", "🪃", "🥅"]
+    },
+    {
+      name: "Travel & Places",
+      emojis: ["🚗", "🚕", "🚙", "🚌", "🚎", "🏎", "🚓", "🚑", "🚒", "🚐", "🛻", "🚚", "🚛", "🚜", "🛵", "🏍", "🛺", "✈️", "🚀"]
+    },
+    {
+      name: "Objects",
+      emojis: ["💡", "🔦", "📱", "📲", "💻", "⌨️", "🖥", "🖨", "🖱", "🖲", "📞", "📟", "📠", "📺", "📷", "🎥", "📽", "🎞", "📀"]
+    },
+    {
+      name: "Symbols",
+      emojis: ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❣️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "💟"]
+    },
+    {
+      name: "Flags",
+      emojis: ["🏳️", "🏴", "🏁", "🚩", "🏳️‍🌈", "🏴‍☠️", "🇦🇫", "🇦🇽", "🇦🇱", "🇩🇿", "🇦🇸", "🇦🇩", "🇦🇴", "🇦🇮", "🇦🇶", "🇦🇬", "🇦🇷", "🇦🇲", "🇦🇼"]
+    }
+  ], []);
+
+  return (
+    <div className="bg-white border rounded shadow-lg p-3" style={{ width: 300, maxHeight: 300, overflowY: 'auto' }}>
+      {categories.map((category, index) => (
+        <div key={index} className="mb-4">
+          <h4 className="font-semibold mb-2">{category.name}</h4>
+          <div className="grid grid-cols-6 gap-2">
+            {category.emojis.map((emoji, idx) => (
+              <Emoji key={idx} emoji={emoji} onSend={onSelect} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
