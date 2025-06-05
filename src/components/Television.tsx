@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
-'use client';
+"use client";
 
 import { Button, Input, Typography, Divider, message } from 'antd';
 import { useEffect, useRef, useState } from 'react';
@@ -19,15 +20,14 @@ export default function Television({sendMessage, addReceiver, playList}: any) {
 
   // Initialize YouTube Player
   useEffect(() => {
-    const tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
     document.body.appendChild(tag);
 
     (window as any).onYouTubeIframeAPIReady = () => {
-      ytPlayer.current = new (window as any).YT.Player('yt-player', {
-        height: '480',
-        width: '853',
-        videoId: 'loWA5o1RdTY',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ytPlayer.current = new (window as any).YT.Player("yt-player", {
+        videoId: "loWA5o1RdTY",
         playerVars: {
           controls: 0,
           disablekb: 1,
@@ -35,11 +35,10 @@ export default function Television({sendMessage, addReceiver, playList}: any) {
           rel: 0,
         },
         events: {
-          onReady: (event: any) => {
-            console.log('YouTube Player is ready');
-            setPlayerReady(true);
-          },
-          onStateChange: (e: any) => console.log('Player state changed:', e.data),
+          onReady: () => console.log("YouTube Player is ready"),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onStateChange: (e: any) =>
+            console.log("Player state changed:", e.data),
         },
       });
     };
@@ -137,73 +136,110 @@ export default function Television({sendMessage, addReceiver, playList}: any) {
   };
 
   return (
-    <div style={{ padding: 32, maxWidth: 1000, margin: '0 auto' }}>
-      <Title level={3}>Lumiroom Cinema</Title>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        height: "100%",
+        padding: 10,
+        margin: "0 auto",
+      }}
+    >
       {contextHolder}
-      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-        <div id="yt-player" ref={playerRef}></div>
-        
+      <Title level={3} style={{ flex: 0, margin: "10px" }}>
+        Lumiroom Cinema
+      </Title>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 10,
-            backgroundColor: connected ? 'transparent' : 'white',
-            pointerEvents: 'all',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 24,
-            color: '#888',
-            textAlign: 'center',
-          }}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (!connected) {
-              const context = new AudioContext();
-              context.resume();
-              setConnected(true);
-            } else {
-              messageApi.info('This is a shared screen. Please use the buttons below to control the video together 😊');
-            }
+            flex: 1,
+            position: "relative",
+            display: "flex",
+            justifyContent: "center",
           }}
         >
-          {!connected && "Click to connect to shared screen"}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+            }}
+            id="yt-player"
+            ref={playerRef}
+          ></div>
+
+          {/* 🛡️ Transparent overlay to block clicks */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              zIndex: 10,
+              backgroundColor: connected ? "transparent" : "white",
+              pointerEvents: "all",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 24,
+              color: "#888",
+              textAlign: "center",
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!connected) {
+                const context = new AudioContext();
+                context.resume();
+                setConnected(true);
+              } else {
+                messageApi.info(
+                  "This is a shared screen. Please use the buttons below to control the video together 😊"
+                );
+              }
+            }}
+          >
+            {!connected && "Click to connect to shared screen"}
+          </div>
         </div>
-      </div>
 
-      <Divider />
+        <Divider />
 
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
-        <Input
-          placeholder="Enter YouTube video URL"
-          value={videoUrl}
-          onChange={(e) => setVideoUrl(e.target.value)}
-          style={{ flex: 1, marginRight: 12 }}
-        />
-        <Button type="primary" onClick={handleLoadVideo}>
-          Load Video
-        </Button>
-      </div>
+        <div
+          style={{
+            flex: 0,
+            display: "flex",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <Input
+            placeholder="Enter YouTube video URL"
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+            style={{ flex: 1, marginRight: 12 }}
+          />
+          <Button type="primary" onClick={handleLoadVideo}>
+            Load Video
+          </Button>
+        </div>
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-        <Button onClick={handlePlay}>▶ Play</Button>
-        <Button onClick={handlePause}>⏸ Pause</Button>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Input
-          type="number"
-          placeholder="Seek (sec)"
-          value={timeInput}
-          onChange={(e) => setTimeInput(e.target.value)}
-          style={{ width: 120 }}
-        />
-        <Button onClick={handleSeek}>Seek</Button>
+        <div style={{ flex: 0, display: "flex", gap: 12, marginBottom: 16 }}>
+          <Button onClick={handlePlay}>▶ Play</Button>
+          <Button onClick={handlePause}>⏸ Pause</Button>
+          <Input
+            type="number"
+            placeholder="Seek (sec)"
+            value={timeInput}
+            onChange={(e) => setTimeInput(e.target.value)}
+            style={{ width: 120 }}
+          />
+          <Button onClick={handleSeek}>Seek</Button>
+        </div>
       </div>
     </div>
   );
