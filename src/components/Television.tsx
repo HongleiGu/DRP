@@ -3,9 +3,10 @@
 
 "use client";
 
-import { Button, Input, Typography, Divider, message } from 'antd';
+import { Button, Input, Typography, Divider, message, Popover } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { VideoElement } from './PlayList';
+import { EllipsisOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
 
@@ -135,6 +136,28 @@ export default function Television({onMount, sendMessage, playList}: any) {
     }
   };
 
+  const chatBubbleStyle = (emoji: string, top: number, left: number) => ({
+    position: 'absolute',
+    top: `${top}%`,
+    left: `${left}%`,
+    transform: 'translate(-50%, -50%)',
+    background: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: '50%',
+    width: 28,
+    height: 28,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 16,
+    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+    pointerEvents: 'auto',
+    cursor: 'pointer',
+    transition: 'transform 0.2s',
+    '&:hover': {
+      transform: 'translate(-50%, -50%) scale(1.2)'
+    }
+  });
+
   return (
     <div
       style={{
@@ -209,35 +232,134 @@ export default function Television({onMount, sendMessage, playList}: any) {
 
         <Divider />
 
-        <div
-          style={{
-            flex: 0,
-            display: "flex",
-            alignItems: "center",
-            marginBottom: 16,
-          }}
-        >
-          <Input
-            placeholder="Enter YouTube video URL"
-            value={videoUrl}
-            onChange={(e) => setVideoUrl(e.target.value)}
-            style={{ flex: 1, marginRight: 12 }}
-          />
-          <Button type="primary" onClick={handleLoadVideo}>
-            Load Video
-          </Button>
+        <div style={{ display: 'flex', marginBottom: 16, gap: 12, alignItems: 'center' }}>
+          {/* Shortened URL Input & Load Button */}
+          <div style={{ flex: 3, display: 'flex', alignItems: 'center' }}>
+            <Input
+              placeholder="YouTube URL"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              style={{ flex: 1, marginRight: 12 }}
+            />
+            <Button type="primary" onClick={handleLoadVideo}>
+              Load
+            </Button>
+          </div>
+
+          {/* Horizontal Image Gallery with Popover */}
+          <div style={{ flex: 2, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+            <div style={{ 
+              display: 'flex', 
+              overflowX: 'auto', 
+              gap: 12,
+              padding: '8px 0',
+              flex: 1,
+              marginRight: 12
+            }}>
+              {[1, 2].map((item) => (
+                <div key={item} style={{ position: 'relative' }}>
+                  {/* Thumbnail with chat bubble space */}
+                  <div style={{ 
+                    width: 120, 
+                    height: 80,
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    backgroundColor: '#f0f0f0'
+                  }}>
+                    <img 
+                      src={`https://picsum.photos/120/80?random=${item}`} 
+                      alt={`Thumb ${item}`}
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover',
+                      }} 
+                    />
+                    
+                    {/* Space for chat bubbles - positioned absolutely */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      pointerEvents: 'none',
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      padding: 4
+                    }}>
+                      {/* Example chat bubbles */}
+                      <div style={chatBubbleStyle('😊', 20, 30)} />
+                      <div style={chatBubbleStyle('👍', 60, 50)} />
+                    </div>
+                  </div>
+                  
+                  {/* Timestamp */}
+                  <div style={{ 
+                    textAlign: 'center', 
+                    fontSize: 12, 
+                    marginTop: 4,
+                    color: '#666'
+                  }}>
+                    0:45
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Enhanced Popover Button */}
+            <Popover 
+              content={
+                <div style={{ padding: 12, width: 300 }}>
+                  <h4 style={{ marginBottom: 8 }}>All Moments</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {[1, 2, 3, 4, 5, 6].map(item => (
+                      <img 
+                        key={item}
+                        src={`https://picsum.photos/80/45?random=${item}`}
+                        alt={`Thumb ${item}`}
+                        style={{ width: 80, height: 45, borderRadius: 4 }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              } 
+              title="Video Moments"
+              trigger="click"
+              placement="bottomRight"
+            >
+              <Button 
+                type="default"
+                style={{ 
+                  width: 42, 
+                  height: 42,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#1890ff',
+                  border: 'none',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                }} 
+              >
+                <EllipsisOutlined style={{ color: 'white', fontSize: 20 }} />
+              </Button>
+            </Popover>
+          </div>
         </div>
 
         <div style={{ flex: 0, display: "flex", gap: 12, marginBottom: 16 }}>
+          {/* Existing playback controls remain unchanged */}
           <Button onClick={handlePlay}>▶ Play</Button>
           <Button onClick={handlePause}>⏸ Pause</Button>
-          <Input
-            type="number"
-            placeholder="Seek (sec)"
-            value={timeInput}
-            onChange={(e) => setTimeInput(e.target.value)}
-            style={{ width: 120 }}
-          />
+            <Input
+              type="number"
+              placeholder="Seek (sec)"
+              value={timeInput}
+              onChange={(e) => setTimeInput(e.target.value)}
+              style={{ width: 120 }}
+            />
           <Button onClick={handleSeek}>Seek</Button>
         </div>
       </div>

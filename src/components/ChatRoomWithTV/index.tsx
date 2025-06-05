@@ -15,7 +15,7 @@ const { Content } = Layout;
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const sendMessage = useRef<((msg: any) => void) | null>(null);
   const receiveMessage = useRef<((msg: any) => void) | null>(null);
-  const [playlistVisible, setPlaylistVisible] = useState<boolean>(false);
+  // const [playlistVisible, setPlaylistVisible] = useState<boolean>(false);
   const [videos, setVideos] = useState<VideoElement[]>([]);
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
   // const theReceiver: any = null;
@@ -78,7 +78,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   };
 
   return (
-    <Layout style={{ height: '100vh', position: 'relative' }}>
+    <Layout style={{ height: '100vh', width: '100vw', position: 'fixed' }}>
 
       {/* Left Chat Panel */}
       {chatPanelVisible && (
@@ -120,7 +120,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         {chatPanelVisible ? '<' : '>'}
       </Button>
 
-      {/* Playlist Floating Button */}
+      {/* Playlist Floating Button
       <PlayList
         chatroomId={chatroomId}
         visible={playlistVisible}
@@ -129,7 +129,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         addVideos={addVideo}
         removeVideo={removeVideo}
         setVideos={setVideos}
-      />
+      /> */}
     </Layout>
   );
 }

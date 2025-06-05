@@ -89,6 +89,14 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
         filter: `chat_room_id=eq.${chatroomId}`,
       }, (payload) => {
         if (payload.new.speaker !== userId) {
+          if (payload.new.chat_message.startsWith("/invite")) {
+            const msgUserId = payload.new.chat_message.split(" ")[1]
+            if (msgUserId === userId) {
+              const newMsg = payload.new as Message;
+              setMessages(prev => [...prev, newMsg]);
+              // should pop up an invite
+            }
+          }
           if (!payload.new.chat_message.startsWith("/")) {
             const newMsg = payload.new as Message;
             setMessages(prev => [...prev, newMsg]);
