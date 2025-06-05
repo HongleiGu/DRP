@@ -4,43 +4,44 @@
 
 import { Button, Input, Typography, Divider, message } from 'antd';
 import { useEffect, useRef, useState } from 'react';
+import { VideoElement } from './PlayList';
 
 const { Title } = Typography;
 
-export default function Television({sendMessage, addReceiver}: any) {
+export default function Television({sendMessage, addReceiver, playList}: any) {
   const playerRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ytPlayer = useRef<any>(null);
-
   const [timeInput, setTimeInput] = useState<string>('');
   const [videoUrl, setVideoUrl] = useState<string>('');
-
   const [connected, setConnected] = useState<boolean>(false);
-  const [messageApi, contextHolder] = message.useMessage()
+  const [playerReady, setPlayerReady] = useState<boolean>(false);
+  const [messageApi, contextHolder] = message.useMessage();
+
+  // Initialize YouTube Player
   useEffect(() => {
     const tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
     document.body.appendChild(tag);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).onYouTubeIframeAPIReady = () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ytPlayer.current = new (window as any).YT.Player('yt-player', {
-            height: '480',
-            width: '853',
-            videoId: 'loWA5o1RdTY',
-            playerVars: {
-              controls: 0,
-              disablekb: 1,
-              modestbranding: 1,
-              rel: 0,
-            },
-            events: {
-              onReady: () => console.log('YouTube Player is ready'),
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              onStateChange: (e: any) => console.log('Player state changed:', e.data),
-            },
-          });
+      ytPlayer.current = new (window as any).YT.Player('yt-player', {
+        height: '480',
+        width: '853',
+        videoId: 'loWA5o1RdTY',
+        playerVars: {
+          controls: 0,
+          disablekb: 1,
+          modestbranding: 1,
+          rel: 0,
+        },
+        events: {
+          onReady: (event: any) => {
+            console.log('YouTube Player is ready');
+            setPlayerReady(true);
+          },
+          onStateChange: (e: any) => console.log('Player state changed:', e.data),
+        },
+      });
     };
 
     return () => {
@@ -48,81 +49,100 @@ export default function Television({sendMessage, addReceiver}: any) {
     };
   }, []);
 
-  addReceiver((msg: any) => {
-    console.log("add",msg)
-    const message: string = msg.chat_message;
-    if (message.startsWith("/play")) {
-      const seconds = message.split(" ")[1]
-      const id = message.split(" ")[2]
-      if (extractVideoId(ytPlayer.current?.getVideoUrl()) != id) {
-        ytPlayer.current?.loadVideoById(id, seconds)
-      } else {
-        ytPlayer.current?.seekTo(seconds)
-        ytPlayer.current?.pauseVideo()
+  // Load playlist when player is ready and playList changes
+  useEffect(() => {
+    if (playerReady && ytPlayer.current && playList && playList.length > 0) {
+      try {
+        // Extract video IDs from the playlist
+        console.log(playList)
+        const videoIds = playList.map((video: VideoElement) => video.vid);
+        
+        // Use cuePlaylist instead of loadPlaylist for better UX
+        ytPlayer.current.cuePlaylist(videoIds);
+        
+        console.log('Playlist loaded:', videoIds);
+      } catch (error) {
+        console.error('Error loading playlist:', error);
       }
-      ytPlayer.current?.playVideo();
-    } else if (message.startsWith("/seek")) {
-      const seconds = message.split(" ")[1]
-      ytPlayer.current?.seekTo(seconds)
-    } else if (message.startsWith("/load")) {
-      const videoId = message.split(" ")[1]
-      if (videoId && ytPlayer.current?.loadVideoById) {
-        ytPlayer.current.loadVideoById(videoId);
-      } else {
-        alert('Invalid YouTube URL');
-      }
-    } else if (message == "/pause") {
-      ytPlayer.current?.pauseVideo();
     }
-  })
+  }, [playerReady, playList]);
+
+  // Setup message receiver
+  useEffect(() => {
+    const receiver = (msg: any) => {
+      const messageText: string = msg.chat_message;
+      if (messageText.startsWith("/play")) {
+        const seconds = messageText.split(" ")[1];
+        const id = messageText.split(" ")[2];
+        if (extractVideoId(ytPlayer.current?.getVideoUrl()) !== id) {
+          ytPlayer.current?.loadVideoById(id, seconds);
+        } else {
+          ytPlayer.current?.seekTo(seconds);
+          ytPlayer.current?.pauseVideo();
+        }
+        ytPlayer.current?.playVideo();
+      } else if (messageText.startsWith("/seek")) {
+        const seconds = messageText.split(" ")[1];
+        ytPlayer.current?.seekTo(seconds);
+      } else if (messageText.startsWith("/load")) {
+        const videoId = messageText.split(" ")[1];
+        if (videoId && ytPlayer.current?.loadVideoById) {
+          ytPlayer.current.loadVideoById(videoId);
+        }
+      } else if (messageText === "/pause") {
+        ytPlayer.current?.pauseVideo();
+      }
+    };
+
+    addReceiver(receiver);
+  }, [addReceiver]);
 
   const handlePlay = () => {
-    sendMessage(`/play ${ytPlayer.current?.getCurrentTime()} ${extractVideoId(ytPlayer.current?.getVideoUrl())}`)
-    // ytPlayer.current?.playVideo();
-  }
-  const handlePause = () => {
-    sendMessage("/pause")
-    // ytPlayer.current?.pauseVideo();
-  }
-  const handleSeek = () => {
-    const seconds = parseFloat(timeInput);
-    sendMessage(`/seek ${seconds}`)
+    if (ytPlayer.current) {
+      sendMessage(`/play ${ytPlayer.current.getCurrentTime()} ${extractVideoId(ytPlayer.current.getVideoUrl())}`);
+    }
   };
 
-  const extractVideoId = (videoId: string): string => {
-    if (videoId.startsWith("http")) {
-      const url = new URL(videoId)
-      console.log(url)
-      if (url.origin == "https://www.youtube.com") {
-        return url.searchParams.get("v") as string
-      } else {
-        return url.pathname.substring(1)
+  const handlePause = () => {
+    sendMessage("/pause");
+  };
+
+  const handleSeek = () => {
+    const seconds = parseFloat(timeInput);
+    if (!isNaN(seconds)) {
+      sendMessage(`/seek ${seconds}`);
+    }
+  };
+
+  const extractVideoId = (videoUrl: string): string => {
+    if (!videoUrl) return '';
+    try {
+      const url = new URL(videoUrl);
+      if (url.hostname.includes('youtube.com') || url.hostname.includes('youtu.be')) {
+        return url.searchParams.get("v") || url.pathname.split('/').pop() || '';
       }
-    } else {
-      return videoId
+      return '';
+    } catch (e) {
+      return '';
     }
   };
 
   const handleLoadVideo = () => {
     const videoId = extractVideoId(videoUrl);
-    sendMessage(`/load ${videoId}`)
+    if (videoId) {
+      sendMessage(`/load ${videoId}`);
+    } else {
+      messageApi.warning('Invalid YouTube URL');
+    }
   };
 
   return (
     <div style={{ padding: 32, maxWidth: 1000, margin: '0 auto' }}>
       <Title level={3}>Lumiroom Cinema</Title>
       {contextHolder}
-      <div
-        style={{
-          position: 'relative',
-          display: 'flex',
-          justifyContent: 'center',
-          marginBottom: 24,
-        }}
-      >
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
         <div id="yt-player" ref={playerRef}></div>
-
-        {/* 🛡️ Transparent overlay to block clicks */}
+        
         <div
           style={{
             position: 'absolute',
@@ -148,9 +168,12 @@ export default function Television({sendMessage, addReceiver}: any) {
               context.resume();
               setConnected(true);
             } else {
-              message.info('This is a shared screen. Please use the buttons below to control the video together 😊');
+              messageApi.info('This is a shared screen. Please use the buttons below to control the video together 😊');
             }
-          }}>{!connected && "Click to connect to shared screen"}</div>
+          }}
+        >
+          {!connected && "Click to connect to shared screen"}
+        </div>
       </div>
 
       <Divider />

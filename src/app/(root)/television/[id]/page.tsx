@@ -3,6 +3,7 @@
 "use client"
 
 import ChatRoomWithTV from '@/components/ChatRoomWithTV';
+import { PlayList } from '@/components/PlayList';
 import { Message } from '@/types/datatypes';
 import { getRoom } from '@/utils/api';
 import { getUserId } from '@/utils/user';
@@ -55,5 +56,9 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     redirect(`/lumiroom/${DEFAULT_ROOM}`);
   }
 
-  return <ChatRoomWithTV chatroomId={param} />;
+  return (
+    <>
+      <ChatRoomWithTV chatroomId={param} />;
+    </>
+  )
 }

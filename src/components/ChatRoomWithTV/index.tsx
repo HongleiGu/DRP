@@ -9,10 +9,10 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { Layout, Input, Button, List, Avatar, Typography, Badge, Space, message } from 'antd';
 import { Message } from '@/types/datatypes';
-import { getMessages, insertChatHistory } from '@/utils/api';
-// import { addMessageToChatroom, getMessagesFromChatroom } from '@/utils/redis';
+import { addVideoToPlaylist, getMessages, getPlaylist,  insertChatHistory, removeVideoFromPlaylist } from '@/utils/api';
 import { supabase } from '@/lib/supabase';
 import Television from '../Television';
+import { PlayList, VideoElement } from '../PlayList';
 
 const HUD = dynamic(() => import('@/components/Lumiroom/UI/Overlay/HUD'), { ssr: false });
 const Game = dynamic(() => import('@/components/Lumiroom'), {
@@ -31,18 +31,25 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const [playlistVisible, setPlaylistVisible] = useState<boolean>(false);
+  const [videos, setVideos] = useState<VideoElement[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   let theReceiver: any = null;
 
-  // 初始化聊天
+  // Load initial data
   useEffect(() => {
-    const loadInitialMessages = async () => {
+    const loadInitialData = async () => {
       try {
-        const data = await getMessages(chatroomId);
-        setMessages(data);
+        // Load messages
+        const messageData = await getMessages(chatroomId);
+        setMessages(messageData);
+        
+        // Load playlist
+        const vs = await getPlaylist(chatroomId)
+        setVideos(vs);
       } catch (err) {
-        message.error('Failed to load initial messages');
+        message.error('Failed to load initial data');
       }
     };
 
@@ -63,28 +70,30 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         return;
       }
 
-      // const presenceTrack = supabase.channel(`room:${chatroomId}`, {
-      //   config: { presence: { key: user.id } }
-      // })
-      //   .on('presence', { event: 'sync' }, () => {
-      //     const state = presenceTrack.presenceState();
-      //     setOnlineUsers(Object.keys(state));
-      //   })
-      //   .on('presence', { event: 'join' }, ({ key }) => {
-      //     // message.info(`User ${key.slice(0, 6)} joined`);
-      //   })
-      //   .on('presence', { event: 'leave' }, ({ key }) => {
-      //     // message.info(`User ${key.slice(0, 6)} left`);
-      //   })
-      //   .subscribe(async (status) => {
-      //     if (status === 'SUBSCRIBED') {
-      //       await presenceTrack.track({
-      //         user_id: user.id,
-      //         online_at: new Date().toISOString(),
-      //       });
-      //     }
-      //   });
+      // Presence tracking
+      const presenceTrack = supabase.channel(`room:${chatroomId}`, {
+        config: { presence: { key: user.id } }
+      })
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceTrack.presenceState();
+        setOnlineUsers(Object.keys(state));
+      })
+      .on('presence', { event: 'join' }, ({ key }) => {
+        message.info(`User ${key.slice(0, 6)} joined`);
+      })
+      .on('presence', { event: 'leave' }, ({ key }) => {
+        message.info(`User ${key.slice(0, 6)} left`);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceTrack.track({
+            user_id: user.id,
+            online_at: new Date().toISOString(),
+          });
+        }
+      });
 
+      // Message subscription
       const messageSub = supabase.channel(`messages:${chatroomId}`)
         .on('postgres_changes', {
           event: 'INSERT',
@@ -93,37 +102,49 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           filter: `chat_room_id=eq.${chatroomId}`,
         }, (payload) => {
           const newMsg = payload.new as Message;
-          console.log(newMsg)
           if (newMsg.speaker !== user.id) {
             if (!newMsg.chat_message.startsWith("/")) {
               setMessages(prev => [...prev, newMsg]);
             }
           }
           if (theReceiver) {
-            theReceiver(newMsg)
+            theReceiver(newMsg);
           }
         })
         .subscribe();
 
-      loadInitialMessages();
+      // Playlist subscription
+      const playlistSub = supabase.channel(`playlist:${chatroomId}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'playlists',
+          filter: `chatroom_id=eq.${chatroomId}`,
+        }, (payload) => {
+          const newPlaylist = payload.new as { videos: VideoElement[] };
+          setVideos(newPlaylist.videos);
+        })
+        .subscribe();
+
+      loadInitialData();
 
       return () => {
-        // presenceTrack.unsubscribe();
         messageSub.unsubscribe();
+        playlistSub.unsubscribe();
       };
     };
 
     setupRealtime();
   }, [chatroomId, user, router, theReceiver]);
 
-  // 滚动到底部
+  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const addReceiver = (receiver: any) => {
     theReceiver = receiver;
-  }
+  };
 
   const handleSend = async (theMessage: string) => {
     if (!theMessage.trim() || isSending) return;
@@ -139,24 +160,17 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
     };
 
     try {
-      // await insertChatHistory(messageObj);
       setMessages((prev) => {
-        console.log(prev)
         if (messageObj.chat_message.startsWith("/")) {
-          return prev
+          return prev;
         }
-        return [...prev, messageObj]
+        return [...prev, messageObj];
       });
       setNewMessage('');
 
       setTimeout(async () => {
         try {
           await insertChatHistory(messageObj);
-
-          setMessages(prev =>
-            prev.map(msg => msg
-           )
-          );
         } catch {
           message.warning('Saved locally but failed to persist');
         }
@@ -168,12 +182,41 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
     }
   };
 
+  const addVideo = async (video: VideoElement) => {
+    const newVideos = [...videos, video];
+    setVideos(newVideos);
+    await addVideoToPlaylist(chatroomId, video);
+  };
+
+  const removeVideo = async (index: number) => {
+    const newVideos = videos.filter((_, i) => i !== index);
+    const deleted = videos.filter((_, i) => i === index)[0]
+    setVideos(newVideos);
+    await removeVideoFromPlaylist(chatroomId, deleted.vid);
+  };
+
   return (
-    <Layout style={{ height: '100vh' }}>
-      {/* 左侧聊天栏 */}
-      <Sider width="33.33%" theme="light" style={{ borderRight: '1px solid #f0f0f0', overflow: 'hidden' }}>
-        <Header style={{ background: "#fff", padding: "16px", borderBottom: '1px solid #f0f0f0' }}>
-          <Space direction="vertical">
+    <Layout style={{ height: '100vh', position: 'relative' }}>
+      {/* Left Chat Panel */}
+      <Sider 
+        width="33.33%" 
+        theme="light" 
+        style={{ 
+          borderRight: '1px solid #f0f0f0', 
+          overflow: 'hidden',
+          height: '100vh',
+          position: 'relative'
+        }}
+      >
+        <Header style={{ 
+          background: "#fff", 
+          padding: "16px", 
+          borderBottom: '1px solid #f0f0f0',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1
+        }}>
+          <Space direction="vertical" style={{ width: '100%' }}>
             <Title level={5} style={{ margin: 0 }}>Chat Room: {chatroomId}</Title>
             <Text type="secondary">
               <Badge color="green" /> {onlineUsers.length} online
@@ -181,14 +224,17 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           </Space>
         </Header>
 
-        <Content style={{ padding: '16px', overflowY: 'auto' }}>
+        <Content style={{ 
+          padding: '16px', 
+          overflowY: 'auto',
+          height: 'calc(100vh - 120px)'
+        }}>
           <List
             dataSource={messages}
             renderItem={(item) => (
               <List.Item
                 style={{
                   backgroundColor: item.speaker === userId ? "#e6f7ff" : undefined,
-                  opacity: 1,
                   borderRadius: 8,
                   marginBottom: 8,
                   padding: 12,
@@ -212,8 +258,14 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           <div ref={messagesEndRef} />
         </Content>
 
-        <Footer style={{ padding: '12px 16px', background: '#fff', borderTop: '1px solid #f0f0f0' }}>
-          <Input.Group compact style={{ display: 'flex' }}>
+        <Footer style={{ 
+          padding: '12px 16px', 
+          background: '#fff', 
+          borderTop: '1px solid #f0f0f0',
+          position: 'sticky',
+          bottom: 0
+        }}>
+          <Space.Compact style={{ display: 'flex' }}>
             <Input
               style={{ flex: 1 }}
               placeholder="Type a message..."
@@ -230,16 +282,36 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
             >
               Send
             </Button>
-          </Input.Group>
+          </Space.Compact>
         </Footer>
       </Sider>
 
-      {/* 右侧游戏栏 */}
-      <Layout>
-        <Content style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
-          <Television sendMessage={handleSend} addReceiver={addReceiver}></Television>
+      {/* Right Game Panel */}
+      <Layout style={{ height: '100vh' }}>
+        <Content style={{ 
+          height: '100%', 
+          position: 'relative', 
+          overflow: 'hidden',
+          backgroundColor: '#fff'
+        }}>
+          <Television 
+            sendMessage={handleSend} 
+            addReceiver={addReceiver}
+            playList={videos}
+          />
         </Content>
       </Layout>
+
+      {/* Playlist Floating Button */}
+      <PlayList 
+        chatroomId={chatroomId}
+        visible={playlistVisible}
+        setVisible={setPlaylistVisible}
+        videos={videos}
+        addVideos={addVideo}
+        removeVideo={removeVideo} 
+        setVideos={setVideos}
+      />
     </Layout>
   );
 }

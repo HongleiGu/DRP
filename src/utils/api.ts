@@ -4,6 +4,7 @@
 import { Message, TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
 import { currentUser, User } from '@clerk/nextjs/server';
+import { VideoElement } from '@/components/PlayList';
 
 const DEFAULT_VIDEO = "loWA5o1RdTY"
 
@@ -133,11 +134,11 @@ export async function updateChannel(state: TVState): Promise<void> {
 
 export async function getMessages(roomId: string): Promise<Message[]> {
   console.log("fetch messages from room", roomId)
-const { data, error } = await supabase
-  .from('chat_history')
-  .select('*')
-  .eq('chat_room_id', roomId)
-  .not('chat_message', 'ilike', '/%');
+  const { data, error } = await supabase
+    .from('chat_history')
+    .select('*')
+    .eq('chat_room_id', roomId)
+    .not('chat_message', 'ilike', '/%');
 
   if (error) {
     console.error('Detailed Supabase error:', {
@@ -150,4 +151,66 @@ const { data, error } = await supabase
   return data.map(it => {
     return it as Message
   })
+}
+
+// Get all videos for a chatroom
+export async function getPlaylist(chatroomId: string): Promise<VideoElement[]> {
+  const { data, error } = await supabase
+    .from('playlists')
+    .select('name, vid')
+    .eq('chatroom_id', chatroomId)
+
+  if (error) {
+    console.error('Error fetching playlist:', {
+      message: error.message,
+      code: error.code,
+      details: error.details
+    });
+    throw error;
+  }
+  
+  return data || [];
+}
+
+// Add a video to playlist
+export async function addVideoToPlaylist(
+  chatroomId: string, 
+  video: VideoElement
+): Promise<void> {
+  const { error } = await supabase
+    .from('playlists')
+    .insert({
+      chatroom_id: chatroomId,
+      vid: video.vid,
+      name: video.name
+    });
+
+  if (error) {
+    console.error('Error adding video:', {
+      message: error.message,
+      code: error.code,
+      details: error.details
+    });
+    throw error;
+  }
+}
+
+// Remove a video from playlist
+export async function removeVideoFromPlaylist(
+  chatroomId: string, 
+  vid: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('playlists')
+    .delete()
+    .match({ chatroom_id: chatroomId, vid });
+
+  if (error) {
+    console.error('Error removing video:', {
+      message: error.message,
+      code: error.code,
+      details: error.details
+    });
+    throw error;
+  }
 }
