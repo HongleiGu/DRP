@@ -353,10 +353,10 @@ export default function Television({onMount, sendMessage, playList, chatPanelVis
         <div style={{ flex: 0, display: "flex", gap: 12, marginBottom: 16 }}>
           {/* Chat Panel Toggle Button */}
           <Button onClick={() => setChatPanelVisible(!chatPanelVisible)}>
-            {chatPanelVisible ? 'hide chatbox' : 'show chatbox'}
+            {chatPanelVisible ? '⬅️ hide chatbox' : '➡️ show chatbox'}
           </Button>
-          <Button onClick={handlePlay}>▶ Play</Button>
-          <Button onClick={handlePause}>⏸ Pause</Button>
+          <Button onClick={handlePlay}>▶️ Play</Button>
+          <Button onClick={handlePause}>⏸️ Pause</Button>
             <Input
               type="number"
               placeholder="Seek (sec)"
@@ -364,7 +364,7 @@ export default function Television({onMount, sendMessage, playList, chatPanelVis
               onChange={(e) => setTimeInput(e.target.value)}
               style={{ width: 120 }}
             />
-          <Button onClick={handleSeek}>Seek</Button>
+          <Button onClick={handleSeek}>⏩ Seek</Button>
         </div>
       </div>
     </div>
