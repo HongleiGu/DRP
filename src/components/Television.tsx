@@ -299,10 +299,10 @@ export default function Television({
           }}>
             <Popover 
       content={popoverContent}
-      title="Copy Chatroom ID"
+      title="Copy Invitation Link"
       trigger="click"
     >
-      <Button type="primary">Show Chatroom ID</Button>
+      <Button type="primary">Show Invitation Link</Button>
     </Popover>
 
             <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
