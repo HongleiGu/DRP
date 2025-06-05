@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 
-import { Suspense,  useState } from "react";
+import { Suspense,  useRef,  useState } from "react";
 // import { VideoElement } from "../PlayList";
 import { Button, Layout} from "antd";
 // import { Content } from "antd/es/layout/layout";
@@ -19,6 +19,8 @@ const Game = dynamic(() => import('@/components/Lumiroom'), {
 const { Content } = Layout;
 
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
+  const sendMessage = useRef<((msg: any) => void) | null>(null);
+  const receiveMessage = useRef<((msg: any) => void) | null>(null);
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
   let theReceiver: any = null;
 
@@ -45,7 +47,8 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         >
           <ChatPanel
             chatroomId={chatroomId}
-            onSend={handleSend}
+            onMount={(sendFn) => (sendMessage.current = sendFn)}
+            receiveMessage={(msg) => receiveMessage.current?.(msg)}
           />
         </div>
       )}

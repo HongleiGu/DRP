@@ -9,7 +9,7 @@ import { VideoElement } from './PlayList';
 
 const { Title } = Typography;
 
-export default function Television({sendMessage, addReceiver, playList}: any) {
+export default function Television({onMount, sendMessage, playList}: any) {
   const playerRef = useRef<HTMLDivElement>(null);
   const ytPlayer = useRef<any>(null);
   const [timeInput, setTimeInput] = useState<string>('');
@@ -93,8 +93,8 @@ export default function Television({sendMessage, addReceiver, playList}: any) {
       }
     };
 
-    addReceiver(receiver);
-  }, [addReceiver]);
+    onMount(receiver);
+  }, [onMount]);
 
   const handlePlay = () => {
     if (ytPlayer.current) {

@@ -11,10 +11,11 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 // Independent ChatPanel component
 interface ChatPanelProps {
   chatroomId: string;
-  onSend?: (msg: string) => void;
+  onMount: (msg: any)=> void
+  receiveMessage: (msg: any)=> void
 }
 
-export default function ChatPanel({ chatroomId, onSend }: ChatPanelProps) {
+export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -91,6 +92,7 @@ export default function ChatPanel({ chatroomId, onSend }: ChatPanelProps) {
           const newMsg = payload.new as Message;
           setMessages(prev => [...prev, newMsg]);
         }
+        receiveMessage(payload.new)
       })
       .subscribe();
 
@@ -123,11 +125,6 @@ export default function ChatPanel({ chatroomId, onSend }: ChatPanelProps) {
       setMessages(prev => [...prev, messageObj]);
       setNewMessage('');
 
-      // Notify parent if needed
-      if (onSend) {
-        onSend(theMessage);
-      }
-
       // Persist to database
       await insertChatHistory(messageObj);
     } catch {
@@ -135,11 +132,15 @@ export default function ChatPanel({ chatroomId, onSend }: ChatPanelProps) {
     } finally {
       setIsSending(false);
     }
-  }, [isSending, userId, nickname, chatroomId, onSend]);
+  }, [isSending, userId, nickname, chatroomId]);
 
   const handleEmojiSelect = useCallback((emoji: string) => {
     handleSend(emoji);
   }, [handleSend]);
+
+  useEffect(()=> {
+    onMount(handleSend)
+  })
 
   const header = (
     <div className="p-4 border-b z-1000">

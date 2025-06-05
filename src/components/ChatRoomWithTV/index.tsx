@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PlayList, VideoElement } from "../PlayList";
 import { addVideoToPlaylist, getPlaylist, removeVideoFromPlaylist } from "@/utils/api";
 import { Button, Layout, message} from "antd";
@@ -13,6 +13,8 @@ import { supabase } from "@/lib/supabase";
 const { Content } = Layout;
 
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
+  const sendMessage = useRef<((msg: any) => void) | null>(null);
+  const receiveMessage = useRef<((msg: any) => void) | null>(null);
   const [playlistVisible, setPlaylistVisible] = useState<boolean>(false);
   const [videos, setVideos] = useState<VideoElement[]>([]);
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
@@ -77,39 +79,40 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
 
   return (
     <Layout style={{ height: '100vh', position: 'relative' }}>
-      
+
       {/* Left Chat Panel */}
       {chatPanelVisible && (
-        <div 
-          className="flex-1 overflow-y-auto h-max-[80%]" 
+        <div
+          className="flex-1 overflow-y-auto h-max-[80%]"
         >
           <ChatPanel
             chatroomId={chatroomId}
-            onSend={handleSend}
+            onMount={(sendFn) => (sendMessage.current = sendFn)}
+            receiveMessage={(msg) => receiveMessage.current?.(msg)}
           />
         </div>
       )}
 
       {/* Right Game Panel */}
       <Layout style={{ height: '100vh', marginLeft: chatPanelVisible ? 300 : 0 }}>
-        <Content style={{ 
-          height: '100%', 
-          position: 'relative', 
+        <Content style={{
+          height: '100%',
+          position: 'relative',
           overflow: 'hidden',
           backgroundColor: '#fff'
         }}>
-          <Television 
-            sendMessage={handleSend} 
-            addReceiver={addReceiver}
+          <Television
+            onMount={(receiveFn: any) => (receiveMessage.current = receiveFn)}
+            sendMessage={(msg: any) => sendMessage.current?.(msg)}
             playList={videos}
           />
         </Content>
       </Layout>
 
       {/* Chat Panel Toggle Button */}
-      <Button 
-        type="primary" 
-        shape="circle" 
+      <Button
+        type="primary"
+        shape="circle"
         size="large"
         style={{ position: 'fixed', top: 20, left: chatPanelVisible ? 320 : 20, zIndex: 1000 }}
         onClick={() => setChatPanelVisible(!chatPanelVisible)}
@@ -118,13 +121,13 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       </Button>
 
       {/* Playlist Floating Button */}
-      <PlayList 
+      <PlayList
         chatroomId={chatroomId}
         visible={playlistVisible}
         setVisible={setPlaylistVisible}
         videos={videos}
         addVideos={addVideo}
-        removeVideo={removeVideo} 
+        removeVideo={removeVideo}
         setVideos={setVideos}
       />
     </Layout>
