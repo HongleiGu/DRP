@@ -7,11 +7,11 @@ import { Button, Input, Typography, Divider, message, Popover, Card, Row, Col } 
 import { useEffect, useRef, useState } from 'react';
 import { VideoElement } from './PlayList';
 import { CopyOutlined, EllipsisOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { isEmoji } from '@/utils/utils';
 import { Message } from '@/types/datatypes';
 import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
 
 const { Title } = Typography;
 
@@ -203,6 +203,18 @@ export default function Television({
       <Title level={3} style={{ flex: 0, margin: "10px" }}>
         Lumiroom Cinema
       </Title>
+      <Button
+      type="primary"
+      onClick={() => router.push(`/lumiroom/${chatroomId}`)}
+      style={{
+        position: "absolute",
+        top: 16,
+        right: 16, // ← 改成 right 取代 left
+        zIndex: 1000
+      }}
+    >
+      Return
+    </Button>
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div
           style={{
@@ -217,8 +229,8 @@ export default function Television({
               position: "absolute",
               top: 0,
               left: 0,
-              width: "100%",
-              height: "100%",
+              width: "99%",
+              height: "99%",
             }}
             id="yt-player"
             ref={playerRef}
@@ -333,8 +345,8 @@ export default function Television({
           <Button onClick={() => setChatPanelVisible(!chatPanelVisible)}>
             {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
           </Button>
-          <Button onClick={handlePlay}>▶ Play</Button>
-          <Button onClick={handlePause}>⏸ Pause</Button>
+          <Button onClick={handlePlay}>▶️ Play</Button>
+          <Button onClick={handlePause}>⏸️ Pause</Button>
           <Input
             type="number"
             placeholder="Seek (sec)"
@@ -342,7 +354,7 @@ export default function Television({
             onChange={(e) => setTimeInput(e.target.value)}
             style={{ width: 120 }}
           />
-          <Button onClick={handleSeek}>Seek</Button>
+          <Button onClick={handleSeek}>⏩ Seek</Button>
         </div>
       </div>
     </div>
