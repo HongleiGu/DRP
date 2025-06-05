@@ -18,7 +18,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const [playlistVisible, setPlaylistVisible] = useState<boolean>(false);
   const [videos, setVideos] = useState<VideoElement[]>([]);
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
-  let theReceiver: any = null;
+  // const theReceiver: any = null;
 
   // Load playlist
   useEffect(() => {
@@ -51,18 +51,18 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
     };
   }, [chatroomId]);
 
-  const addReceiver = (receiver: any) => {
-    theReceiver = receiver;
-  };
+  // const addReceiver = (receiver: any) => {
+  //   theReceiver = receiver;
+  // };
 
-  const handleSend = (theMessage: string) => {
-    if (theReceiver) {
-      theReceiver({
-        chat_message: theMessage,
-        created_at: new Date().toISOString()
-      });
-    }
-  };
+  // const handleSend = (theMessage: string) => {
+  //   if (theReceiver) {
+  //     theReceiver({
+  //       chat_message: theMessage,
+  //       created_at: new Date().toISOString()
+  //     });
+  //   }
+  // };
 
   const addVideo = async (video: VideoElement) => {
     const newVideos = [...videos, video];
