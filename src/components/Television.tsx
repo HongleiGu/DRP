@@ -147,8 +147,9 @@ export default function Television({
     }
   };
 
-  const handleInvite = (userId: string) => {
-    sendMessage(`/invite ${userId}`)
+  const handleInvite = async (username: string) => {
+    // await findIdByUsername(username)
+    sendMessage(`/invite ${username}`)
   }
 
   const extractVideoId = (videoUrl: string): string => {
