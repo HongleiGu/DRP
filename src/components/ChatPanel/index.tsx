@@ -89,8 +89,10 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
         filter: `chat_room_id=eq.${chatroomId}`,
       }, (payload) => {
         if (payload.new.speaker !== userId) {
-          const newMsg = payload.new as Message;
-          setMessages(prev => [...prev, newMsg]);
+          if (!payload.new.chat_message.startsWith("/")) {
+            const newMsg = payload.new as Message;
+            setMessages(prev => [...prev, newMsg]);
+          }
         }
         receiveMessage(payload.new)
       })
@@ -122,8 +124,10 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
 
     try {
       // Optimistically update UI
-      setMessages(prev => [...prev, messageObj]);
-      setNewMessage('');
+      if (!theMessage.startsWith("/")) {
+        setMessages(prev => [...prev, messageObj]);
+        setNewMessage('');
+      }
 
       // Persist to database
       await insertChatHistory(messageObj);
