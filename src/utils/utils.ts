@@ -36,3 +36,8 @@ export function isUUID(str: string): str is string {
 export function isValidUUID(str: string): boolean {
   return uuidSchema.safeParse(str).success;
 }
+
+export function isEmoji (str: string): boolean {
+  const emojiRegex = /([\u203C-\u3299]|[\uD83C][\uDFFB-\uFFFF]|[\uD83D][\uDC00-\uDE4F]|[\uD83E][\uDD00-\uDE7F]|[\u2700-\u27BF])/g;
+  return emojiRegex.test(str);
+};

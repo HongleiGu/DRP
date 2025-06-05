@@ -107,6 +107,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
             playList={videos}
             chatPanelVisible={chatPanelVisible}
             setChatPanelVisible={setChatPanelVisible}
+            chatroomId={chatroomId}
           />
         </Content>
       </Layout>

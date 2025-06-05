@@ -3,15 +3,35 @@
 
 "use client";
 
-import { Button, Input, Typography, Divider, message, Popover } from 'antd';
+import { Button, Input, Typography, Divider, message, Popover, Card, Row, Col } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { VideoElement } from './PlayList';
-import { EllipsisOutlined } from '@ant-design/icons';
+import { CopyOutlined, EllipsisOutlined } from '@ant-design/icons';
 import Image from 'next/image';
+import { isEmoji } from '@/utils/utils';
+import { Message } from '@/types/datatypes';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 const { Title } = Typography;
 
-export default function Television({onMount, sendMessage, playList, chatPanelVisible, setChatPanelVisible}: any) {
+interface TelevisionProps {
+  onMount: (receiver: (msg: Message) => void) => void;
+  sendMessage: (msg: string) => void;
+  playList: VideoElement[];
+  chatPanelVisible: boolean;
+  setChatPanelVisible: (visible: boolean) => void;
+  chatroomId: string
+}
+
+export default function Television({
+  onMount,
+  sendMessage,
+  playList,
+  chatPanelVisible,
+  setChatPanelVisible,
+  chatroomId
+}: TelevisionProps) {
   const playerRef = useRef<HTMLDivElement>(null);
   const ytPlayer = useRef<any>(null);
   const [timeInput, setTimeInput] = useState<string>('');
@@ -19,15 +39,28 @@ export default function Television({onMount, sendMessage, playList, chatPanelVis
   const [connected, setConnected] = useState<boolean>(false);
   const [playerReady, setPlayerReady] = useState<boolean>(false);
   const [messageApi, contextHolder] = message.useMessage();
+  const { user } = useUser();  
+  const [sendEmojis, setSendEmojis] = useState<Record<string, string>>({});
+  const router = useRouter();
+  const [userId, setUserId] = useState<string>("");
 
   // Initialize YouTube Player
   useEffect(() => {
+    if (!user?.id) {
+      message.error("User invalid");
+      router.push("/");
+      return;
+    }
+
+    const uid = user.id;
+    setUserId(user.id)
+    setSendEmojis(prev => ({ ...prev, [uid]: "" }));
+    
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
     document.body.appendChild(tag);
 
     (window as any).onYouTubeIframeAPIReady = () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ytPlayer.current = new (window as any).YT.Player("yt-player", {
         videoId: "loWA5o1RdTY",
         playerVars: {
@@ -37,30 +70,24 @@ export default function Television({onMount, sendMessage, playList, chatPanelVis
           rel: 0,
         },
         events: {
-          onReady: () => console.log("YouTube Player is ready"),
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onStateChange: (e: any) =>
-            console.log("Player state changed:", e.data),
+          onReady: () => setPlayerReady(true),
+          onStateChange: (e: any) => console.log("Player state changed:", e.data),
         },
       });
     };
 
     return () => {
       ytPlayer.current?.destroy();
+      delete (window as any).onYouTubeIframeAPIReady;
     };
-  }, []);
+  }, [user, router]);
 
   // Load playlist when player is ready and playList changes
   useEffect(() => {
-    if (playerReady && ytPlayer.current && playList && playList.length > 0) {
+    if (playerReady && ytPlayer.current && playList?.length > 0) {
       try {
-        // Extract video IDs from the playlist
-        console.log(playList)
         const videoIds = playList.map((video: VideoElement) => video.vid);
-        
-        // Use cuePlaylist instead of loadPlaylist for better UX
         ytPlayer.current.cuePlaylist(videoIds);
-        
         console.log('Playlist loaded:', videoIds);
       } catch (error) {
         console.error('Error loading playlist:', error);
@@ -70,21 +97,25 @@ export default function Television({onMount, sendMessage, playList, chatPanelVis
 
   // Setup message receiver
   useEffect(() => {
-    const receiver = (msg: any) => {
+    const receiver = (msg: Message) => {
       const messageText: string = msg.chat_message;
-      if (messageText.startsWith("/play")) {
-        const seconds = messageText.split(" ")[1];
-        const id = messageText.split(" ")[2];
+      console.log("check emoji", isEmoji(messageText));
+      
+      if (isEmoji(messageText)) {
+        setSendEmojis(prev => ({ ...prev, [userId]: "" }));
+        // console.log(sendEmojis.current);
+      } else if (messageText.startsWith("/play")) {
+        const [_, seconds, id] = messageText.split(" ");
         if (extractVideoId(ytPlayer.current?.getVideoUrl()) !== id) {
           ytPlayer.current?.loadVideoById(id, seconds);
         } else {
-          ytPlayer.current?.seekTo(seconds);
+          ytPlayer.current?.seekTo(parseFloat(seconds));
           ytPlayer.current?.pauseVideo();
         }
         ytPlayer.current?.playVideo();
       } else if (messageText.startsWith("/seek")) {
         const seconds = messageText.split(" ")[1];
-        ytPlayer.current?.seekTo(seconds);
+        ytPlayer.current?.seekTo(parseFloat(seconds));
       } else if (messageText.startsWith("/load")) {
         const videoId = messageText.split(" ")[1];
         if (videoId && ytPlayer.current?.loadVideoById) {
@@ -137,27 +168,25 @@ export default function Television({onMount, sendMessage, playList, chatPanelVis
     }
   };
 
-  const chatBubbleStyle = (emoji: string, top: number, left: number) => ({
-    position: 'absolute',
-    top: `${top}%`,
-    left: `${left}%`,
-    transform: 'translate(-50%, -50%)',
-    background: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: '50%',
-    width: 28,
-    height: 28,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 16,
-    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-    pointerEvents: 'auto',
-    cursor: 'pointer',
-    transition: 'transform 0.2s',
-    '&:hover': {
-      transform: 'translate(-50%, -50%) scale(1.2)'
-    }
-  });
+  const handleCopy = () => {
+    navigator.clipboard.writeText(`http://drp-nu.vercel.app/television/${chatroomId}`);
+    message.success('Chatroom ID copied to clipboard!');
+  };
+
+  const popoverContent = (
+    <div style={{ display: 'flex', gap: '8px' }}>
+      <Input
+        value={`http://drp-nu.vercel.app/television/${chatroomId}`}
+        readOnly
+        style={{ width: 200, cursor: 'pointer' }}
+        onClick={handleCopy}
+      />
+      <Button 
+        icon={<CopyOutlined />}
+        onClick={handleCopy}
+      />
+    </div>
+  );
 
   return (
     <div
@@ -195,7 +224,7 @@ export default function Television({onMount, sendMessage, playList, chatPanelVis
             ref={playerRef}
           ></div>
 
-          {/* 🛡️ Transparent overlay to block clicks */}
+          {/* Transparent overlay to block clicks */}
           <div
             style={{
               position: "absolute",
@@ -204,7 +233,7 @@ export default function Television({onMount, sendMessage, playList, chatPanelVis
               width: "100%",
               height: "100%",
               zIndex: 10,
-              backgroundColor: connected ? "transparent" : "white",
+              backgroundColor: connected ? "transparent" : "rgba(255, 255, 255, 0.8)",
               pointerEvents: "all",
               display: "flex",
               alignItems: "center",
@@ -212,6 +241,7 @@ export default function Television({onMount, sendMessage, playList, chatPanelVis
               fontSize: 24,
               color: "#888",
               textAlign: "center",
+              transition: "background-color 0.3s ease",
             }}
             onClick={(e) => {
               e.preventDefault();
@@ -234,7 +264,7 @@ export default function Television({onMount, sendMessage, playList, chatPanelVis
         <Divider />
 
         <div style={{ display: 'flex', marginBottom: 16, gap: 12, alignItems: 'center' }}>
-          {/* Shortened URL Input & Load Button */}
+          {/* URL Input & Load Button */}
           <div style={{ flex: 3, display: 'flex', alignItems: 'center' }}>
             <Input
               placeholder="YouTube URL"
@@ -247,123 +277,71 @@ export default function Television({onMount, sendMessage, playList, chatPanelVis
             </Button>
           </div>
 
-          {/* Horizontal Image Gallery with Popover */}
-          <div style={{ flex: 2, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-            <div style={{ 
-              display: 'flex', 
-              overflowX: 'auto', 
-              gap: 12,
-              padding: '8px 0',
-              flex: 1,
-              marginRight: 12
-            }}>
-              {[1, 2].map((item) => (
-                <div key={item} style={{ position: 'relative' }}>
-                  {/* Thumbnail with chat bubble space */}
-                  <div style={{ 
-                    width: 120, 
-                    height: 80,
-                    borderRadius: 8,
-                    overflow: 'hidden',
-                    position: 'relative',
-                    backgroundColor: '#f0f0f0'
-                  }}>
-                    <img 
-                      src={`https://picsum.photos/120/80?random=${item}`} 
-                      alt={`Thumb ${item}`}
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'cover',
-                      }} 
-                    />
-                    
-                    {/* Space for chat bubbles - positioned absolutely */}
-                    <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      pointerEvents: 'none',
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      padding: 4
+          {/* Emoji display area */}
+          <div style={{ 
+            flex: 2, 
+            display: 'flex', 
+            alignItems: 'center', 
+            height: 80,
+            gap: 12 
+          }}>
+            <Popover 
+      content={popoverContent}
+      title="Copy Chatroom ID"
+      trigger="click"
+    >
+      <Button type="primary">Show Chatroom ID</Button>
+    </Popover>
+
+            <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
+              {Object.entries(sendEmojis).map(([userId, emoji]) => (
+                <Col key={userId} span={12}>
+                  <div style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
+                    <Card style={{ 
+                      position: 'absolute', 
+                      top: 0, 
+                      left: 0, 
+                      right: 0, 
+                      backgroundColor: 'white', 
+                      zIndex: 10, 
+                      padding: 8 
                     }}>
-                      {/* Example chat bubbles */}
-                      {/* <div style={chatBubbleStyle('😊', 20, 30)} /> */}
-                      {/* <div style={chatBubbleStyle('👍', 60, 50)} /> */}
+                      {emoji}
+                    </Card>
+                    
+                    <div style={{ 
+                      borderRadius: 8, 
+                      overflow: 'hidden', 
+                      backgroundColor: '#f0f0f0'
+                    }}>
+                      <Image
+                        src={`https://picsum.photos/120/80?random=${userId}`}
+                        alt={`User ${userId}`}
+                        width={120}
+                        height={80}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
                     </div>
                   </div>
-                  
-                  {/* Timestamp */}
-                  <div style={{ 
-                    textAlign: 'center', 
-                    fontSize: 12, 
-                    marginTop: 4,
-                    color: '#666'
-                  }}>
-                    0:45
-                  </div>
-                </div>
+                </Col>
               ))}
-            </div>
-            
-            {/* Enhanced Popover Button */}
-            <Popover 
-              content={
-                <div style={{ padding: 12, width: 300 }}>
-                  <h4 style={{ marginBottom: 8 }}>All Moments</h4>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {[1, 2, 3, 4, 5, 6].map(item => (
-                      <Image
-                        key={item}
-                        src={`https://picsum.photos/80/45?random=${item}`}
-                        alt={`Thumb ${item}`}
-                        style={{ width: 80, height: 45, borderRadius: 4 }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              } 
-              title="Video Moments"
-              trigger="click"
-              placement="bottomRight"
-            >
-              <Button 
-                type="default"
-                style={{ 
-                  width: 42, 
-                  height: 42,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#1890ff',
-                  border: 'none',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                }} 
-              >
-                <EllipsisOutlined style={{ color: 'white', fontSize: 20 }} />
-              </Button>
-            </Popover>
+            </Row>
           </div>
         </div>
 
         <div style={{ flex: 0, display: "flex", gap: 12, marginBottom: 16 }}>
-          {/* Chat Panel Toggle Button */}
           <Button onClick={() => setChatPanelVisible(!chatPanelVisible)}>
-            {chatPanelVisible ? 'hide chatbox' : 'show chatbox'}
+            {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
           </Button>
           <Button onClick={handlePlay}>▶ Play</Button>
           <Button onClick={handlePause}>⏸ Pause</Button>
-            <Input
-              type="number"
-              placeholder="Seek (sec)"
-              value={timeInput}
-              onChange={(e) => setTimeInput(e.target.value)}
-              style={{ width: 120 }}
-            />
+          <Input
+            type="number"
+            placeholder="Seek (sec)"
+            value={timeInput}
+            onChange={(e) => setTimeInput(e.target.value)}
+            style={{ width: 120 }}
+          />
           <Button onClick={handleSeek}>Seek</Button>
         </div>
       </div>
