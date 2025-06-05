@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+
 import { useEffect, useState } from "react";
 import { PlayList, VideoElement } from "../PlayList";
 import { addVideoToPlaylist, getPlaylist, removeVideoFromPlaylist } from "@/utils/api";
@@ -21,7 +24,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       try {
         const vs = await getPlaylist(chatroomId);
         setVideos(vs);
-      } catch (err) {
+      } catch {
         message.error('Failed to load playlist');
       }
     };

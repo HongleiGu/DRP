@@ -1,6 +1,6 @@
 "use client"
 
-import ChatRoom from '@/components/ChatRoom/index';
+import ChatPanel from '@/components/ChatPanel/index';
 import { Message } from '@/types/datatypes';
 import { getRoom } from '@/utils/api';
 import { getUserId } from '@/utils/user';
@@ -53,5 +53,5 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     redirect(`/lumiroom/${DEFAULT_ROOM}`);
   }
 
-  return <ChatRoom chatroomId={param} />;
+  return <ChatPanel chatroomId={param} />;
 }

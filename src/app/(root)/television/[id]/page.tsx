@@ -3,7 +3,7 @@
 "use client"
 
 import ChatRoomWithTV from '@/components/ChatRoomWithTV';
-import { PlayList } from '@/components/PlayList';
+// import { PlayList } from '@/components/PlayList';
 import { Message } from '@/types/datatypes';
 import { getRoom } from '@/utils/api';
 import { getUserId } from '@/utils/user';

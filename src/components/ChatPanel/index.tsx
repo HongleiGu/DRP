@@ -48,12 +48,8 @@ export default function ChatPanel({ chatroomId, onSend }: ChatPanelProps) {
   // Load initial messages
   useEffect(() => {
     const loadMessages = async () => {
-      try {
-        const messageData = await getMessages(chatroomId);
-        setMessages(messageData);
-      } catch (err) {
-        message.error('Failed to load messages');
-      }
+      const messageData = await getMessages(chatroomId);
+      setMessages(messageData);
     };
 
     if (userId) {
@@ -133,7 +129,7 @@ export default function ChatPanel({ chatroomId, onSend }: ChatPanelProps) {
 
       // Persist to database
       await insertChatHistory(messageObj);
-    } catch (err) {
+    } catch {
       message.error('Failed to send message');
     } finally {
       setIsSending(false);
