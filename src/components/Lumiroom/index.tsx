@@ -11,7 +11,8 @@ import { Button } from 'antd';
 import { YoutubeOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation'
 
-export default function Game({sendMessage, addReceiver, chatroomId}: any) {
+export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVisible,
+  setChatPanelVisible}: any) {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [showButton, setShowButton] = useState(false);
@@ -76,15 +77,22 @@ export default function Game({sendMessage, addReceiver, chatroomId}: any) {
     {/* Buttons container - positioned bottom right */}
     <div
       style={{
-        position: 'absolute',
-        bottom: 20,
-        left: 20,
+        position: "absolute",
+        top: 60,
+        right: 16, 
         display: 'flex',
         flexDirection: 'column',
         gap: '12px', // spacing between buttons
-        zIndex: 10
+        zIndex: 10,
+        width: 120
       }}
     >
+      <Button 
+        onClick={() => setChatPanelVisible(!chatPanelVisible)}
+        block
+      >
+        {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
+      </Button>
       {showButton && (
         <Button
           type="primary"
@@ -98,7 +106,7 @@ export default function Game({sendMessage, addReceiver, chatroomId}: any) {
             boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
           }}
         >
-          Open Television Page
+          Television
         </Button>
       )}
       {/* <Button

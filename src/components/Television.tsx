@@ -196,7 +196,7 @@ export default function Television({
   };
 
   const popoverContent = (
-    <div style={{ display: 'flex', gap: '8px'}} className='flex flex-col'>
+    <div style={{ flex: "1", display: 'flex', gap: '8px'}}>
       <p>Copy invitation link</p>
       <Space.Compact className="w-full">
          <Input
@@ -239,8 +239,7 @@ export default function Television({
       style={{
         display: "flex",
         flexDirection: "column",
-        width: "100%",
-        height: "100%",
+        flex: 1,
         padding: 10,
         margin: "0 auto",
       }}
@@ -259,7 +258,7 @@ export default function Television({
         zIndex: 1000
       }}
     >
-      Return
+      Go Back
     </Button>
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div

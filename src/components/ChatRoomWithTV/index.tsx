@@ -4,13 +4,13 @@
 import { useEffect, useRef, useState } from "react";
 import { VideoElement } from "../PlayList";
 import { getPlaylist } from "@/utils/api";
-import { Layout, message} from "antd";
+import { message} from "antd";
 // import { Content } from "antd/es/layout/layout";
 import Television from "../Television";
 import ChatPanel from "../ChatPanel";
 import { supabase } from "@/lib/supabase";
 
-const { Content } = Layout;
+// const { Content } = Layout;
 
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const sendMessage = useRef<((msg: any) => void) | null>(null);
@@ -78,13 +78,14 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   // };
 
   return (
-    <Layout style={{ height: '100vh', width: '100vw', position: 'fixed' }}>
+    <div style={{ display: "flex", flexDirection: "row", height: '100vh', width: '100vw', position: 'fixed' }}>
 
       {/* Left Chat Panel */}
       {chatPanelVisible && (
-        <div
-          className="flex-1 overflow-y-auto h-max-[80%]"
-        >
+        <div style={{
+          flex: 3,
+          display: "flex"
+        }}>
           <ChatPanel
             chatroomId={chatroomId}
             onMount={(sendFn) => (sendMessage.current = sendFn)}
@@ -94,13 +95,11 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       )}
 
       {/* Right Game Panel */}
-      <Layout style={{ height: '100vh', marginLeft: chatPanelVisible ? 300 : 0 }}>
-        <Content style={{
-          height: '100%',
-          position: 'relative',
-          overflow: 'hidden',
-          backgroundColor: '#fff'
-        }}>
+      <div style={{
+          flex: 7,
+          backgroundColor: '#fff',
+          display: "flex"
+      }}>
           <Television
             onMount={(receiveFn: any) => (receiveMessage.current = receiveFn)}
             sendMessage={(msg: any) => sendMessage.current?.(msg)}
@@ -109,8 +108,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
             setChatPanelVisible={setChatPanelVisible}
             chatroomId={chatroomId}
           />
-        </Content>
-      </Layout>
+      </div>
 
       {/* Playlist Floating Button
       <PlayList
@@ -122,6 +120,6 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         removeVideo={removeVideo}
         setVideos={setVideos}
       /> */}
-    </Layout>
+    </div>
   );
 }

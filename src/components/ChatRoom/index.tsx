@@ -3,7 +3,7 @@
 
 import { Suspense,  useRef,  useState } from "react";
 // import { VideoElement } from "../PlayList";
-import { Button, Layout} from "antd";
+import { Button} from "antd";
 // import { Content } from "antd/es/layout/layout";
 // import Television from "../Television";
 import ChatPanel from "../ChatPanel";
@@ -17,7 +17,7 @@ const Game = dynamic(() => import('@/components/Lumiroom'), {
   loading: () => <div className="text-center p-8">Loading game...</div>,
 });
 
-const { Content } = Layout;
+// const { Content } = Layout;
 
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const router = useRouter();
@@ -40,13 +40,14 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   };
 
   return (
-    <Layout style={{ height: '100vh', position: 'relative' }}>
+    <div style={{ display: "flex", flexDirection: "row", height: '100vh', width: '100vw', position: 'fixed' }}>
       
       {/* Left Chat Panel */}
       {chatPanelVisible && (
-        <div 
-          className="flex-1 overflow-y-auto h-max-[80%]" 
-        >
+        <div style={{
+          flex: 3,
+          display: "flex"
+        }}>
           <ChatPanel
             chatroomId={chatroomId}
             onMount={(sendFn) => (sendMessage.current = sendFn)}
@@ -56,37 +57,22 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       )}
 
       {/* Right Game Panel */}
-      <Layout style={{ height: '100vh', marginLeft: chatPanelVisible ? 300 : 0 }}>
-        <Content style={{ 
-          height: '100%', 
-          position: 'relative', 
-          overflow: 'hidden',
+      <div style={{
+          flex: 7,
           backgroundColor: '#fff'
-        }}>
-          {/* 右侧游戏栏 */}
-          <Layout>
-            <Content style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
-              <GameStateProvider>
-                <Suspense fallback={<div className="text-center p-8">Initializing game engine...</div>}>
-                  <HUD />
-                  <Game sendMessage={handleSend} addReceiver={addReceiver} chatroomId={chatroomId} />
-                </Suspense>
-              </GameStateProvider>
-            </Content>
-          </Layout>
-        </Content>
-      </Layout>
+      }}>
+        <GameStateProvider>
+          <Suspense fallback={<div className="text-center p-8">Initializing game engine...</div>}>
+            <HUD />
+            <Game sendMessage={handleSend} addReceiver={addReceiver}
+            chatPanelVisible={chatPanelVisible}
+            setChatPanelVisible={setChatPanelVisible}
+            chatroomId={chatroomId} />
+          </Suspense>
+        </GameStateProvider>
+      </div>
 
       {/* Chat Panel Toggle Button */}
-      <Button 
-        type="primary" 
-        shape="circle" 
-        size="large"
-        style={{ position: 'fixed', top: 20, left: chatPanelVisible ? 320 : 20, zIndex: 1000 }}
-        onClick={() => setChatPanelVisible(!chatPanelVisible)}
-      >
-        {chatPanelVisible ? '<' : '>'}
-      </Button>
       <Button
             type="primary"
             onClick={() => router.push(`/lobby`)}
@@ -97,8 +83,8 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
               zIndex: 1000
             }}
           >
-            Return
+            Go Back
           </Button>
-    </Layout>
+    </div>
   );
 }
