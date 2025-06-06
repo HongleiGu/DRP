@@ -193,14 +193,6 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   const footer = (
     <div className="bg-white p-4" style={{ flex: 0}}>
       <div className="flex items-center space-x-2" style={{display: "flex"}}>
-        <Popover 
-          content={<EmojiGrid onSelect={handleEmojiSelect} />}
-          open={emojiPopoverOpen}
-          // onOpenChange={(open)=>setEmojiPopoverOpen(!open)}
-          trigger="click"
-          placement="topRight"
-          zIndex={101}
-        ></Popover>
         <Input
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
@@ -213,6 +205,14 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
             }
           }}
         />
+        <Popover 
+          content={<EmojiGrid onSelect={handleEmojiSelect} />}
+          open={emojiPopoverOpen}
+          // onOpenChange={(open)=>setEmojiPopoverOpen(!open)}
+          trigger="click"
+          placement="topRight"
+          zIndex={101}
+        ></Popover>
         <Button 
           className="text-xl"
           onClick={()=>setEmojiPopoverOpen(!emojiPopoverOpen)}>😊</Button>
