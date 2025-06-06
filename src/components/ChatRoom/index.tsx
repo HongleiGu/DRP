@@ -83,7 +83,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
               zIndex: 1000
             }}
           >
-            Return
+            Go Back
           </Button>
     </div>
   );

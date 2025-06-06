@@ -183,7 +183,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
 
   const header = (
     <div className="p-4 z-1000">
-      <div className="flex justify-between items-center" style={{display: "flex"}}>
+      <div className="flex" style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
         <h3 className="text-lg font-semibold">Chat Room</h3>
         <Badge status="success" text={`${onlineUsers.length} online`} />
       </div>
@@ -247,7 +247,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
       }}
       onClick={()=>setEmojiPopoverOpen(false)}
     />, document.body)}
-      <div className="relative flex flex-col h-full" id="scrollableDiv" style={{ overflowY: 'auto', height: "calc(100vh - 120px)" }}>
+      <div className="relative flex flex-col h-full" id="scrollableDiv" style={{ overflowY: 'auto', height: "calc(100vh - 100px)" }}>
         <InfiniteScroll 
           dataLength={memoizedMessages.length} 
           next={() => {}} 

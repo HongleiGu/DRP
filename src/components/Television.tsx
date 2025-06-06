@@ -247,7 +247,7 @@ export default function Television({
         zIndex: 1000
       }}
     >
-      Return
+      Go Back
     </Button>
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div
