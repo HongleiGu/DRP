@@ -64,21 +64,15 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         <GameStateProvider>
           <Suspense fallback={<div className="text-center p-8">Initializing game engine...</div>}>
             <HUD />
-            <Game sendMessage={handleSend} addReceiver={addReceiver} chatroomId={chatroomId} />
+            <Game sendMessage={handleSend} addReceiver={addReceiver}
+            chatPanelVisible={chatPanelVisible}
+            setChatPanelVisible={setChatPanelVisible}
+            chatroomId={chatroomId} />
           </Suspense>
         </GameStateProvider>
       </div>
 
       {/* Chat Panel Toggle Button */}
-      <Button 
-        type="primary" 
-        shape="circle" 
-        size="large"
-        style={{ position: 'fixed', top: 20, left: chatPanelVisible ? 320 : 20, zIndex: 1000 }}
-        onClick={() => setChatPanelVisible(!chatPanelVisible)}
-      >
-        {chatPanelVisible ? '<' : '>'}
-      </Button>
       <Button
             type="primary"
             onClick={() => router.push(`/lobby`)}

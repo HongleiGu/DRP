@@ -97,7 +97,8 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       {/* Right Game Panel */}
       <div style={{
           flex: 7,
-          backgroundColor: '#fff'
+          backgroundColor: '#fff',
+          display: "flex"
       }}>
           <Television
             onMount={(receiveFn: any) => (receiveMessage.current = receiveFn)}

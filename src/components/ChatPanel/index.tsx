@@ -183,7 +183,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
 
   const header = (
     <div className="p-4 z-1000">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center" style={{display: "flex"}}>
         <h3 className="text-lg font-semibold">Chat Room</h3>
         <Badge status="success" text={`${onlineUsers.length} online`} />
       </div>
@@ -192,7 +192,15 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
 
   const footer = (
     <div className="bg-white p-4" style={{ flex: 0}}>
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2" style={{display: "flex"}}>
+        <Popover 
+          content={<EmojiGrid onSelect={handleEmojiSelect} />}
+          open={emojiPopoverOpen}
+          // onOpenChange={(open)=>setEmojiPopoverOpen(!open)}
+          trigger="click"
+          placement="topRight"
+          zIndex={101}
+        ></Popover>
         <Input
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
@@ -205,14 +213,6 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
             }
           }}
         />
-        <Popover 
-          content={<EmojiGrid onSelect={handleEmojiSelect} />}
-          open={emojiPopoverOpen}
-          // onOpenChange={(open)=>setEmojiPopoverOpen(!open)}
-          trigger="click"
-          placement="topRight"
-          zIndex={101}
-        ></Popover>
         <Button 
           className="text-xl"
           onClick={()=>setEmojiPopoverOpen(!emojiPopoverOpen)}>😊</Button>
@@ -247,7 +247,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
       }}
       onClick={()=>setEmojiPopoverOpen(false)}
     />, document.body)}
-      <div className="relative flex flex-col h-full" id="scrollableDiv" style={{ overflowY: 'auto', maxHeight: 'calc(100% - 100px)' }}>
+      <div className="relative flex flex-col h-full" id="scrollableDiv" style={{ overflowY: 'auto', height: "calc(100vh - 120px)" }}>
         <InfiniteScroll 
           dataLength={memoizedMessages.length} 
           next={() => {}} 

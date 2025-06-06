@@ -11,7 +11,8 @@ import { Button } from 'antd';
 import { YoutubeOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation'
 
-export default function Game({sendMessage, addReceiver, chatroomId}: any) {
+export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVisible,
+  setChatPanelVisible}: any) {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [showButton, setShowButton] = useState(false);
@@ -101,6 +102,12 @@ export default function Game({sendMessage, addReceiver, chatroomId}: any) {
           Open Television Page
         </Button>
       )}
+      <Button 
+        onClick={() => setChatPanelVisible(!chatPanelVisible)}
+        block
+      >
+        {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
+      </Button>
       {/* <Button
         type="default"
         onClick={handleButtonClickChat}
