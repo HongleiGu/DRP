@@ -357,7 +357,7 @@ export default function Television({
           </div>
         </div>
 
-        <Divider />
+        {/* <Divider /> */}
 
         <div style={{ 
           display: 'flex', 
