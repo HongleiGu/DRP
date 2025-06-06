@@ -1,4 +1,5 @@
 // ChatPanel.tsx
+"use client"
 import { supabase } from "@/lib/supabase";
 import { getMessages, insertChatHistory } from "@/utils/api";
 import { useUser } from "@clerk/nextjs";

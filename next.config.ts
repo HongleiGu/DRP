@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
       { // placeholder
         protocol: "https",
         hostname: "picsum.photos"
+      },
+      { // placeholder
+        protocol: "https",
+        hostname: "avatar.iran.liara.run"
       }
     ],
     path: "/",

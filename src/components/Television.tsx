@@ -6,13 +6,13 @@ import "@/app/global.css"
 import { Button, Input, Typography, Divider, message, Popover, Card, Row, Col, Space } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { VideoElement } from './PlayList';
-import { CopyOutlined, SendOutlined } from '@ant-design/icons';
+import { CopyOutlined, FastForwardOutlined, PauseCircleOutlined, PlayCircleOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { isEmoji } from '@/utils/utils';
+import { getRandomNumber, isEmoji } from '@/utils/utils';
 import { Message } from '@/types/datatypes';
 import { useUser } from '@clerk/nextjs';
-import { getIdByNickname } from "@/actions/onboarding";
+import { getUserByNickname } from "@/actions/onboarding";
 
 const { Title } = Typography;
 
@@ -54,9 +54,9 @@ export default function Television({
       return;
     }
 
-    const uid = user.id;
+    // const uid = user.id;
     setUserId(user.id)
-    setSendEmojis(prev => ({ ...prev, [uid]: "" }));
+    setSendEmojis(prev => ({ ...prev, [user.publicMetadata?.nickname as string ?? "Mr.Unknown"]: "" }));
     
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
@@ -104,8 +104,7 @@ export default function Television({
       console.log("check emoji", isEmoji(messageText));
       
       if (isEmoji(messageText)) {
-        setSendEmojis(prev => ({ ...prev, [userId]: "" }));
-        // console.log(sendEmojis.current);
+        setSendEmojis(prev => ({ ...prev, [msg.speaker_name]: messageText }));
       } else if (messageText.startsWith("/play")) {
         const [_, seconds, id] = messageText.split(" ");
         if (extractVideoId(ytPlayer.current?.getVideoUrl()) !== id) {
@@ -131,6 +130,10 @@ export default function Television({
     onMount(receiver);
   }, [onMount]);
 
+  useEffect(() => {
+    console.log(sendEmojis)
+  }, [sendEmojis])
+
   const handlePlay = () => {
     if (ytPlayer.current) {
       sendMessage(`/play ${ytPlayer.current.getCurrentTime()} ${extractVideoId(ytPlayer.current.getVideoUrl())}`);
@@ -149,7 +152,7 @@ export default function Television({
   };
 
   const handleInvite = async (username: string) => {
-    const uId = await getIdByNickname(username)
+    const uId = (await getUserByNickname(username)).id
     sendMessage(`/invite ${uId} ${userId}`)
   }
 
@@ -306,100 +309,156 @@ export default function Television({
 
         <Divider />
 
-        <div style={{ display: 'flex', marginBottom: 16, gap: 12, alignItems: 'center' }}>
-          {/* URL Input & Load Button */}
-          
-          <div className="flex-3 flex flex-col align-left w-min max-w-[40%] space-y-2 md:max-w-[30%] sm:max-w-[100%]">
-  <div className="flex flex-col">
-    <Space.Compact>
-      <Input
-        type="number"
-        placeholder="Seek (sec)"
-        value={timeInput}
-        onChange={(e) => setTimeInput(e.target.value)}
-        className="w-full"
-      />
-      <Button size="large" onClick={handleSeek}>⏩ Seek</Button>
-    </Space.Compact>
-
-    <div className="flex flex-col sm:flex-row justify-between mt-1 space-y-1 sm:space-y-0 sm:space-x-2">
-      {/* Use flex-wrap to prevent overlapping */}
-      <div className="flex flex-wrap justify-between w-full">
-        <Button color="cyan" size="large" className="flex-1 m-1" onClick={() => setChatPanelVisible(!chatPanelVisible)}>
-          {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
-        </Button>
-        <Button color="cyan" size="large" className="flex-1 m-1" onClick={handlePlay}>▶️ Play</Button>
-        <Button color="cyan" size="large" className="flex-1 m-1" onClick={handlePause}>⏸️ Pause</Button>
-        <Popover 
-          content={popoverContent}
-          title="Invite others to join"
-          trigger="click"
-        >
-          <Button size="large" type="primary" className="flex-1 m-1">Show Invitation Link</Button>
-        </Popover>
-      </div>
-    </div>
-  </div>
-
-  <div className="flex items-center">
-    <Space.Compact style={{ width: '100%' }}>
-      <Input
-        placeholder="YouTube URL"
-        value={videoUrl}
-        onChange={(e) => setVideoUrl(e.target.value)}
-      />
-      <Button type="primary" size="large" onClick={handleLoadVideo}>
-        Load
-      </Button>
-    </Space.Compact>
-  </div>
-</div>
-
-          {/* Emoji display area */}
-          <div style={{ 
-            flex: 2, 
-            display: 'flex', 
-            alignItems: 'center', 
-            height: 80,
-            gap: 12 
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          gap: 16,
+          marginBottom: 16 
+        }}>
+          {/* Top Section: Video Controls */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 16,
+            alignItems: 'center',
+            justifyContent: 'space-between'
           }}>
+            {/* URL Input Group */}
+            <Space.Compact style={{ width: '100%', maxWidth: 500 }}>
+              <Input
+                placeholder="YouTube URL"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                size="large"
+              />
+              <Button 
+                type="primary" 
+                size="large" 
+                onClick={handleLoadVideo}
+                style={{ minWidth: 100 }}
+              >
+                Load
+              </Button>
+            </Space.Compact>
 
-            <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
-              {Object.entries(sendEmojis).map(([userId, emoji]) => (
-                <Col key={userId} span={12}>
-                  <div style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                    <Card style={{ 
-                      position: 'absolute', 
-                      top: 0, 
-                      left: 0, 
-                      right: 0, 
-                      backgroundColor: 'white', 
-                      zIndex: 10, 
-                      padding: 8 
-                    }}>
-                      {emoji}
-                    </Card>
-                    
-                    <div style={{ 
-                      borderRadius: 8, 
-                      overflow: 'hidden', 
-                      backgroundColor: '#f0f0f0'
-                    }}>
-                      <Image
-                        src={`https://picsum.photos/120/80?random=${userId}`}
-                        alt={`User ${userId}`}
-                        width={120}
-                        height={80}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    </div>
-                  </div>
-                </Col>
-              ))}
-            </Row>
+            {/* Seek Controls */}
+            <Space.Compact style={{ width: '100%', maxWidth: 300 }}>
+              <Input
+                type="number"
+                placeholder="Seek (seconds)"
+                value={timeInput}
+                onChange={(e) => setTimeInput(e.target.value)}
+                size="large"
+              />
+              <Button 
+                size="large" 
+                onClick={handleSeek}
+                icon={<FastForwardOutlined />}
+                style={{ minWidth: 100 }}
+              >
+                Seek
+              </Button>
+            </Space.Compact>
+          </div>
+
+          {/* Middle Section: Action Buttons */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: 12,
+            width: '100%'
+          }}>
+            <Button 
+              size="large" 
+              onClick={() => setChatPanelVisible(!chatPanelVisible)}
+              block
+            >
+              {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
+            </Button>
+            
+            <Button 
+              type="primary" 
+              size="large" 
+              onClick={handlePlay}
+              icon={<PlayCircleOutlined />}
+              block
+            >
+              Play
+            </Button>
+            
+            <Button 
+              danger
+              size="large" 
+              onClick={handlePause}
+              icon={<PauseCircleOutlined />}
+              block
+            >
+              Pause
+            </Button>
+            
+            <Popover 
+              content={popoverContent}
+              title="Invite others to join"
+              trigger="click"
+            >
+              <Button 
+                size="large" 
+                type="dashed"
+                icon={<ShareAltOutlined />}
+                block
+              >
+                Invite
+              </Button>
+            </Popover>
+          </div>
+
+          {/* Bottom Section: User Emojis */}
+          <div style={{ 
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 16,
+            justifyContent: 'center',
+            padding: 12,
+            backgroundColor: '#f8f9fa',
+            borderRadius: 8
+          }}>
+            {Object.entries(sendEmojis).map(([userId, emoji]) => (
+              <div 
+                key={userId} 
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  minWidth: 100
+                }}
+              >
+                <Card 
+                  styles={{
+                    body: { 
+                      padding: 8,
+                      fontSize: 24,
+                      textAlign: 'center'
+                    }
+                  }}
+                >
+                  {emoji}
+                </Card>
+                <img
+                  src={`https://avatar.iran.liara.run/public/${getRandomNumber(0, 30)}`}
+                  alt={`${userId}`}
+                  style={{ 
+                    marginTop: 8,
+                    borderRadius: 8,
+                    border: '1px solid #f0f0f0',
+                    width: 60,
+                    height: 60
+                  }}
+                />
+                <div style={{ marginTop: 4, fontSize: 12 }}>{userId}</div>
+              </div>
+            ))}
           </div>
         </div>
-
       </div>
     </div>
   );

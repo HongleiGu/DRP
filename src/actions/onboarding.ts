@@ -2,7 +2,7 @@
 
 // this needs fix, but later, right now we will use a dummy function
 import { registerUser } from '@/utils/api'
-import { auth, clerkClient } from '@clerk/nextjs/server'
+import { auth, clerkClient, User } from '@clerk/nextjs/server'
 
 export const completeOnboarding = async (formData: CustomJwtSessionClaims) => {
   const { userId } = await auth()
@@ -28,10 +28,10 @@ export const completeOnboarding = async (formData: CustomJwtSessionClaims) => {
   }
 }
 
-export async function getIdByNickname(nickname: string): Promise<string> {
+export async function getUserByNickname(nickname: string): Promise<User> {
   const client = await clerkClient()
   const users = await client.users.getUserList()
-  return users.data.filter(it => (it.publicMetadata?.nickname as string) === nickname)[0].id
+  return users.data.filter(it => (it.publicMetadata?.nickname as string) === nickname)[0]
 }
 
 

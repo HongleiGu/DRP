@@ -41,3 +41,7 @@ export function isEmoji (str: string): boolean {
   const emojiRegex = /([\u203C-\u3299]|[\uD83C][\uDFFB-\uFFFF]|[\uD83D][\uDC00-\uDE4F]|[\uD83E][\uDD00-\uDE7F]|[\u2700-\u27BF])/g;
   return emojiRegex.test(str);
 };
+
+export function getRandomNumber(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}

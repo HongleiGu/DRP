@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-
+"use client"
 import { useEffect, useRef, useState } from "react";
 import { VideoElement } from "../PlayList";
 import { getPlaylist } from "@/utils/api";
