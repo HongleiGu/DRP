@@ -40,13 +40,14 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   };
 
   return (
-    <Layout style={{ height: '100vh', position: 'relative' }}>
+    <div style={{ display: "flex", flexDirection: "row", height: '100vh', width: '100vw', position: 'fixed' }}>
       
       {/* Left Chat Panel */}
       {chatPanelVisible && (
-        <div 
-          className="flex-1 overflow-y-auto h-max-[80%]" 
-        >
+        <div style={{
+          flex: 3,
+          display: "flex"
+        }}>
           <ChatPanel
             chatroomId={chatroomId}
             onMount={(sendFn) => (sendMessage.current = sendFn)}
@@ -56,26 +57,17 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       )}
 
       {/* Right Game Panel */}
-      <Layout style={{ height: '100vh', marginLeft: chatPanelVisible ? 300 : 0 }}>
-        <Content style={{ 
-          height: '100%', 
-          position: 'relative', 
-          overflow: 'hidden',
+      <div style={{
+          flex: 7,
           backgroundColor: '#fff'
-        }}>
-          {/* 右侧游戏栏 */}
-          <Layout>
-            <Content style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
-              <GameStateProvider>
-                <Suspense fallback={<div className="text-center p-8">Initializing game engine...</div>}>
-                  <HUD />
-                  <Game sendMessage={handleSend} addReceiver={addReceiver} chatroomId={chatroomId} />
-                </Suspense>
-              </GameStateProvider>
-            </Content>
-          </Layout>
-        </Content>
-      </Layout>
+      }}>
+        <GameStateProvider>
+          <Suspense fallback={<div className="text-center p-8">Initializing game engine...</div>}>
+            <HUD />
+            <Game sendMessage={handleSend} addReceiver={addReceiver} chatroomId={chatroomId} />
+          </Suspense>
+        </GameStateProvider>
+      </div>
 
       {/* Chat Panel Toggle Button */}
       <Button 
@@ -99,6 +91,6 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           >
             Return
           </Button>
-    </Layout>
+    </div>
   );
 }

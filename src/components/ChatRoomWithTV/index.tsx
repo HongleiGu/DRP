@@ -78,13 +78,14 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   // };
 
   return (
-    <Layout style={{ height: '100vh', width: '100vw', position: 'fixed' }}>
+    <div style={{ display: "flex", flexDirection: "row", height: '100vh', width: '100vw', position: 'fixed' }}>
 
       {/* Left Chat Panel */}
       {chatPanelVisible && (
-        <div
-          className="flex-1 overflow-y-auto h-max-[80%]"
-        >
+        <div style={{
+          flex: 3,
+          display: "flex"
+        }}>
           <ChatPanel
             chatroomId={chatroomId}
             onMount={(sendFn) => (sendMessage.current = sendFn)}
@@ -94,13 +95,10 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       )}
 
       {/* Right Game Panel */}
-      <Layout style={{ height: '100vh', marginLeft: chatPanelVisible ? 300 : 0 }}>
-        <Content style={{
-          height: '100%',
-          position: 'relative',
-          overflow: 'hidden',
+      <div style={{
+          flex: 7,
           backgroundColor: '#fff'
-        }}>
+      }}>
           <Television
             onMount={(receiveFn: any) => (receiveMessage.current = receiveFn)}
             sendMessage={(msg: any) => sendMessage.current?.(msg)}
@@ -109,8 +107,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
             setChatPanelVisible={setChatPanelVisible}
             chatroomId={chatroomId}
           />
-        </Content>
-      </Layout>
+      </div>
 
       {/* Playlist Floating Button
       <PlayList
@@ -122,6 +119,6 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         removeVideo={removeVideo}
         setVideos={setVideos}
       /> */}
-    </Layout>
+    </div>
   );
 }

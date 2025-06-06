@@ -185,7 +185,7 @@ export default function Television({
   };
 
   const popoverContent = (
-    <div style={{ display: 'flex', gap: '8px'}} className='flex flex-col'>
+    <div style={{ flex: "1", display: 'flex', gap: '8px'}}>
       <p>Copy invitation link</p>
       <Space.Compact className="w-full">
          <Input

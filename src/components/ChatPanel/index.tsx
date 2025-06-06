@@ -3,7 +3,7 @@
 import { supabase } from "@/lib/supabase";
 import { getMessages, insertChatHistory } from "@/utils/api";
 import { useUser } from "@clerk/nextjs";
-import { message, Badge, List, Avatar, Input, Button, Popover, Modal } from "antd";
+import { message, Badge, List, Avatar, Input, Button, Popover, Modal, Card } from "antd";
 import { Message } from "@/types/datatypes";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
@@ -191,7 +191,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   );
 
   const footer = (
-    <div className="bg-white p-4" style={{ position: 'fixed', bottom: 0 }}>
+    <div className="bg-white p-4" style={{ flex: 0}}>
       <div className="flex items-center space-x-2">
         <Input
           value={newMessage}
@@ -229,9 +229,10 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   );
 
   return (
-    <div 
-      className="flex flex-col h-full bg-white p-4"
-      style={{ width: 300, position: 'fixed', left: 0, top: 0, bottom: 0 }}
+    <Card
+      title={header}
+      style={{flex: 1}}
+      bodyStyle={{ padding: 0, height: '100%', display: "flex", flexDirection: "column" }}
     >
       {emojiPopoverOpen && createPortal(<div
       style={{
@@ -246,7 +247,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
       }}
       onClick={()=>setEmojiPopoverOpen(false)}
     />, document.body)}
-      <div className="relative flex flex-col h-full" id="scrollableDiv" style={{ overflowY: 'auto', maxHeight: 'calc(100% - 80px)' }}>
+      <div className="relative flex flex-col h-full" id="scrollableDiv" style={{ overflowY: 'auto', maxHeight: 'calc(100% - 100px)' }}>
         <InfiniteScroll 
           dataLength={memoizedMessages.length} 
           next={() => {}} 
@@ -258,10 +259,8 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
             itemLayout="horizontal"
             dataSource={memoizedMessages}
             className="overflow-y-auto"
-            header={header}
-            footer={footer}
             renderItem={(msg) => (
-              <List.Item className={msg.speaker === userId ? 'bg-blue-50' : ''}>
+              <List.Item style={{margin: "8px"}} className={msg.speaker === userId ? 'bg-blue-50' : ''}>
                 <List.Item.Meta
                   avatar={<Avatar>{msg.speaker_name?.charAt(0) || 'U'}</Avatar>}
                   title={<span className="font-semibold">{msg.speaker_name}</span>}
@@ -273,6 +272,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
           <div ref={messagesEndRef} />
         </InfiniteScroll>
       </div>
+      {footer}
 
       <Modal
         title="Room Invitation"
@@ -290,11 +290,11 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
       >
         {invitationData && (
           <p>
-            <strong>{invitationData.from}</strong> has invited you to join room: 
+            <strong>{invitationData.from}</strong> has invited you to join room:
             <strong> {invitationData.roomId}</strong>
           </p>
         )}
       </Modal>
-    </div>
+    </Card>
   );
 }
