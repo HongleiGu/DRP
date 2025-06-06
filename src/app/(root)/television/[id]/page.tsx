@@ -3,6 +3,7 @@
 
 
 import ChatRoomWithTV from '@/components/ChatRoomWithTV';
+import GateLoadingCSS from '@/components/GateLoading';
 // import { PlayList } from '@/components/PlayList';
 import { Message } from '@/types/datatypes';
 import { getRoom } from '@/utils/api';
@@ -49,7 +50,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   }, [params]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <GateLoadingCSS/>
   }
 
   if (!room) {

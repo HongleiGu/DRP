@@ -3,7 +3,7 @@
 
 "use client";
 import "@/app/global.css"
-import { Button, Input, Typography, Divider, message, Popover, Card, Row, Col, Space } from 'antd';
+import { Button, Input, Typography, Divider, message, Popover, Card, Row, Col, Space, Slider } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 // import { VideoElement } from './PlayList';
 import { CaretDownOutlined, CaretUpOutlined, CopyOutlined, FastForwardOutlined, PauseCircleOutlined, PlayCircleOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
@@ -50,11 +50,13 @@ export default function Television({
   const [sendEmojis, setSendEmojis] = useState<Record<string, RenderedEmoji>>({"placeholder":{
     avatarId: 0,
     emoji: ""
-  }}); // in the first render, setting this empty causes trouble
+  }});
   const router = useRouter();
   const [userId, setUserId] = useState<string>("");
   const [inputUserId, setInputUserId] = useState<string>("");
   const [controlPanelVisible, setControlPanelVisible] = useState<boolean>(true);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
 
   // Initialize YouTube Player
   useEffect(() => {
@@ -64,7 +66,6 @@ export default function Television({
       return;
     }
 
-    // const uid = user.id;
     setUserId(user.id)
     setNickname((user.publicMetadata?.nickname ?? "") as string)
     setSendEmojis(prev => ({ [user.publicMetadata?.nickname as string ?? "Mr.Unknown"]: {
@@ -73,7 +74,7 @@ export default function Television({
     } }));
     
     const tag = document.createElement("script");
-    tag.src = "https://www.youtube.com/iframe_api";
+    tag.src = "https://www.youtube.com/iframe_api?rel=0";
     document.body.appendChild(tag);
 
     (window as any).onYouTubeIframeAPIReady = () => {
@@ -87,7 +88,7 @@ export default function Television({
         },
         events: {
           onReady: () => setPlayerReady(true),
-          onStateChange: (e: any) => console.log("Player state changed:", e.data),
+          onStateChange: () => console.log("state changed")
         },
       });
     };
@@ -98,18 +99,22 @@ export default function Television({
     };
   }, [user, router]);
 
-  // // Load playlist when player is ready and playList changes
-  // useEffect(() => {
-  //   if (playerReady && ytPlayer.current && playList?.length > 0) {
-  //     try {
-  //       const videoIds = playList.map((video: VideoElement) => video.vid);
-  //       ytPlayer.current.cuePlaylist(videoIds);
-  //       console.log('Playlist loaded:', videoIds);
-  //     } catch (error) {
-  //       console.error('Error loading playlist:', error);
-  //     }
-  //   }
-  // }, [playerReady, playList]);
+  // Update video time
+  useEffect(() => {
+    if (!playerReady) return;
+
+    const intervalId = setInterval(() => {
+      if (ytPlayer.current) {
+        const newTime = ytPlayer.current.getCurrentTime();
+        const newDuration = ytPlayer.current.getDuration();
+        
+        if (!isNaN(newTime)) setCurrentTime(newTime);
+        if (!isNaN(newDuration)) setDuration(newDuration);
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [playerReady]);
 
   // Setup message receiver
   useEffect(() => {
@@ -147,9 +152,17 @@ export default function Television({
     onMount(receiver);
   }, [onMount]);
 
-  useEffect(() => {
-    console.log(sendEmojis)
-  }, [sendEmojis])
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleSliderSeek = (seconds: number) => {
+    if (Math.abs(seconds - currentTime) > 1) {
+      sendMessage(`/seek ${Math.floor(seconds)}`);
+    }
+  };
 
   const handlePlay = () => {
     if (ytPlayer.current) {
@@ -170,7 +183,6 @@ export default function Television({
 
   const handleInvite = async (username: string) => {
     console.log(username)
-    // const uId = (await getUserByNickname(username)).id
     console.log(`/invite ${username} ${nickname}`)
     sendMessage(`/invite ${username} ${nickname}`)
   }
@@ -209,7 +221,6 @@ export default function Television({
          <Input
           value={`http://drp-nu.vercel.app/television/${chatroomId}`}
           readOnly
-          // style={{ width: 200, cursor: 'pointer' }}
           onClick={handleCopy}
         />
         <Button 
@@ -227,17 +238,6 @@ export default function Television({
           onClick={() => handleInvite(inputUserId)}
         />
       </Space.Compact>
-      {/* <Input
-        value={userId}
-        style={{ width: 200, cursor: 'pointer' }}
-      />
-      <div className="flex-row">
-        <Button 
-          icon={<SendOutlined />}
-          iconPosition="end"
-          onClick={handleCopy}
-        />
-      </div> */}
     </div>
   );
 
@@ -256,19 +256,19 @@ export default function Television({
         Lumiroom Cinema
       </Title>
       <Button
-      type="primary"
-      onClick={() =>
-        window.location.pathname = `/lumiroom/${chatroomId}`
-      }
-      style={{
-        position: "absolute",
-        top: 16,
-        right: 16, // ← 改成 right 取代 left
-        zIndex: 1000
-      }}
-    >
-      Go Back
-    </Button>
+        type="primary"
+        onClick={() =>
+          window.location.pathname = `/lumiroom/${chatroomId}`
+        }
+        style={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          zIndex: 1000
+        }}
+      >
+        Go Back
+      </Button>
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div
           style={{
@@ -289,8 +289,7 @@ export default function Television({
             id="yt-player"
             ref={playerRef}
           ></div>
-
-          {/* Transparent overlay to block clicks */}
+           {/* Transparent overlay to block clicks */}
           <div
             style={{
               position: "absolute",
@@ -327,8 +326,38 @@ export default function Television({
           </div>
         </div>
 
-        <Divider />
+        {/* Progress Bar */}
+        <div style={{ 
+          width: '100%', 
+          padding: '0 10px',
+          margin: '16px 0'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 16 
+          }}>
+            <span style={{ minWidth: 50, textAlign: 'center' }}>
+              {formatTime(currentTime)}
+            </span>
+            
+            <Slider
+              min={0}
+              max={duration}
+              value={currentTime}
+              step={1}
+              tooltip={{ formatter: (value) => formatTime(value || 0) }}
+              onChange={handleSliderSeek}
+              style={{ width: '100%', margin: 0 }}
+            />
+            
+            <span style={{ minWidth: 50, textAlign: 'center' }}>
+              {formatTime(duration)}
+            </span>
+          </div>
+        </div>
 
+        <Divider />
 
         <div style={{ 
           display: 'flex', 
