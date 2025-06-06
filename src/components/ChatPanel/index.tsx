@@ -10,6 +10,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import EmojiGrid from "../EmojiGrids";
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { getNicknameById } from "@/actions/onboarding";
+import { createPortal } from "react-dom";
 
 interface ChatPanelProps {
   chatroomId: string;
@@ -207,11 +208,14 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
         <Popover 
           content={<EmojiGrid onSelect={handleEmojiSelect} />}
           open={emojiPopoverOpen}
+          // onOpenChange={(open)=>setEmojiPopoverOpen(!open)}
+          trigger="click"
           placement="topRight"
+          zIndex={101}
         ></Popover>
         <Button 
           className="text-xl"
-          onClick={()=>setEmojiPopoverOpen(true)}>😊</Button>
+          onClick={()=>setEmojiPopoverOpen(!emojiPopoverOpen)}>😊</Button>
         <Button
           type="primary"
           onClick={() => handleSend(newMessage)}
@@ -229,6 +233,19 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
       className="flex flex-col h-full bg-white p-4"
       style={{ width: 300, position: 'fixed', left: 0, top: 0, bottom: 0 }}
     >
+      {emojiPopoverOpen && createPortal(<div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0)',
+        zIndex: 100,
+        pointerEvents: 'auto',
+      }}
+      onClick={()=>setEmojiPopoverOpen(false)}
+    />, document.body)}
       <div className="relative flex flex-col h-full" id="scrollableDiv" style={{ overflowY: 'auto', maxHeight: 'calc(100% - 80px)' }}>
         <InfiniteScroll 
           dataLength={memoizedMessages.length} 
