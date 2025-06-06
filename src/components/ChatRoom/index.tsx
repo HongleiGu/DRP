@@ -17,7 +17,7 @@ const Game = dynamic(() => import('@/components/Lumiroom'), {
   loading: () => <div className="text-center p-8">Loading game...</div>,
 });
 
-const { Content } = Layout;
+// const { Content } = Layout;
 
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const router = useRouter();

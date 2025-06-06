@@ -10,7 +10,7 @@ import Television from "../Television";
 import ChatPanel from "../ChatPanel";
 import { supabase } from "@/lib/supabase";
 
-const { Content } = Layout;
+// const { Content } = Layout;
 
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const sendMessage = useRef<((msg: any) => void) | null>(null);
