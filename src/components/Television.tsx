@@ -25,6 +25,11 @@ interface TelevisionProps {
   chatroomId: string
 }
 
+interface RenderedEmoji {
+  avatarId: number;
+  emoji: string;
+}
+
 export default function Television({
   onMount,
   sendMessage,
@@ -41,7 +46,7 @@ export default function Television({
   const [playerReady, setPlayerReady] = useState<boolean>(false);
   const [messageApi, contextHolder] = message.useMessage();
   const { user } = useUser();  
-  const [sendEmojis, setSendEmojis] = useState<Record<string, string>>({});
+  const [sendEmojis, setSendEmojis] = useState<Record<string, RenderedEmoji>>({});
   const router = useRouter();
   const [userId, setUserId] = useState<string>("");
   const [inputUserId, setInputUserId] = useState<string>("");
@@ -57,7 +62,10 @@ export default function Television({
 
     // const uid = user.id;
     setUserId(user.id)
-    setSendEmojis(prev => ({ ...prev, [user.publicMetadata?.nickname as string ?? "Mr.Unknown"]: "" }));
+    setSendEmojis(prev => ({ ...prev, [user.publicMetadata?.nickname as string ?? "Mr.Unknown"]: {
+      emoji: "",
+      avatarId: getRandomNumber(0,30)
+    } }));
     
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
@@ -105,7 +113,10 @@ export default function Television({
       console.log("check emoji", isEmoji(messageText));
       
       if (isEmoji(messageText)) {
-        setSendEmojis(prev => ({ ...prev, [msg.speaker_name]: messageText }));
+        setSendEmojis(prev => ({ ...prev, [msg.speaker_name]: {
+          emoji: messageText,
+          avatarId: getRandomNumber(0,30)
+        } }));
       } else if (messageText.startsWith("/play")) {
         const [_, seconds, id] = messageText.split(" ");
         if (extractVideoId(ytPlayer.current?.getVideoUrl()) !== id) {
@@ -431,7 +442,7 @@ export default function Television({
             backgroundColor: '#f8f9fa',
             borderRadius: 8
           }}>
-            {Object.entries(sendEmojis).map(([userId, emoji]) => (
+            {Object.entries(sendEmojis).map(([userId, {emoji, avatarId}]) => (
               <div 
                 key={userId} 
                 style={{
@@ -453,7 +464,7 @@ export default function Television({
                   {emoji}
                 </Card>
                 <img
-                  src={`https://avatar.iran.liara.run/public/${getRandomNumber(0, 30)}`}
+                  src={`https://avatar.iran.liara.run/public/${avatarId}`}
                   alt={`${userId}`}
                   style={{ 
                     marginTop: 8,
