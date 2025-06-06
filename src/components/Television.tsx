@@ -257,7 +257,9 @@ export default function Television({
       </Title>
       <Button
       type="primary"
-      onClick={() => router.push(`/lumiroom/${chatroomId}`)}
+      onClick={() =>
+        window.location.pathname = `/lumiroom/${chatroomId}`
+      }
       style={{
         position: "absolute",
         top: 16,
