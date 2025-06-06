@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import EmojiGrid from "../EmojiGrids";
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { getNicknameById } from "@/actions/onboarding";
+// import { getNicknameById } from "@/actions/onboarding";
 import { createPortal } from "react-dom";
 
 interface ChatPanelProps {
@@ -91,14 +91,14 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
         console.log("payload", payload.new)
         if (payload.new.speaker !== userId) {
           if (payload.new.chat_message.startsWith("/invite")) {
-            const msgUserId = payload.new.chat_message.split(" ")[1]
-            const senderUserId = payload.new.chat_message.split(" ")[2]
+            const msgUserNickName = payload.new.chat_message.split(" ")[1]
+            const senderUserNickName = payload.new.chat_message.split(" ")[2]
             // const roomId = payload.new.chat_message.split(" ")[2]
-            if (msgUserId === userId) {
-              const msgNickname = await getNicknameById(senderUserId)
+            if (msgUserNickName === nickname) {
+              // senderUserNickName)
               // const newMsg = payload.new as Message;
               // setMessages(prev => [...prev, newMsg]);
-              setInvitationData({from: msgNickname, roomId: chatroomId})
+              setInvitationData({from: senderUserNickName, roomId: chatroomId})
               setIsInviteModalVisible(true)
               // should pop up an invite
             }

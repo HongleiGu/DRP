@@ -5,7 +5,7 @@
 import "@/app/global.css"
 import { Button, Input, Typography, Divider, message, Popover, Card, Row, Col, Space } from 'antd';
 import { useEffect, useRef, useState } from 'react';
-import { VideoElement } from './PlayList';
+// import { VideoElement } from './PlayList';
 import { CaretDownOutlined, CaretUpOutlined, CopyOutlined, FastForwardOutlined, PauseCircleOutlined, PlayCircleOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -19,7 +19,7 @@ const { Title } = Typography;
 interface TelevisionProps {
   onMount: (receiver: (msg: Message) => void) => void;
   sendMessage: (msg: string) => void;
-  playList: VideoElement[];
+  // playList: VideoElement[];
   chatPanelVisible: boolean;
   setChatPanelVisible: (visible: boolean) => void;
   chatroomId: string
@@ -33,7 +33,7 @@ interface RenderedEmoji {
 export default function Television({
   onMount,
   sendMessage,
-  playList,
+  // playList,
   chatPanelVisible,
   setChatPanelVisible,
   chatroomId
@@ -44,9 +44,13 @@ export default function Television({
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [connected, setConnected] = useState<boolean>(false);
   const [playerReady, setPlayerReady] = useState<boolean>(false);
+  const [nickname, setNickname] = useState<string>('');
   const [messageApi, contextHolder] = message.useMessage();
   const { user } = useUser();  
-  const [sendEmojis, setSendEmojis] = useState<Record<string, RenderedEmoji>>({});
+  const [sendEmojis, setSendEmojis] = useState<Record<string, RenderedEmoji>>({"placeholder":{
+    avatarId: 0,
+    emoji: ""
+  }}); // in the first render, setting this empty causes trouble
   const router = useRouter();
   const [userId, setUserId] = useState<string>("");
   const [inputUserId, setInputUserId] = useState<string>("");
@@ -62,7 +66,8 @@ export default function Television({
 
     // const uid = user.id;
     setUserId(user.id)
-    setSendEmojis(prev => ({ ...prev, [user.publicMetadata?.nickname as string ?? "Mr.Unknown"]: {
+    setNickname((user.publicMetadata?.nickname ?? "") as string)
+    setSendEmojis(prev => ({ [user.publicMetadata?.nickname as string ?? "Mr.Unknown"]: {
       emoji: "",
       avatarId: getRandomNumber(0,30)
     } }));
@@ -93,18 +98,18 @@ export default function Television({
     };
   }, [user, router]);
 
-  // Load playlist when player is ready and playList changes
-  useEffect(() => {
-    if (playerReady && ytPlayer.current && playList?.length > 0) {
-      try {
-        const videoIds = playList.map((video: VideoElement) => video.vid);
-        ytPlayer.current.cuePlaylist(videoIds);
-        console.log('Playlist loaded:', videoIds);
-      } catch (error) {
-        console.error('Error loading playlist:', error);
-      }
-    }
-  }, [playerReady, playList]);
+  // // Load playlist when player is ready and playList changes
+  // useEffect(() => {
+  //   if (playerReady && ytPlayer.current && playList?.length > 0) {
+  //     try {
+  //       const videoIds = playList.map((video: VideoElement) => video.vid);
+  //       ytPlayer.current.cuePlaylist(videoIds);
+  //       console.log('Playlist loaded:', videoIds);
+  //     } catch (error) {
+  //       console.error('Error loading playlist:', error);
+  //     }
+  //   }
+  // }, [playerReady, playList]);
 
   // Setup message receiver
   useEffect(() => {
@@ -164,8 +169,10 @@ export default function Television({
   };
 
   const handleInvite = async (username: string) => {
-    const uId = (await getUserByNickname(username)).id
-    sendMessage(`/invite ${uId} ${userId}`)
+    console.log(username)
+    // const uId = (await getUserByNickname(username)).id
+    console.log(`/invite ${username} ${nickname}`)
+    sendMessage(`/invite ${username} ${nickname}`)
   }
 
   const extractVideoId = (videoUrl: string): string => {
@@ -196,7 +203,7 @@ export default function Television({
   };
 
   const popoverContent = (
-    <div style={{ flex: "1", display: 'flex', gap: '8px'}}>
+    <div className="flex-1 flex flex-col" style={{ gap: '8px'}}>
       <p>Copy invitation link</p>
       <Space.Compact className="w-full">
          <Input

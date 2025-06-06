@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client"
-import { useEffect, useRef, useState } from "react";
-import { VideoElement } from "../PlayList";
-import { getPlaylist } from "@/utils/api";
-import { message} from "antd";
+import { useRef, useState } from "react";
+// import { VideoElement } from "../PlayList";
+// import { getPlaylist } from "@/utils/api";
+// import { message} from "antd";
 // import { Content } from "antd/es/layout/layout";
 import Television from "../Television";
 import ChatPanel from "../ChatPanel";
-import { supabase } from "@/lib/supabase";
+// import { supabase } from "@/lib/supabase";
 
 // const { Content } = Layout;
 
@@ -16,40 +16,40 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const sendMessage = useRef<((msg: any) => void) | null>(null);
   const receiveMessage = useRef<((msg: any) => void) | null>(null);
   // const [playlistVisible, setPlaylistVisible] = useState<boolean>(false);
-  const [videos, setVideos] = useState<VideoElement[]>([]);
+  // const [videos, setVideos] = useState<VideoElement[]>([]);
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
   // const theReceiver: any = null;
 
-  // Load playlist
-  useEffect(() => {
-    const loadPlaylist = async () => {
-      try {
-        const vs = await getPlaylist(chatroomId);
-        setVideos(vs);
-      } catch {
-        message.error('Failed to load playlist');
-      }
-    };
+  // // Load playlist
+  // useEffect(() => {
+  //   const loadPlaylist = async () => {
+  //     try {
+  //       const vs = await getPlaylist(chatroomId);
+  //       setVideos(vs);
+  //     } catch {
+  //       message.error('Failed to load playlist');
+  //     }
+  //   };
 
-    // Setup playlist subscription
-    const playlistSub = supabase.channel(`playlist:${chatroomId}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'playlists',
-        filter: `chatroom_id=eq.${chatroomId}`,
-      }, (payload) => {
-        const newPlaylist = payload.new as { videos: VideoElement[] };
-        setVideos(newPlaylist.videos);
-      })
-      .subscribe();
+  //   // Setup playlist subscription
+  //   const playlistSub = supabase.channel(`playlist:${chatroomId}`)
+  //     .on('postgres_changes', {
+  //       event: 'UPDATE',
+  //       schema: 'public',
+  //       table: 'playlists',
+  //       filter: `chatroom_id=eq.${chatroomId}`,
+  //     }, (payload) => {
+  //       const newPlaylist = payload.new as { videos: VideoElement[] };
+  //       setVideos(newPlaylist.videos);
+  //     })
+  //     .subscribe();
 
-    loadPlaylist();
+  //   loadPlaylist();
 
-    return () => {
-      playlistSub.unsubscribe();
-    };
-  }, [chatroomId]);
+  //   return () => {
+  //     playlistSub.unsubscribe();
+  //   };
+  // }, [chatroomId]);
 
   // const addReceiver = (receiver: any) => {
   //   theReceiver = receiver;
@@ -103,7 +103,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           <Television
             onMount={(receiveFn: any) => (receiveMessage.current = receiveFn)}
             sendMessage={(msg: any) => sendMessage.current?.(msg)}
-            playList={videos}
+            // playList={videos}
             chatPanelVisible={chatPanelVisible}
             setChatPanelVisible={setChatPanelVisible}
             chatroomId={chatroomId}
