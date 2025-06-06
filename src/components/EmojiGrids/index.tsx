@@ -58,7 +58,7 @@ export default function EmojiGrid({ onSelect }: EmojiGridProps) {
   ], []);
 
   return (
-    <div className="bg-white border rounded shadow-lg p-3" style={{ width: 300, maxHeight: 300, overflowY: 'auto' }}>
+    <div className="bg-white rounded shadow-lg p-3" style={{ width: 300, maxHeight: 300, overflowY: 'auto' }}>
       {categories.map((category, index) => (
         <div key={index} className="mb-4">
           <h4 className="font-semibold mb-2">{category.name}</h4>

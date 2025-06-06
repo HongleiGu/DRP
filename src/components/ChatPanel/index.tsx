@@ -180,7 +180,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   };
 
   const header = (
-    <div className="p-4 border-b z-1000">
+    <div className="p-4 z-1000">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Chat Room</h3>
         <Badge status="success" text={`${onlineUsers.length} online`} />
@@ -189,7 +189,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   );
 
   const footer = (
-    <div className="bg-white border-t p-4" style={{ position: 'fixed', bottom: 0 }}>
+    <div className="bg-white p-4" style={{ position: 'fixed', bottom: 0 }}>
       <div className="flex items-center space-x-2">
         <Input
           value={newMessage}
@@ -225,7 +225,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
 
   return (
     <div 
-      className="flex flex-col h-full bg-white border-r p-4" // ← Added p-4 padding here
+      className="flex flex-col h-full bg-white p-4"
       style={{ width: 300, position: 'fixed', left: 0, top: 0, bottom: 0 }}
     >
       <div className="relative flex flex-col h-full" id="scrollableDiv" style={{ overflowY: 'auto', maxHeight: 'calc(100% - 80px)' }}>
