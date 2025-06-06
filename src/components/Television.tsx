@@ -6,7 +6,7 @@ import "@/app/global.css"
 import { Button, Input, Typography, Divider, message, Popover, Card, Row, Col, Space } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { VideoElement } from './PlayList';
-import { CopyOutlined, FastForwardOutlined, PauseCircleOutlined, PlayCircleOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { CaretDownOutlined, CaretUpOutlined, CopyOutlined, FastForwardOutlined, PauseCircleOutlined, PlayCircleOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { getRandomNumber, isEmoji } from '@/utils/utils';
@@ -45,6 +45,7 @@ export default function Television({
   const router = useRouter();
   const [userId, setUserId] = useState<string>("");
   const [inputUserId, setInputUserId] = useState<string>("");
+  const [controlPanelVisible, setControlPanelVisible] = useState<boolean>(true);
 
   // Initialize YouTube Player
   useEffect(() => {
@@ -309,108 +310,116 @@ export default function Television({
 
         <Divider />
 
+
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column',
           gap: 16,
           marginBottom: 16 
         }}>
-          {/* Top Section: Video Controls */}
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 16,
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            {/* URL Input Group */}
-            <Space.Compact style={{ width: '100%', maxWidth: 500 }}>
-              <Input
-                placeholder="YouTube URL"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                size="large"
-              />
+          <div className="flex w-full align-middle justify-center">
+            <Button 
+              icon={controlPanelVisible ? <CaretDownOutlined /> : <CaretUpOutlined />}
+              onClick={() => setControlPanelVisible(!controlPanelVisible)}
+            />
+          </div>
+          
+          {controlPanelVisible ? 
+          <>
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 16,
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <Space.Compact style={{ width: '100%', maxWidth: 500 }}>
+                <Input
+                  placeholder="YouTube URL"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  size="large"
+                />
+                <Button 
+                  type="primary" 
+                  size="large" 
+                  onClick={handleLoadVideo}
+                  style={{ minWidth: 100 }}
+                >
+                  Load
+                </Button>
+              </Space.Compact>
+
+              <Space.Compact style={{ width: '100%', maxWidth: 300 }}>
+                <Input
+                  type="number"
+                  placeholder="Seek (seconds)"
+                  value={timeInput}
+                  onChange={(e) => setTimeInput(e.target.value)}
+                  size="large"
+                />
+                <Button 
+                  size="large" 
+                  onClick={handleSeek}
+                  icon={<FastForwardOutlined />}
+                  style={{ minWidth: 100 }}
+                >
+                  Seek
+                </Button>
+              </Space.Compact>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: 12,
+              width: '100%'
+            }}>
+              <Button 
+                size="large" 
+                onClick={() => setChatPanelVisible(!chatPanelVisible)}
+                block
+              >
+                {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
+              </Button>
+              
               <Button 
                 type="primary" 
                 size="large" 
-                onClick={handleLoadVideo}
-                style={{ minWidth: 100 }}
-              >
-                Load
-              </Button>
-            </Space.Compact>
-
-            {/* Seek Controls */}
-            <Space.Compact style={{ width: '100%', maxWidth: 300 }}>
-              <Input
-                type="number"
-                placeholder="Seek (seconds)"
-                value={timeInput}
-                onChange={(e) => setTimeInput(e.target.value)}
-                size="large"
-              />
-              <Button 
-                size="large" 
-                onClick={handleSeek}
-                icon={<FastForwardOutlined />}
-                style={{ minWidth: 100 }}
-              >
-                Seek
-              </Button>
-            </Space.Compact>
-          </div>
-
-          {/* Middle Section: Action Buttons */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-            gap: 12,
-            width: '100%'
-          }}>
-            <Button 
-              size="large" 
-              onClick={() => setChatPanelVisible(!chatPanelVisible)}
-              block
-            >
-              {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
-            </Button>
-            
-            <Button 
-              type="primary" 
-              size="large" 
-              onClick={handlePlay}
-              icon={<PlayCircleOutlined />}
-              block
-            >
-              Play
-            </Button>
-            
-            <Button 
-              danger
-              size="large" 
-              onClick={handlePause}
-              icon={<PauseCircleOutlined />}
-              block
-            >
-              Pause
-            </Button>
-            
-            <Popover 
-              content={popoverContent}
-              title="Invite others to join"
-              trigger="click"
-            >
-              <Button 
-                size="large" 
-                type="dashed"
-                icon={<ShareAltOutlined />}
+                onClick={handlePlay}
+                icon={<PlayCircleOutlined />}
                 block
               >
-                Invite
+                Play
               </Button>
-            </Popover>
-          </div>
+              
+              <Button 
+                danger
+                size="large" 
+                onClick={handlePause}
+                icon={<PauseCircleOutlined />}
+                block
+              >
+                Pause
+              </Button>
+              
+              <Popover 
+                content={popoverContent}
+                title="Invite others to join"
+                trigger="click"
+              >
+                <Button 
+                  size="large" 
+                  type="dashed"
+                  icon={<ShareAltOutlined />}
+                  block
+                >
+                  Invite
+                </Button>
+              </Popover>
+            </div> 
+          </> : null
+          }
 
           {/* Bottom Section: User Emojis */}
           <div style={{ 
