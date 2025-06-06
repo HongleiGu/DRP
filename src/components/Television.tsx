@@ -309,37 +309,51 @@ export default function Television({
         <div style={{ display: 'flex', marginBottom: 16, gap: 12, alignItems: 'center' }}>
           {/* URL Input & Load Button */}
           
-          <div style={{ flex: 3, display: 'flex', flexDirection: 'column', alignItems: 'left' }} className='flex-col'>
+          <div className="flex-3 flex flex-col align-left w-min max-w-[40%] space-y-2 md:max-w-[30%] sm:max-w-[100%]">
+  <div className="flex flex-col">
+    <Space.Compact>
+      <Input
+        type="number"
+        placeholder="Seek (sec)"
+        value={timeInput}
+        onChange={(e) => setTimeInput(e.target.value)}
+        className="w-full"
+      />
+      <Button size="large" onClick={handleSeek}>⏩ Seek</Button>
+    </Space.Compact>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Button color="cyan" size="large" onClick={() => setChatPanelVisible(!chatPanelVisible)}>
-                {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
-              </Button>
-              <div style={{ display: 'flex', alignItems: 'center', marginTop: 8 }}>
-                <Button color="cyan" size="large" onClick={handlePlay}>▶️ Play</Button>
-                <Button color="cyan" size="large" onClick={handlePause}>⏸️ Pause</Button>
-                <Input
-                  type="number"
-                  placeholder="Seek (sec)"
-                  value={timeInput}
-                  onChange={(e) => setTimeInput(e.target.value)}
-                  style={{ width: 120, marginRight: 8 }}
-                />
-                <Button size="large" onClick={handleSeek}>⏩ Seek</Button>
-              </div>
-            </div>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-              <Input
-                placeholder="YouTube URL"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                style={{ flex: 5, marginRight: 12 }}
-              />
-              <Button type="primary" size="large" onClick={handleLoadVideo}>
-                Load
-              </Button>
-            </div>
-          </div>
+    <div className="flex flex-col sm:flex-row justify-between mt-1 space-y-1 sm:space-y-0 sm:space-x-2">
+      {/* Use flex-wrap to prevent overlapping */}
+      <div className="flex flex-wrap justify-between w-full">
+        <Button color="cyan" size="large" className="flex-1 m-1" onClick={() => setChatPanelVisible(!chatPanelVisible)}>
+          {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
+        </Button>
+        <Button color="cyan" size="large" className="flex-1 m-1" onClick={handlePlay}>▶️ Play</Button>
+        <Button color="cyan" size="large" className="flex-1 m-1" onClick={handlePause}>⏸️ Pause</Button>
+        <Popover 
+          content={popoverContent}
+          title="Invite others to join"
+          trigger="click"
+        >
+          <Button size="large" type="primary" className="flex-1 m-1">Show Invitation Link</Button>
+        </Popover>
+      </div>
+    </div>
+  </div>
+
+  <div className="flex items-center">
+    <Space.Compact style={{ width: '100%' }}>
+      <Input
+        placeholder="YouTube URL"
+        value={videoUrl}
+        onChange={(e) => setVideoUrl(e.target.value)}
+      />
+      <Button type="primary" size="large" onClick={handleLoadVideo}>
+        Load
+      </Button>
+    </Space.Compact>
+  </div>
+</div>
 
           {/* Emoji display area */}
           <div style={{ 
@@ -349,13 +363,6 @@ export default function Television({
             height: 80,
             gap: 12 
           }}>
-            <Popover 
-              content={popoverContent}
-              title="Invite others to join"
-              trigger="click"
-            >
-              <Button size="large" type="primary">Show Invitation Link</Button>
-            </Popover>
 
             <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
               {Object.entries(sendEmojis).map(([userId, emoji]) => (
