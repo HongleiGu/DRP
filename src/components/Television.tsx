@@ -12,6 +12,7 @@ import Image from 'next/image';
 import { isEmoji } from '@/utils/utils';
 import { Message } from '@/types/datatypes';
 import { useUser } from '@clerk/nextjs';
+import { getIdByNickname } from "@/actions/onboarding";
 
 const { Title } = Typography;
 
@@ -148,8 +149,8 @@ export default function Television({
   };
 
   const handleInvite = async (username: string) => {
-    // await findIdByUsername(username)
-    sendMessage(`/invite ${username}`)
+    const uId = await getIdByNickname(username)
+    sendMessage(`/invite ${uId} ${userId}`)
   }
 
   const extractVideoId = (videoUrl: string): string => {

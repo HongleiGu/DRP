@@ -27,3 +27,16 @@ export const completeOnboarding = async (formData: CustomJwtSessionClaims) => {
     return { error: `There was an error updating the user metadata. ${err}` }
   }
 }
+
+export async function getIdByNickname(nickname: string): Promise<string> {
+  const client = await clerkClient()
+  const users = await client.users.getUserList()
+  return users.data.filter(it => (it.publicMetadata?.nickname as string) === nickname)[0].id
+}
+
+
+export async function getNicknameById(userId: string): Promise<string> {
+  const client = await clerkClient()
+  return (await client.users.getUser(userId)).publicMetadata?.nickname as string ?? ""
+  // return users.data.filter(it => it.username === username)[0].id
+}
