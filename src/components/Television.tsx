@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 "use client";
-import "@/app/global.css"
+import "@/app/globals.css"
 import { Button, Input, Typography, Divider, message, Popover, Card, Row, Col, Space, Slider } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 // import { VideoElement } from './PlayList';
@@ -57,6 +57,7 @@ export default function Television({
   const [controlPanelVisible, setControlPanelVisible] = useState<boolean>(true);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
+  const [copied, setCopied] = useState<boolean>(true);
 
   // Initialize YouTube Player
   useEffect(() => {
@@ -212,22 +213,24 @@ export default function Television({
   const handleCopy = () => {
     navigator.clipboard.writeText(`http://drp-nu.vercel.app/television/${chatroomId}`);
     message.success('Chatroom ID copied to clipboard!');
+    setCopied(true)
   };
 
   const popoverContent = (
     <div className="flex-1 flex flex-col" style={{ gap: '8px'}}>
       <p>Copy invitation link</p>
       <Space.Compact className="w-full">
-         <Input
+         {/* <Input
           value={`http://drp-nu.vercel.app/television/${chatroomId}`}
           readOnly
           onClick={handleCopy}
-        />
+        /> */}
         <Button 
           icon={<CopyOutlined />}
           iconPosition="end"
           onClick={handleCopy}
         />
+        {copied ? <span className="ml-4 text-green-500">Copied!</span> : null}
       </Space.Compact>
       <p>OR enter userId and we will send the invitation directly</p>
       <Space.Compact className="w-full">
@@ -460,6 +463,7 @@ export default function Television({
                   size="large" 
                   type="dashed"
                   icon={<ShareAltOutlined />}
+                  onClick={() => setCopied(false)}
                   block
                 >
                   Invite

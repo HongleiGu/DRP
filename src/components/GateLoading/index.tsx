@@ -1,7 +1,7 @@
 // components/GateLoadingCSS.tsx
 import React from 'react';
 import { Spin } from 'antd';
-import "@/app/global.css"
+import "@/app/globals.css"
 
 const GateLoadingCSS: React.FC = () => {
   return (
