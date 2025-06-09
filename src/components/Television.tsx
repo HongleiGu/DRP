@@ -373,8 +373,9 @@ export default function Television({
           style={{
             width: "100%",
             padding: "0 10px",
-            margin: "16px 0",
+            margin: "16px 0"
           }}
+          className="text-black"
         >
           <div
             style={{
@@ -403,15 +404,14 @@ export default function Television({
           </div>
         </div>
 
-        {/* <Divider /> */}
-
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             gap: 16,
-            marginBottom: 16,
+            // marginBottom: 16,
           }}
+          className="text-black"
         >
           <div className="flex w-full align-middle justify-center">
             <Button
@@ -556,7 +556,7 @@ export default function Television({
               flexWrap: "wrap",
               gap: 16,
               justifyContent: "center",
-              padding: 12,
+              // padding: 12,
               backgroundColor: "#f8f9fa",
               borderRadius: 8,
             }}
