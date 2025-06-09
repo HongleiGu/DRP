@@ -78,14 +78,24 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   // };
 
   return (
-    <div style={{ display: "flex", flexDirection: "row", height: '100vh', width: '100vw', position: 'fixed' }}>
-
+    <div
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        width: "100%",
+        backgroundColor: "#fff",
+        overflow: "hidden", // 防止超出滚动黑边
+      }}
+    >
       {/* Left Chat Panel */}
       {chatPanelVisible && (
-        <div style={{
-          flex: 3,
-          display: "flex"
-        }}>
+        <div
+          style={{
+            width: 300, // ✅ 固定宽度，而不是 flex
+            backgroundColor: "#f8f9fa",
+            display: "flex",
+          }}
+        >
           <ChatPanel
             chatroomId={chatroomId}
             onMount={(sendFn) => (sendMessage.current = sendFn)}
@@ -94,32 +104,22 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         </div>
       )}
 
-      {/* Right Game Panel */}
-      <div style={{
-          flex: 7,
-          backgroundColor: '#fff',
-          display: "flex"
-      }}>
-          <Television
-            onMount={(receiveFn: any) => (receiveMessage.current = receiveFn)}
-            sendMessage={(msg: any) => sendMessage.current?.(msg)}
-            // playList={videos}
-            chatPanelVisible={chatPanelVisible}
-            setChatPanelVisible={setChatPanelVisible}
-            chatroomId={chatroomId}
-          />
+      {/* Right Video Panel */}
+      <div
+        style={{
+          flex: 1, // ✅ 自动撑满剩余空间
+          backgroundColor: "#fff",
+          display: "flex",
+        }}
+      >
+        <Television
+          onMount={(receiveFn: any) => (receiveMessage.current = receiveFn)}
+          sendMessage={(msg: any) => sendMessage.current?.(msg)}
+          chatPanelVisible={chatPanelVisible}
+          setChatPanelVisible={setChatPanelVisible}
+          chatroomId={chatroomId}
+        />
       </div>
-
-      {/* Playlist Floating Button
-      <PlayList
-        chatroomId={chatroomId}
-        visible={playlistVisible}
-        setVisible={setPlaylistVisible}
-        videos={videos}
-        addVideos={addVideo}
-        removeVideo={removeVideo}
-        setVideos={setVideos}
-      /> */}
     </div>
   );
 }

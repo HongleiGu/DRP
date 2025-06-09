@@ -229,72 +229,116 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   );
 
   return (
-    <Card
-      title={header}
-      style={{flex: 1}}
-      bodyStyle={{ padding: 0, height: '100%', display: "flex", flexDirection: "column" }}
-    >
-      {emojiPopoverOpen && createPortal(<div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0)',
-        zIndex: 100,
-        pointerEvents: 'auto',
-      }}
-      onClick={()=>setEmojiPopoverOpen(false)}
-    />, document.body)}
-      <div className="relative flex flex-col h-full" id="scrollableDiv" style={{ overflowY: 'auto', height: "calc(100vh - 100px)" }}>
-        <InfiniteScroll 
-          dataLength={memoizedMessages.length} 
-          next={() => {}} 
-          hasMore={false} 
-          loader={undefined} 
-          scrollableTarget="scrollableDiv"
-        >
-          <List
-            itemLayout="horizontal"
-            dataSource={memoizedMessages}
-            className="overflow-y-auto"
-            renderItem={(msg) => (
-              <List.Item style={{margin: "8px"}} className={msg.speaker === userId ? 'bg-blue-50' : ''}>
-                <List.Item.Meta
-                  avatar={<Avatar>{msg.speaker_name?.charAt(0) || 'U'}</Avatar>}
-                  title={<span className="font-semibold">{msg.speaker_name}</span>}
-                  description={msg.chat_message}
-                />
-              </List.Item>
-            )}
-          />
-          <div ref={messagesEndRef} />
-        </InfiniteScroll>
-      </div>
-      {footer}
+  <Card
+    title={header}
+    style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}
+    bodyStyle={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}
+  >
+    {emojiPopoverOpen &&
+      createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            zIndex: 100,
+            pointerEvents: 'auto',
+          }}
+          onClick={() => setEmojiPopoverOpen(false)}
+        />,
+        document.body
+      )}
 
-      <Modal
-        title="Room Invitation"
-        open={isInviteModalVisible}
-        onOk={handleAcceptInvite}
-        onCancel={handleDeclineInvite}
-        footer={[
-          <Button key="decline" onClick={handleDeclineInvite}>
-            Decline
-          </Button>,
-          <Button key="accept" type="primary" onClick={handleAcceptInvite}>
-            Accept
-          </Button>
-        ]}
+    <div
+      className="relative flex flex-col"
+      id="scrollableDiv"
+      style={{ overflowY: 'auto', flex: 1 }}
+    >
+      <InfiniteScroll
+        dataLength={memoizedMessages.length}
+        next={() => {}}
+        hasMore={false}
+        loader={undefined}
+        scrollableTarget="scrollableDiv"
       >
-        {invitationData && (
-          <p>
-            <strong>{invitationData.from}</strong> has invited you to join room:
-            <strong> {invitationData.roomId}</strong>
-          </p>
-        )}
-      </Modal>
-    </Card>
-  );
+        <List
+          itemLayout="horizontal"
+          dataSource={memoizedMessages}
+          className="overflow-y-auto"
+          renderItem={(msg) => (
+            <List.Item style={{ margin: '8px' }} className={msg.speaker === userId ? 'bg-blue-50' : ''}>
+              <List.Item.Meta
+                avatar={<Avatar>{msg.speaker_name?.charAt(0) || 'U'}</Avatar>}
+                title={<span className="font-semibold">{msg.speaker_name}</span>}
+                description={msg.chat_message}
+              />
+            </List.Item>
+          )}
+        />
+        <div ref={messagesEndRef} />
+      </InfiniteScroll>
+    </div>
+
+    <div className="bg-white p-4" style={{ borderTop: '1px solid #f0f0f0' }}>
+      <div className="flex items-center space-x-2" style={{ display: 'flex' }}>
+        <Input
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type a message..."
+          disabled={isSending}
+          onPressEnter={(e) => {
+            if (!e.shiftKey) {
+              e.preventDefault();
+              handleSend(newMessage);
+            }
+          }}
+        />
+        <Popover
+          content={<EmojiGrid onSelect={handleEmojiSelect} />}
+          open={emojiPopoverOpen}
+          trigger="click"
+          placement="topRight"
+          zIndex={101}
+        />
+        <Button className="text-xl" onClick={() => setEmojiPopoverOpen(!emojiPopoverOpen)}>
+          😊
+        </Button>
+        <Button
+          type="primary"
+          onClick={() => handleSend(newMessage)}
+          loading={isSending}
+          disabled={!newMessage.trim()}
+        >
+          Send
+        </Button>
+      </div>
+    </div>
+
+    <Modal
+      title="Room Invitation"
+      open={isInviteModalVisible}
+      onOk={handleAcceptInvite}
+      onCancel={handleDeclineInvite}
+      footer={[
+        <Button key="decline" onClick={handleDeclineInvite}>
+          Decline
+        </Button>,
+        <Button key="accept" type="primary" onClick={handleAcceptInvite}>
+          Accept
+        </Button>,
+      ]}
+    >
+      {invitationData && (
+        <p>
+          <strong>{invitationData.from}</strong> has invited you to join room:
+          <strong> {invitationData.roomId}</strong>
+        </p>
+      )}
+    </Modal>
+  </Card>
+);
+
 }
