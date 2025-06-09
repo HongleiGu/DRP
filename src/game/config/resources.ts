@@ -1,5 +1,6 @@
-import { ImageSource } from 'excalibur'
+import { FontSource, ImageSource } from 'excalibur'
 import { LdtkResource } from '@excaliburjs/plugin-ldtk'
+import * as ex from 'excalibur';
 
 const paths = {
   Sprites: {
@@ -23,6 +24,9 @@ const paths = {
     Dirt: "/game/assets/tilemaps/sprout/Tilesets/Tilled_Dirt.png",
     Grass: "/game/assets/tilemaps/sprout/Tilesets/Grass.png",
     Water: "/game/assets/tilemaps/sprout/Tilesets/Water.png"
+  },
+  Fonts: {
+    Pixelify_Sans: "/fonts/Pixelify_Sans/static/PixelifySans-Regular.ttf"
   }
 }
 
@@ -30,6 +34,10 @@ export const Resources = {
     CharacterSpriteSheet: new ImageSource(paths.Sprites.CharacterSpritePath),
     HeroSpriteSheetPng: new ImageSource(paths.Sprites.Hero01),
     TelevisionSprite: new ImageSource(paths.Sprites.Television),
+    PixelifySansFont: new FontSource(paths.Fonts.Pixelify_Sans, 'PixelifySans', { 
+      filtering: ex.ImageFiltering.Pixel,
+      size: 8, // set a default size
+    }),
     LdtkResource: new LdtkResource(paths.Ldtk.LdtkResourcePath, {
         useTilemapCameraStrategy: true,
         useMapBackgroundColor: true,

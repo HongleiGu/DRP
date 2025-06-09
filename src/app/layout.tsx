@@ -7,6 +7,7 @@ import '@ant-design/v5-patch-for-react-19';
 import "@/app/globals.css"
 import { AntdRegistry } from '@ant-design/nextjs-registry'
 import { StreamVideoProvider } from '@/providers/StreamProvider';
+import { Pixelify_Sans } from 'next/font/google';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -17,6 +18,14 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
 })
+
+
+export const gameFont = Pixelify_Sans({
+  subsets: ['latin'],
+  weight: '400',
+  display: 'swap',
+  variable: '--game-font' // CSS variable approach
+});
 
 export const metadata: Metadata = {
   title: 'Clerk Next.js Quickstart',

@@ -2,19 +2,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 "use client";
-<<<<<<< HEAD
-import "@/app/globals.css"
-import { Button, Input, Typography, message, Popover, Card, Space, Slider } from 'antd';
-import { useEffect, useRef, useState } from 'react';
-// import { VideoElement } from './PlayList';
-import { CaretDownOutlined, CaretUpOutlined, CopyOutlined, FastForwardOutlined, PauseCircleOutlined, PlayCircleOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
-// import Image from 'next/image';
-import { getRandomNumber, isEmoji } from '@/utils/utils';
-import { Message } from '@/types/datatypes';
-import { useUser } from '@clerk/nextjs';
-// import { getUserByNickname } from "@/actions/onboarding";
-=======
 import "@/app/globals.css";
 import {
   Button,
@@ -43,7 +30,6 @@ import { getRandomNumber, isEmoji } from "@/utils/utils";
 import { Message } from "@/types/datatypes";
 import { useUser } from "@clerk/nextjs";
 import { FullscreenOutlined } from "@ant-design/icons";
->>>>>>> c07a7142c6e2918011e972da788a39b162334534
 
 const { Title } = Typography;
 

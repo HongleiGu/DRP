@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Engine, DisplayMode, Color, FadeInOut, Loader } from 'excalibur'
 import { initializeGame } from './engine'
 import { Resources } from '@/game/config/resources'
-import { Button } from 'antd';
+import { Alert, Button } from 'antd';
 import { CalendarOutlined, YoutubeOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation'
 import MarkdownCalendar from '../Calendar'
@@ -147,6 +147,7 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
       >
         Open Chatroom
       </Button> */}
+      <Alert message="Use WASD or Arrow keys to move" type="info" />
     </div>
       <MarkdownCalendar isOpen={isCalendarOpen} roomId={chatroomId} onClose={() => setIsCalendarOpen(false)}/>
   </div>

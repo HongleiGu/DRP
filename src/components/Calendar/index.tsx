@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Calendar, Modal, Button, Spin, message, Typography } from 'antd';
 import { EditOutlined, DeleteOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
+// import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import { useUser } from '@clerk/nextjs';
 import type { Dayjs } from 'dayjs';
