@@ -55,6 +55,7 @@ export default function Television({
   setChatPanelVisible,
   chatroomId,
 }: TelevisionProps) {
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const playerRef = useRef<HTMLDivElement>(null);
   const ytPlayer = useRef<any>(null);
   const [timeInput, setTimeInput] = useState<string>("");
@@ -110,7 +111,12 @@ export default function Television({
         },
         events: {
           onReady: () => setPlayerReady(true),
-          onStateChange: () => console.log("state changed"),
+          onStateChange: (event: any) => {
+            const state = event.data;
+            // 1 = playing, 2 = paused
+            if (state === 1) setIsPlaying(true);
+            else if (state === 2) setIsPlaying(false);
+          },
         },
       });
     };
@@ -490,23 +496,16 @@ export default function Television({
                 </Button>
 
                 <Button
-                  type="primary"
+                  type={isPlaying ? "default" : "primary"}
+                  danger={isPlaying}
                   size="large"
-                  onClick={handlePlay}
-                  icon={<PlayCircleOutlined />}
+                  onClick={isPlaying ? handlePause : handlePlay}
+                  icon={
+                    isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />
+                  }
                   block
                 >
-                  Play
-                </Button>
-
-                <Button
-                  danger
-                  size="large"
-                  onClick={handlePause}
-                  icon={<PauseCircleOutlined />}
-                  block
-                >
-                  Pause
+                  {isPlaying ? "Pause" : "Play"}
                 </Button>
 
                 <Button
