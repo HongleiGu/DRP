@@ -16,12 +16,15 @@
 		"WoodenHouseWalls.png",
 		"Tiles.png",
 		"Plants.png",
+		"Plants_premium.png",
 		"Furniture.png",
 		"Doors.png",
 		"Door2.png",
 		"Fences.png",
 		"Paths.png",
-		"Fruits.png"
+		"Fruits.png",
+		"Fruits_premium.png",
+		"Tiles2.png"
 	],
 	"entities": {
 		"PlayerStart": [
