@@ -2,17 +2,34 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 "use client";
-import "@/app/globals.css"
-import { Button, Input, Typography, Divider, message, Popover, Card, Row, Col, Space, Slider } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import "@/app/globals.css";
+import {
+  Button,
+  Input,
+  Typography,
+  message,
+  Popover,
+  Card,
+  Space,
+  Slider,
+} from "antd";
+import { useEffect, useRef, useState } from "react";
 // import { VideoElement } from './PlayList';
-import { CaretDownOutlined, CaretUpOutlined, CopyOutlined, FastForwardOutlined, PauseCircleOutlined, PlayCircleOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { getRandomNumber, isEmoji } from '@/utils/utils';
-import { Message } from '@/types/datatypes';
-import { useUser } from '@clerk/nextjs';
-import { getUserByNickname } from "@/actions/onboarding";
+import {
+  CaretDownOutlined,
+  CaretUpOutlined,
+  CopyOutlined,
+  FastForwardOutlined,
+  PauseCircleOutlined,
+  PlayCircleOutlined,
+  SendOutlined,
+  ShareAltOutlined,
+} from "@ant-design/icons";
+import { useRouter } from "next/navigation";
+import { getRandomNumber, isEmoji } from "@/utils/utils";
+import { Message } from "@/types/datatypes";
+import { useUser } from "@clerk/nextjs";
+import { FullscreenOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 
@@ -22,7 +39,7 @@ interface TelevisionProps {
   // playList: VideoElement[];
   chatPanelVisible: boolean;
   setChatPanelVisible: (visible: boolean) => void;
-  chatroomId: string
+  chatroomId: string;
 }
 
 interface RenderedEmoji {
@@ -36,21 +53,23 @@ export default function Television({
   // playList,
   chatPanelVisible,
   setChatPanelVisible,
-  chatroomId
+  chatroomId,
 }: TelevisionProps) {
   const playerRef = useRef<HTMLDivElement>(null);
   const ytPlayer = useRef<any>(null);
-  const [timeInput, setTimeInput] = useState<string>('');
-  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [timeInput, setTimeInput] = useState<string>("");
+  const [videoUrl, setVideoUrl] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
   const [playerReady, setPlayerReady] = useState<boolean>(false);
-  const [nickname, setNickname] = useState<string>('');
+  const [nickname, setNickname] = useState<string>("");
   const [messageApi, contextHolder] = message.useMessage();
-  const { user } = useUser();  
-  const [sendEmojis, setSendEmojis] = useState<Record<string, RenderedEmoji>>({"placeholder":{
-    avatarId: 0,
-    emoji: ""
-  }});
+  const { user } = useUser();
+  const [sendEmojis, setSendEmojis] = useState<Record<string, RenderedEmoji>>({
+    placeholder: {
+      avatarId: 0,
+      emoji: "",
+    },
+  });
   const router = useRouter();
   const [userId, setUserId] = useState<string>("");
   const [inputUserId, setInputUserId] = useState<string>("");
@@ -67,13 +86,15 @@ export default function Television({
       return;
     }
 
-    setUserId(user.id)
-    setNickname((user.publicMetadata?.nickname ?? "") as string)
-    setSendEmojis(prev => ({ [user.publicMetadata?.nickname as string ?? "Mr.Unknown"]: {
-      emoji: "",
-      avatarId: getRandomNumber(0,30)
-    } }));
-    
+    setUserId(user.id);
+    setNickname((user.publicMetadata?.nickname ?? "") as string);
+    setSendEmojis((prev) => ({
+      [(user.publicMetadata?.nickname as string) ?? "Mr.Unknown"]: {
+        emoji: "",
+        avatarId: getRandomNumber(0, 30),
+      },
+    }));
+
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api?rel=0";
     document.body.appendChild(tag);
@@ -89,7 +110,7 @@ export default function Television({
         },
         events: {
           onReady: () => setPlayerReady(true),
-          onStateChange: () => console.log("state changed")
+          onStateChange: () => console.log("state changed"),
         },
       });
     };
@@ -108,7 +129,7 @@ export default function Television({
       if (ytPlayer.current) {
         const newTime = ytPlayer.current.getCurrentTime();
         const newDuration = ytPlayer.current.getDuration();
-        
+
         if (!isNaN(newTime)) setCurrentTime(newTime);
         if (!isNaN(newDuration)) setDuration(newDuration);
       }
@@ -122,12 +143,15 @@ export default function Television({
     const receiver = (msg: Message) => {
       const messageText: string = msg.chat_message;
       console.log("check emoji", isEmoji(messageText));
-      
+
       if (isEmoji(messageText)) {
-        setSendEmojis(prev => ({ ...prev, [msg.speaker_name]: {
-          emoji: messageText,
-          avatarId: getRandomNumber(0,30)
-        } }));
+        setSendEmojis((prev) => ({
+          ...prev,
+          [msg.speaker_name]: {
+            emoji: messageText,
+            avatarId: getRandomNumber(0, 30),
+          },
+        }));
       } else if (messageText.startsWith("/play")) {
         const [_, seconds, id] = messageText.split(" ");
         if (extractVideoId(ytPlayer.current?.getVideoUrl()) !== id) {
@@ -156,7 +180,9 @@ export default function Television({
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const handleSliderSeek = (seconds: number) => {
@@ -167,7 +193,11 @@ export default function Television({
 
   const handlePlay = () => {
     if (ytPlayer.current) {
-      sendMessage(`/play ${ytPlayer.current.getCurrentTime()} ${extractVideoId(ytPlayer.current.getVideoUrl())}`);
+      sendMessage(
+        `/play ${ytPlayer.current.getCurrentTime()} ${extractVideoId(
+          ytPlayer.current.getVideoUrl()
+        )}`
+      );
     }
   };
 
@@ -183,21 +213,24 @@ export default function Television({
   };
 
   const handleInvite = async (username: string) => {
-    console.log(username)
-    console.log(`/invite ${username} ${nickname}`)
-    sendMessage(`/invite ${username} ${nickname}`)
-  }
+    console.log(username);
+    console.log(`/invite ${username} ${nickname}`);
+    sendMessage(`/invite ${username} ${nickname}`);
+  };
 
   const extractVideoId = (videoUrl: string): string => {
-    if (!videoUrl) return '';
+    if (!videoUrl) return "";
     try {
       const url = new URL(videoUrl);
-      if (url.hostname.includes('youtube.com') || url.hostname.includes('youtu.be')) {
-        return url.searchParams.get("v") || url.pathname.split('/').pop() || '';
+      if (
+        url.hostname.includes("youtube.com") ||
+        url.hostname.includes("youtu.be")
+      ) {
+        return url.searchParams.get("v") || url.pathname.split("/").pop() || "";
       }
-      return '';
+      return "";
     } catch (e) {
-      return '';
+      return "";
     }
   };
 
@@ -206,26 +239,28 @@ export default function Television({
     if (videoId) {
       sendMessage(`/load ${videoId}`);
     } else {
-      messageApi.warning('Invalid YouTube URL');
+      messageApi.warning("Invalid YouTube URL");
     }
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(`http://drp-nu.vercel.app/television/${chatroomId}`);
-    message.success('Chatroom ID copied to clipboard!');
-    setCopied(true)
+    navigator.clipboard.writeText(
+      `http://drp-nu.vercel.app/television/${chatroomId}`
+    );
+    message.success("Chatroom ID copied to clipboard!");
+    setCopied(true);
   };
 
   const popoverContent = (
-    <div className="flex-1 flex flex-col" style={{ gap: '8px'}}>
+    <div className="flex-1 flex flex-col" style={{ gap: "8px" }}>
       <p>Copy invitation link</p>
       <Space.Compact className="w-full">
-         {/* <Input
+        {/* <Input
           value={`http://drp-nu.vercel.app/television/${chatroomId}`}
           readOnly
           onClick={handleCopy}
         /> */}
-        <Button 
+        <Button
           icon={<CopyOutlined />}
           iconPosition="end"
           onClick={handleCopy}
@@ -234,8 +269,12 @@ export default function Television({
       </Space.Compact>
       <p>OR enter userId and we will send the invitation directly</p>
       <Space.Compact className="w-full">
-        <Input placeholder="userId" value={inputUserId} onChange={(e) => setInputUserId(e.target.value)}/>
-        <Button 
+        <Input
+          placeholder="userId"
+          value={inputUserId}
+          onChange={(e) => setInputUserId(e.target.value)}
+        />
+        <Button
           icon={<SendOutlined />}
           iconPosition="end"
           onClick={() => handleInvite(inputUserId)}
@@ -260,14 +299,12 @@ export default function Television({
       </Title>
       <Button
         type="primary"
-        onClick={() =>
-          window.location.pathname = `/lumiroom/${chatroomId}`
-        }
+        onClick={() => (window.location.pathname = `/lumiroom/${chatroomId}`)}
         style={{
           position: "absolute",
           top: 16,
           right: 16,
-          zIndex: 1000
+          zIndex: 1000,
         }}
       >
         Go Back
@@ -292,7 +329,7 @@ export default function Television({
             id="yt-player"
             ref={playerRef}
           ></div>
-           {/* Transparent overlay to block clicks */}
+          {/* Transparent overlay to block clicks */}
           <div
             style={{
               position: "absolute",
@@ -301,7 +338,9 @@ export default function Television({
               width: "100%",
               height: "100%",
               zIndex: 10,
-              backgroundColor: connected ? "transparent" : "rgba(255, 255, 255, 0.8)",
+              backgroundColor: connected
+                ? "transparent"
+                : "rgba(255, 255, 255, 0.8)",
               pointerEvents: "all",
               display: "flex",
               alignItems: "center",
@@ -330,20 +369,24 @@ export default function Television({
         </div>
 
         {/* Progress Bar */}
-        <div style={{ 
-          width: '100%', 
-          padding: '0 10px',
-          margin: '16px 0'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 16 
-          }}>
-            <span style={{ minWidth: 50, textAlign: 'center' }}>
+        <div
+          style={{
+            width: "100%",
+            padding: "0 10px",
+            margin: "16px 0",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+            }}
+          >
+            <span style={{ minWidth: 50, textAlign: "center" }}>
               {formatTime(currentTime)}
             </span>
-            
+
             <Slider
               min={0}
               max={duration}
@@ -351,10 +394,10 @@ export default function Television({
               step={1}
               tooltip={{ formatter: (value) => formatTime(value || 0) }}
               onChange={handleSliderSeek}
-              style={{ width: '100%', margin: 0 }}
+              style={{ width: "100%", margin: 0 }}
             />
-            
-            <span style={{ minWidth: 50, textAlign: 'center' }}>
+
+            <span style={{ minWidth: 50, textAlign: "center" }}>
               {formatTime(duration)}
             </span>
           </div>
@@ -362,144 +405,179 @@ export default function Television({
 
         {/* <Divider /> */}
 
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          gap: 16,
-          marginBottom: 16 
-        }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+            marginBottom: 16,
+          }}
+        >
           <div className="flex w-full align-middle justify-center">
-            <Button 
-              icon={controlPanelVisible ? <CaretDownOutlined /> : <CaretUpOutlined />}
+            <Button
+              icon={
+                controlPanelVisible ? (
+                  <CaretDownOutlined />
+                ) : (
+                  <CaretUpOutlined />
+                )
+              }
               onClick={() => setControlPanelVisible(!controlPanelVisible)}
             />
           </div>
-          
-          {controlPanelVisible ? 
-          <>
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 16,
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <Space.Compact style={{ width: '100%', maxWidth: 500 }}>
-                <Input
-                  placeholder="YouTube URL"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  size="large"
-                />
-                <Button 
-                  type="primary" 
-                  size="large" 
-                  onClick={handleLoadVideo}
-                  style={{ minWidth: 100 }}
-                >
-                  Load
-                </Button>
-              </Space.Compact>
 
-              <Space.Compact style={{ width: '100%', maxWidth: 300 }}>
-                <Input
-                  type="number"
-                  placeholder="Seek (seconds)"
-                  value={timeInput}
-                  onChange={(e) => setTimeInput(e.target.value)}
-                  size="large"
-                />
-                <Button 
-                  size="large" 
-                  onClick={handleSeek}
-                  icon={<FastForwardOutlined />}
-                  style={{ minWidth: 100 }}
-                >
-                  Seek
-                </Button>
-              </Space.Compact>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: 12,
-              width: '100%'
-            }}>
-              <Button 
-                size="large" 
-                onClick={() => setChatPanelVisible(!chatPanelVisible)}
-                block
-              >
-                {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
-              </Button>
-              
-              <Button 
-                type="primary" 
-                size="large" 
-                onClick={handlePlay}
-                icon={<PlayCircleOutlined />}
-                block
-              >
-                Play
-              </Button>
-              
-              <Button 
-                danger
-                size="large" 
-                onClick={handlePause}
-                icon={<PauseCircleOutlined />}
-                block
-              >
-                Pause
-              </Button>
-              
-              <Popover 
-                content={popoverContent}
-                title="Invite others to join"
-                trigger="click"
-              >
-                <Button 
-                  size="large" 
-                  type="dashed"
-                  icon={<ShareAltOutlined />}
-                  onClick={() => setCopied(false)}
-                  block
-                >
-                  Invite
-                </Button>
-              </Popover>
-            </div> 
-          </> : null
-          }
-
-          {/* Bottom Section: User Emojis */}
-          <div style={{ 
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 16,
-            justifyContent: 'center',
-            padding: 12,
-            backgroundColor: '#f8f9fa',
-            borderRadius: 8
-          }}>
-            {Object.entries(sendEmojis).map(([userId, {emoji, avatarId}]) => (
-              <div 
-                key={userId} 
+          {controlPanelVisible ? (
+            <>
+              <div
                 style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  minWidth: 100
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 16,
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
               >
-                <Card 
+                <Space.Compact style={{ width: "100%", maxWidth: 500 }}>
+                  <Input
+                    placeholder="YouTube URL"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    size="large"
+                  />
+                  <Button
+                    type="primary"
+                    size="large"
+                    onClick={handleLoadVideo}
+                    style={{ minWidth: 100 }}
+                  >
+                    Load
+                  </Button>
+                </Space.Compact>
+
+                <Space.Compact style={{ width: "100%", maxWidth: 300 }}>
+                  <Input
+                    type="number"
+                    placeholder="Seek (seconds)"
+                    value={timeInput}
+                    onChange={(e) => setTimeInput(e.target.value)}
+                    size="large"
+                  />
+                  <Button
+                    size="large"
+                    onClick={handleSeek}
+                    icon={<FastForwardOutlined />}
+                    style={{ minWidth: 100 }}
+                  >
+                    Seek
+                  </Button>
+                </Space.Compact>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                  gap: 12,
+                  width: "100%",
+                }}
+              >
+                <Button
+                  size="large"
+                  onClick={() => setChatPanelVisible(!chatPanelVisible)}
+                  block
+                >
+                  {chatPanelVisible ? "Hide Chat" : "Show Chat"}
+                </Button>
+
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={handlePlay}
+                  icon={<PlayCircleOutlined />}
+                  block
+                >
+                  Play
+                </Button>
+
+                <Button
+                  danger
+                  size="large"
+                  onClick={handlePause}
+                  icon={<PauseCircleOutlined />}
+                  block
+                >
+                  Pause
+                </Button>
+
+                <Button
+                  size="large"
+                  icon={<FullscreenOutlined />}
+                  onClick={() => {
+                    const elem =
+                      document.getElementById("yt-player")?.parentElement;
+                    if (elem?.requestFullscreen) {
+                      elem.requestFullscreen();
+                    } else if ((elem as any)?.webkitRequestFullscreen) {
+                      (elem as any).webkitRequestFullscreen();
+                    } else if ((elem as any)?.mozRequestFullScreen) {
+                      (elem as any).mozRequestFullScreen();
+                    } else if ((elem as any)?.msRequestFullscreen) {
+                      (elem as any).msRequestFullscreen();
+                    }
+                  }}
+                  block
+                >
+                  Fullscreen
+                </Button>
+
+                <Popover
+                  content={popoverContent}
+                  title="Invite others to join"
+                  trigger="click"
+                >
+                  <Button
+                    size="large"
+                    type="dashed"
+                    icon={<ShareAltOutlined />}
+                    onClick={() => setCopied(false)}
+                    block
+                  >
+                    Invite
+                  </Button>
+                </Popover>
+              </div>
+            </>
+          ) : null}
+
+          {/* Bottom Section: User Emojis */}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 16,
+              justifyContent: "center",
+              padding: 12,
+              backgroundColor: "#f8f9fa",
+              borderRadius: 8,
+            }}
+          >
+            {Object.entries(sendEmojis).map(([userId, { emoji, avatarId }]) => (
+              <div
+                key={userId}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  minWidth: 100,
+                }}
+              >
+                <Card
                   styles={{
-                    body: { 
+                    body: {
                       padding: 8,
                       fontSize: 24,
-                      textAlign: 'center'
-                    }
+                      textAlign: "center",
+                    },
                   }}
                 >
                   {emoji}
@@ -507,12 +585,12 @@ export default function Television({
                 <img
                   src={`https://avatar.iran.liara.run/public/${avatarId}`}
                   alt={`${userId}`}
-                  style={{ 
+                  style={{
                     marginTop: 8,
                     borderRadius: 8,
-                    border: '1px solid #f0f0f0',
+                    border: "1px solid #f0f0f0",
                     width: 60,
-                    height: 60
+                    height: 60,
                   }}
                 />
                 <div style={{ marginTop: 4, fontSize: 12 }}>{userId}</div>
