@@ -148,7 +148,7 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
         Open Chatroom
       </Button> */}
     </div>
-    <MarkdownCalendar isOpen={isCalendarOpen} roomId={chatroomId} onClose={() => setIsCalendarOpen(false)}/>
+      <MarkdownCalendar isOpen={isCalendarOpen} roomId={chatroomId} onClose={() => setIsCalendarOpen(false)}/>
   </div>
 )
 }

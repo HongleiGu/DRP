@@ -33,6 +33,7 @@
     "react-infinite-scroll-component": "^6.1.0",
     "react-markdown": "^10.1.0",
     "redis": "^5.1.1",
+    "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "stream-chat": "^9.3.0",
     "zod": "^3.25.32"

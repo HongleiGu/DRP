@@ -1,7 +1,7 @@
 "use server"
 
 
-import { Message, TVState } from '@/types/datatypes';
+import { CalendarEntry, Message, TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
 import { currentUser, User } from '@clerk/nextjs/server';
 import { VideoElement } from '@/components/PlayList';
@@ -214,3 +214,29 @@ export async function removeVideoFromPlaylist(
     throw error;
   }
 }
+
+export async function getCalendarEntries(
+  roomId: string
+): Promise<Record<string, CalendarEntry>> {
+  try {
+    const { data, error } = await supabase
+      .from('calendar_entries')
+      .select('*')
+      .eq('room_id', roomId)
+      .order('date', { ascending: true });
+
+    if (error) throw error;
+
+    const entriesObj = data.reduce((acc, entry) => ({
+      ...acc,
+      [entry.date]: entry
+    }), {} as Record<string, CalendarEntry>);
+  
+    // setEntries(entriesObj);
+    return entriesObj
+  } catch (error) {
+    console.error('Error fetching entries:', error);
+    throw error
+    // message.error('Failed to load calendar entries');
+  }
+};
