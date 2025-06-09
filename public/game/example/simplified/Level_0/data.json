@@ -49,6 +49,19 @@
 				"color": 14120515,
 				"customFields" : {}
 			}
+		],
+		"Calendar": [
+			{
+				"id": "Calendar",
+				"iid": "1a91a730-3740-11f0-98ac-4f82c6c4c1d5",
+				"layer": "Entities",
+				"x": 256,
+				"y": 192,
+				"width": 24,
+				"height": 15,
+				"color": 15389866,
+				"customFields" : {}
+			}
 		]
 	}
 }

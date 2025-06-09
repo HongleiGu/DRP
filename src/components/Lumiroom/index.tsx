@@ -8,14 +8,17 @@ import { Engine, DisplayMode, Color, FadeInOut, Loader } from 'excalibur'
 import { initializeGame } from './engine'
 import { Resources } from '@/game/config/resources'
 import { Button } from 'antd';
-import { YoutubeOutlined } from '@ant-design/icons';
+import { CalendarOutlined, YoutubeOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation'
+import MarkdownCalendar from '../Calendar'
 
 export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVisible,
   setChatPanelVisible}: any) {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [showButton, setShowButton] = useState(false);
+  const [showButtonTV, setShowButtonTV] = useState(false);
+  const [showButtonCalendar, setShowButtonCalendar] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
   const gameRef = useRef<Engine | null>(null);
   const params = useParams<{ id: string }>()
 
@@ -35,7 +38,8 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
 
     // Create callbacks object
     const sceneCallbacks = {
-        showInteractButton: setShowButton,
+        showInteractButtonTV: setShowButtonTV,
+        showInteractButtonCalendar: setShowButtonCalendar,
         // Add more callbacks as needed:
         // onPlayerPositionChange: handlePositionChange,
     };
@@ -66,8 +70,13 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
     }
   }, [])
 
-  const handleButtonClick = () => {
+  const handleTVButtonClick = () => {
     router.push(`/television/${chatroomId}`)
+  };
+
+  const handleCalendarButtonClick = () => {
+    // router.push(`/television/${chatroomId}`)
+    setIsCalendarOpen(true)
   };
 
   return (
@@ -93,11 +102,27 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
       >
         {chatPanelVisible ? 'Hide Chat' : 'Show Chat'}
       </Button>
-      {showButton && (
+      {showButtonTV && (
         <Button
           type="primary"
           icon={<YoutubeOutlined />}
-          onClick={handleButtonClick}
+          onClick={handleTVButtonClick}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            borderRadius: '8px',
+            padding: '10px 20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+          }}
+        >
+          Television
+        </Button>
+      )}
+      {showButtonCalendar && (
+        <Button
+          type="primary"
+          icon={<CalendarOutlined />}
+          onClick={handleCalendarButtonClick}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -123,6 +148,7 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
         Open Chatroom
       </Button> */}
     </div>
+    <MarkdownCalendar isOpen={isCalendarOpen} roomId={chatroomId} onClose={() => setIsCalendarOpen(false)}/>
   </div>
 )
 }

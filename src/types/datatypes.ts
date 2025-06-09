@@ -18,7 +18,8 @@ export interface Room {
 
 // Define a type for scene callbacks
 export type SceneCallbacks = {
-    showInteractButton?: (show: boolean) => void;
+    showInteractButtonTV?: (show: boolean) => void;
+    showInteractButtonCalendar?: (show: boolean) => void;
     // Add more callback methods as needed
     // onPlayerPositionChange?: (position: Vector) => void;
     // onGameEvent?: (event: string, data: any) => void;
@@ -29,4 +30,15 @@ export interface TVState {
   channel: string,
   is_playing: boolean,
   time: number; // the number of seconds in the video, only updated when paused, reload, seek
+}
+
+// Define TypeScript interfaces
+export interface CalendarEntry {
+  id: number;
+  room_id: string;
+  user_id: string;
+  date: string; // YYYY-MM-DD format
+  content: string;
+  created_at: string;
+  updated_at: string;
 }

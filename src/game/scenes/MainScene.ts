@@ -3,12 +3,14 @@ import { Resources } from "../config/resources";
 import { Player } from "../actors/Player";
 import { Television } from "../actors/Television";
 import { SceneCallbacks } from "@/types/datatypes";
+import { Calendar } from "../actors/Calendar";
 // import InteractButton from "../components/InteractButton";
 
 export class MainScene extends Scene {
     // the exclamation mark say we are going to assign some value afterward, might be rejected by eslint
     private player!: Player;
     private television!: Television;
+    private calendar!: Calendar
     private readonly INTERACTION_DISTANCE = 30;
     private callbacks: SceneCallbacks;
 
@@ -52,6 +54,7 @@ export class MainScene extends Scene {
         // Find player and television by name
         const players = this.world.entityManager.getByName('Player');
         const televisions = this.world.entityManager.getByName('Television');
+        const calendars = this.world.entityManager.getByName('Calendar');
 
         if (players.length > 0) {
             this.player = players[0] as Player;
@@ -63,6 +66,12 @@ export class MainScene extends Scene {
             this.television = televisions[0] as Television;
         } else {
             console.warn("Television entity not found in LDTK level");
+        }
+
+        if (calendars.length > 0) {
+            this.calendar = calendars[0] as Calendar;
+        } else {
+            console.warn("Calendar entity not found in LDTK level");
         }
     }
 
@@ -79,13 +88,24 @@ export class MainScene extends Scene {
         return distance <= this.INTERACTION_DISTANCE
     }
 
+    
+    private isPlayerNearCalendar() {
+        const distance = this.player.globalPos.distance(this.calendar.globalPos)
+        return distance <= this.INTERACTION_DISTANCE
+    }
+
     onPreUpdate() {
         // Toggle button visibility based on distance
-        const isNear = this.isPlayerNearTV();
+        const isNearTV = this.isPlayerNearTV();
+        const isNearCalendar = this.isPlayerNearCalendar();
+
         
         // Notify React component via callback
-        if (this.callbacks.showInteractButton) {
-            this.callbacks.showInteractButton(isNear);
+        if (this.callbacks.showInteractButtonTV) {
+            this.callbacks.showInteractButtonTV(isNearTV);
+        }
+        if (this.callbacks.showInteractButtonCalendar) {
+            this.callbacks.showInteractButtonCalendar(isNearCalendar);
         }
     }
 }

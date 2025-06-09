@@ -191,8 +191,8 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   );
 
   const footer = (
-    <div className="bg-white p-4" style={{ flex: 0}}>
-      <div className="flex items-center space-x-2" style={{display: "flex"}}>
+    <div className="bg-white pl-2 flex">
+      <div className="flex items-center space-x-2 w-full">
         <Input
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}

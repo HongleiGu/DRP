@@ -6,6 +6,7 @@ import { Player } from '@/game/actors/Player'
 import { Resources } from '@/game/config/resources'
 import { Television } from '@/game/actors/Television';
 import { SceneCallbacks } from '@/types/datatypes';
+import { Calendar } from '@/game/actors/Calendar';
 
 export const initializeGame = (game: Engine, callbacks: SceneCallbacks) => {
   // Initialize scenes
@@ -31,6 +32,19 @@ export const initializeGame = (game: Engine, callbacks: SceneCallbacks) => {
   Resources.LdtkResource.registerEntityIdentifierFactory('Television', (props) => {
     const player = new Television({
         name: 'Television',
+        anchor: ex.vec(props.entity.__pivot[0],props.entity.__pivot[1]),
+        width: props.entity.width,
+        height: props.entity.height,
+        pos: props.worldPos,
+        z: props.layer.order
+    });
+    player.graphics.use(Resources.TelevisionSprite.toSprite());
+    return player;
+  });
+
+  Resources.LdtkResource.registerEntityIdentifierFactory('Calendar', (props) => {
+    const player = new Calendar({
+        name: 'Calendar',
         anchor: ex.vec(props.entity.__pivot[0],props.entity.__pivot[1]),
         width: props.entity.width,
         height: props.entity.height,
