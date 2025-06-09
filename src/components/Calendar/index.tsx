@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Calendar, Modal, Button, Spin, message, Typography } from 'antd';
-import { EditOutlined, DeleteOutlined, SaveOutlined, UserOutlined, CloseOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useUser } from '@clerk/nextjs';
