@@ -68,13 +68,6 @@ export default function MarkdownCalendar({ roomId, isOpen, onClose }: {
   useEffect(() => {
     if (!isOpen) return;
 
-    // fetchEntries();
-    const helper = async () => {
-      const entries = await getCalendarEntries(roomId)
-      setEntries(entries)
-    }
-    helper();
-
      // Setup realtime subscription
     const channel = supabase
       .channel(`calendar-entries-${roomId}`)
@@ -105,6 +98,16 @@ export default function MarkdownCalendar({ roomId, isOpen, onClose }: {
       channel.unsubscribe();
     };
   }, [isOpen, roomId]);
+
+  useEffect(() => {
+    // fetchEntries();
+    const helper = async () => {
+      const e = await getCalendarEntries(roomId)
+      console.log("entries", e)
+      setEntries(e)
+    }
+    helper();
+  }, [])
 
   const handleDateSelect = useCallback((date: Dayjs) => {
     const dateString = date.format('YYYY-MM-DD');
