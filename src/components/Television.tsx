@@ -78,6 +78,7 @@ export default function Television({
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [copied, setCopied] = useState<boolean>(true);
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
 
   // Initialize YouTube Player
   useEffect(() => {
@@ -86,6 +87,11 @@ export default function Television({
       router.push("/");
       return;
     }
+
+    const handler = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handler);
 
     setUserId(user.id);
     setNickname((user.publicMetadata?.nickname ?? "") as string);
@@ -124,6 +130,7 @@ export default function Television({
     return () => {
       ytPlayer.current?.destroy();
       delete (window as any).onYouTubeIframeAPIReady;
+      document.removeEventListener("fullscreenchange", handler);
     };
   }, [user, router]);
 
@@ -364,13 +371,49 @@ export default function Television({
                 context.resume();
                 setConnected(true);
               } else {
-                messageApi.info(
-                  "This is a shared screen. Please use the buttons below to control the video together 😊"
-                );
+                isPlaying ? handlePause() : handlePlay()
+                  // document.exitFullscreen();
               }
             }}
           >
             {!connected && "Click to connect to shared screen"}
+            {isFullScreen && (
+              <div style={{
+                    width: "100%",
+                    height: "100%"
+              }}>
+                <div
+                  style={{
+                    position: "fixed",
+                    bottom: "10px",
+                    width: "100%",
+                    padding: "0 50px",
+                    margin: "16px 0",
+                  }}
+                  className="text-black"
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 16,
+                    }}
+                  >
+
+                    <Slider
+                      min={0}
+                      max={duration}
+                      value={currentTime}
+                      step={1}
+                      tooltip={{ formatter: (value) => formatTime(value || 0) }}
+                      onChange={handleSliderSeek}
+                      style={{ width: "100%", margin: 0 }}
+                    />
+
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -379,7 +422,7 @@ export default function Television({
           style={{
             width: "100%",
             padding: "0 10px",
-            margin: "16px 0"
+            margin: "16px 0",
           }}
           className="text-black"
         >
@@ -393,7 +436,6 @@ export default function Television({
             <span style={{ minWidth: 50, textAlign: "center" }}>
               {formatTime(currentTime)}
             </span>
-
             <Slider
               min={0}
               max={duration}
@@ -514,15 +556,7 @@ export default function Television({
                   onClick={() => {
                     const elem =
                       document.getElementById("yt-player")?.parentElement;
-                    if (elem?.requestFullscreen) {
-                      elem.requestFullscreen();
-                    } else if ((elem as any)?.webkitRequestFullscreen) {
-                      (elem as any).webkitRequestFullscreen();
-                    } else if ((elem as any)?.mozRequestFullScreen) {
-                      (elem as any).mozRequestFullScreen();
-                    } else if ((elem as any)?.msRequestFullscreen) {
-                      (elem as any).msRequestFullscreen();
-                    }
+                    elem?.requestFullscreen();
                   }}
                   block
                 >

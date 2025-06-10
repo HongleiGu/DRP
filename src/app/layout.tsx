@@ -8,6 +8,7 @@ import "@/app/globals.css"
 import { AntdRegistry } from '@ant-design/nextjs-registry'
 import { StreamVideoProvider } from '@/providers/StreamProvider';
 import { Pixelify_Sans } from 'next/font/google';
+import { ConfigProvider } from 'antd';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -42,7 +43,20 @@ export default function RootLayout({
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} style={{ margin: 0 }}>
           <StreamVideoProvider>
-            <AntdRegistry>{children}</AntdRegistry>
+            <AntdRegistry>
+              <ConfigProvider
+                theme={{
+                  components: {
+                    Slider: {
+                      railBg: "rgba(233, 233, 233, 1)",
+                      railHoverBg: "rgba(227, 227, 227, 1)"
+                    },
+                  },
+                }}
+              >
+                {children}
+              </ConfigProvider>
+            </AntdRegistry>
           </StreamVideoProvider>
         </body>
       </html>
