@@ -31,8 +31,8 @@
 				"layer": "Entities",
 				"x": 232,
 				"y": 296,
-				"width": 24,
-				"height": 15,
+				"width": 16,
+				"height": 16,
 				"color": 14120515,
 				"customFields" : {}
 			}
@@ -44,8 +44,8 @@
 				"layer": "Entities",
 				"x": 280,
 				"y": 200,
-				"width": 24,
-				"height": 15,
+				"width": 16,
+				"height": 16,
 				"color": 15389866,
 				"customFields" : {}
 			}

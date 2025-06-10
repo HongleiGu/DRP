@@ -6,7 +6,8 @@ const paths = {
   Sprites: {
     CharacterSpritePath: "/game/assets/tilemaps/sprout/Characters/Basic Charakter Spritesheet.png",
     Hero01: "/game/assets/Hero 01.png",
-    Television: "/game/assets/television.png"
+    Television: "/game/assets/television.png",
+    Calendar: "/game/assets/calendar.png"
   },
   Ldtk: {
     LdtkResourcePath: "/game/example.ldtk",
@@ -36,6 +37,7 @@ export const Resources = {
     CharacterSpriteSheet: new ImageSource(paths.Sprites.CharacterSpritePath),
     HeroSpriteSheetPng: new ImageSource(paths.Sprites.Hero01),
     TelevisionSprite: new ImageSource(paths.Sprites.Television),
+    CalendarSprite: new ImageSource(paths.Sprites.Calendar),
     PixelifySansFont: new FontSource(paths.Fonts.Pixelify_Sans, 'PixelifySans', { 
       filtering: ex.ImageFiltering.Pixel,
       size: 8, // set a default size

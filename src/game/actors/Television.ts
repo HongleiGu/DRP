@@ -23,6 +23,10 @@ export class Television extends ex.Actor {
         width: Resources.TelevisionSprite.width,
         height: Resources.TelevisionSprite.height
       },
+      destSize: {
+        width: 16,
+        height: 16
+      }
     });
     
     // Add sprite to main actor

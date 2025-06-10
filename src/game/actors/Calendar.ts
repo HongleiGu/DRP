@@ -17,12 +17,16 @@ export class Calendar extends ex.Actor {
   
   onInitialize(engine: ex.Engine): void {
     const sprite = new ex.Sprite({
-      image: Resources.TelevisionSprite,
+      image: Resources.CalendarSprite,
       sourceView: {
         x: 0, y: 0,
-        width: Resources.TelevisionSprite.width,
-        height: Resources.TelevisionSprite.height
+        width: Resources.CalendarSprite.width,
+        height: Resources.CalendarSprite.height
       },
+      destSize: {
+        width: 16,
+        height: 16
+      }
     });
     
     // Add sprite to main actor
@@ -35,7 +39,7 @@ export class Calendar extends ex.Actor {
       color: ex.Color.Black
     });
     
-    // Position label relative to television
+    // Position label relative to Calendar
     this.label.pos = ex.vec(0, -sprite.height / 2);
     this.label.anchor = ex.vec(0.5, 0.5); // Center text
     
@@ -50,10 +54,10 @@ export class Calendar extends ex.Actor {
     // ));
   }
   
-  // Optional: Update position when television moves
+  // Optional: Update position when Calendar moves
   onPostUpdate(engine: ex.Engine, delta: number): void {
     if (this.label) {
-      // Keep label positioned above television
+      // Keep label positioned above Calendar
       this.label.pos = ex.vec(0, -this.height / 2 - 8);
     }
   }
