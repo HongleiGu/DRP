@@ -267,3 +267,24 @@ export async function updateSupabasePlayerState(userId: string, x: number, y: nu
     throw error
   }
 };
+
+export async function resetPlayerToDefault(userId: string, name: string, roomId: string): Promise<void> {
+  const {error} = await supabase
+    .from('players')
+    .upsert({
+      user_id: userId,
+      name: name,
+      room_id: roomId,
+      x: 200,
+      y: 300,
+      direction: "down" as Direction
+    } as PlayerData,
+    {
+      onConflict: 'user_id, room_id'
+    }
+  )
+  if (error) {
+    console.error("Failed to reset players:", error.message);
+    throw error
+  }
+}

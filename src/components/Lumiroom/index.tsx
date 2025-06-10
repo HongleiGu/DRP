@@ -14,6 +14,7 @@ import MarkdownCalendar from '../Calendar'
 import { useUser } from "@clerk/nextjs";
 import { supabase } from '@/lib/supabase'
 import { PlayerData } from '@/types/datatypes'
+import { resetPlayerToDefault } from '@/utils/api'
 
 
 export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVisible,
@@ -24,7 +25,7 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
   const [showButtonCalendar, setShowButtonCalendar] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
   const gameRef = useRef<Engine | null>(null);
-  const params = useParams<{ id: string }>()
+  // const params = useParams<{ id: string }>()
   const {user} = useUser();
 
   useEffect(() => {
@@ -73,6 +74,23 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
       game.stop()
       gameRef.current = null;
     }
+  }, [])
+
+  useEffect(() => {
+    const helper = async () => {
+      if (!user?.id) {
+        alert("you have not logged in yet")
+        router.push("/")
+        return
+      }
+      if (!user?.publicMetadata.nickname) {
+        alert("you are not onboard yet")
+        router.push("/onboarding")
+        return
+      }
+      await resetPlayerToDefault(user?.id, user?.publicMetadata.nickname as string, chatroomId)
+    }
+    helper()
   }, [])
 
   const handleTVButtonClick = () => {
