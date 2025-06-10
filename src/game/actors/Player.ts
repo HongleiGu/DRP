@@ -38,24 +38,23 @@ export class Player extends ex.Actor {
         };
 
         for (const [dir, row] of Object.entries(anims)) {
-        // Idle: use middle frame
-        this.graphics.add(`${dir}-idle`, new ex.Animation({
-            frames: [
-                { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed }
-            ]
-        }));
+            // Idle: use middle frame
+            this.graphics.add(`${dir}-idle`, new ex.Animation({
+                frames: [
+                    { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed }
+                ]
+            }));
 
-        // Walk: use 4-frame loop: 0 -> 1 -> 2 -> 1
-        this.graphics.add(`${dir}-walk`, new ex.Animation({
-            frames: [
-                { graphic: sheet.getSprite(0, row), duration: Config.PlayerFrameSpeed },
-                { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed },
-                { graphic: sheet.getSprite(2, row), duration: Config.PlayerFrameSpeed },
-                { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed }
-            ]
-        }));
-    }
-
+            // Walk: use 4-frame loop: 0 -> 1 -> 2 -> 1
+            this.graphics.add(`${dir}-walk`, new ex.Animation({
+                frames: [
+                    { graphic: sheet.getSprite(0, row), duration: Config.PlayerFrameSpeed },
+                    { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed },
+                    { graphic: sheet.getSprite(2, row), duration: Config.PlayerFrameSpeed },
+                    { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed }
+                ]
+            }));
+        }
 
         this.graphics.use('down-idle');
 
