@@ -217,27 +217,30 @@ export async function removeVideoFromPlaylist(
 
 export async function getCalendarEntries(
   roomId: string
-): Promise<Record<string, CalendarEntry>> {
+): Promise<Record<string, CalendarEntry[]>> {  // Changed return type
   try {
     const { data, error } = await supabase
       .from('calendar_entries')
       .select('*')
       .eq('room_id', roomId)
-      .order('date', { ascending: true });
+      .order('date', { ascending: true })
+      .order('created_at', { ascending: true }); // Add secondary sort
 
     if (error) throw error;
 
-    const entriesObj = data.reduce((acc, entry) => ({
-      ...acc,
-      [entry.date]: entry
-    }), {} as Record<string, CalendarEntry>);
+    // Group entries by date
+    const entriesByDate = data.reduce((acc, entry) => {
+      if (!acc[entry.date]) {
+        acc[entry.date] = [];
+      }
+      acc[entry.date].push(entry);
+      return acc;
+    }, {} as Record<string, CalendarEntry[]>);
   
-    // setEntries(entriesObj);
-    return entriesObj
+    return entriesByDate;
   } catch (error) {
     console.error('Error fetching entries:', error);
-    throw error
-    // message.error('Failed to load calendar entries');
+    throw error;
   }
 };
 
