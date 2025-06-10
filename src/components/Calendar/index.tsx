@@ -428,7 +428,9 @@ export default function FestivalCalendar({
       })
       .subscribe();
 
-    return () => channel.unsubscribe();
+    return () => {
+      channel.unsubscribe();
+    };
   }, [isOpen, roomId]);
 
   const handleDateSelect = (date: Dayjs) => {
