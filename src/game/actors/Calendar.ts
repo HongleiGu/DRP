@@ -28,7 +28,7 @@ export class Calendar extends ex.Actor {
     // Create label as separate actor
     this.label = new ex.Label({
       text: 'CALENDAR',
-      font: Resources.PixelifySansFont.toFont(),
+      font: Resources.DeliusFont.toFont(),
       color: ex.Color.Black
     });
     

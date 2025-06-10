@@ -26,7 +26,9 @@ const paths = {
     Water: "/game/assets/tilemaps/sprout/Tilesets/Water.png"
   },
   Fonts: {
-    Pixelify_Sans: "/fonts/Pixelify_Sans/static/PixelifySans-Regular.ttf"
+    Pixelify_Sans: "/fonts/Pixelify_Sans/static/PixelifySans-Regular.ttf",
+    Delius: "/fonts/Delius/static/Delius-Regular.ttf",
+    Chewy: "/fonts/Chewy/static/Chewy-Regular.ttf"
   }
 }
 
@@ -36,6 +38,14 @@ export const Resources = {
     TelevisionSprite: new ImageSource(paths.Sprites.Television),
     PixelifySansFont: new FontSource(paths.Fonts.Pixelify_Sans, 'PixelifySans', { 
       filtering: ex.ImageFiltering.Pixel,
+      size: 8, // set a default size
+    }),
+    DeliusFont: new FontSource(paths.Fonts.Delius, 'Delius', { 
+      // filtering: ex.ImageFiltering.Pixel,
+      size: 8, // set a default size
+    }),
+    ChewyFont: new FontSource(paths.Fonts.Chewy, 'Chewy', { 
+      // filtering: ex.ImageFiltering.Pixel,
       size: 8, // set a default size
     }),
     LdtkResource: new LdtkResource(paths.Ldtk.LdtkResourcePath, {

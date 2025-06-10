@@ -28,7 +28,7 @@ export class Television extends ex.Actor {
     // Create label as separate actor
     this.label = new ex.Label({
       text: 'TELEVISION',
-      font: Resources.PixelifySansFont.toFont(),
+      font: Resources.DeliusFont.toFont(),
       color: ex.Color.Black
     });
     
