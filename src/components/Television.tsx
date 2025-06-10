@@ -371,7 +371,11 @@ export default function Television({
                 context.resume();
                 setConnected(true);
               } else {
-                isPlaying ? handlePause() : handlePlay()
+                if (isPlaying) {
+                  handlePause()
+                } else {
+                  handlePlay()
+                }
                   // document.exitFullscreen();
               }
             }}
