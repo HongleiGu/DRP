@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import * as ex from 'excalibur';
 import { Resources } from '../config/resources';
 // import { pixelFont } from '@/utils/utils';
