@@ -26,7 +26,7 @@ export class Player extends ex.Actor {
 
     onInitialize(): void {
         const sheet = ex.SpriteSheet.fromImageSource({
-            image: Resources.HeroSpriteSheetPng,
+            image: Resources.CharacterSpriteSheet,
             grid: { spriteWidth: 16, spriteHeight: 20, rows: 4, columns: 3 }
         });
 

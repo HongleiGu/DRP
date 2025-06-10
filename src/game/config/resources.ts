@@ -4,7 +4,7 @@ import * as ex from 'excalibur';
 
 const paths = {
   Sprites: {
-    CharacterSpritePath: "/game/assets/tilemaps/sprout/Characters/Basic Charakter Spritesheet.png",
+    CharacterSpritePath: "/game/assets/character-pack-full_version/sprite_split/character_1/character_1_frame16x20.png",//"/game/assets/tilemaps/sprout/Characters/Basic Charakter Spritesheet.png",
     Hero01: "/game/assets/Hero 01.png",
     Television: "/game/assets/television.png",
     Calendar: "/game/assets/calendar.png"
