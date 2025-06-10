@@ -42,3 +42,15 @@ export interface CalendarEntry {
   created_at: string;
   updated_at: string;
 }
+
+export interface PlayerData {
+  id: string; // useless
+  user_id: string;
+  name: string;
+  room_id: string;
+  x: number;
+  y: number;
+  direction: Direction
+}
+
+export type Direction = "up" | "down" | "right" | "left"

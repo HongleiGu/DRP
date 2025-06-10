@@ -8,9 +8,13 @@ import { Engine, DisplayMode, Color, FadeInOut, Loader } from 'excalibur'
 import { initializeGame } from './engine'
 import { Resources } from '@/game/config/resources'
 import { Alert, Button } from 'antd';
-import { CalendarOutlined, InfoCircleOutlined, YoutubeOutlined } from '@ant-design/icons';
+import { CalendarOutlined, YoutubeOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation'
 import MarkdownCalendar from '../Calendar'
+import { useUser } from "@clerk/nextjs";
+import { supabase } from '@/lib/supabase'
+import { PlayerData } from '@/types/datatypes'
+
 
 export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVisible,
   setChatPanelVisible}: any) {
@@ -21,6 +25,7 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
   const gameRef = useRef<Engine | null>(null);
   const params = useParams<{ id: string }>()
+  const {user} = useUser();
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -45,7 +50,7 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
     };
 
     // Initialize game with callbacks
-    initializeGame(game, sceneCallbacks);
+    initializeGame(game, sceneCallbacks, user?.id ?? "unknown", chatroomId);
 
     const loader = new Loader();
     for (const resource of Object.values(Resources)) {

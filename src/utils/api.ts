@@ -1,7 +1,7 @@
 "use server"
 
 
-import { CalendarEntry, Message, TVState } from '@/types/datatypes';
+import { CalendarEntry, Direction, Message, PlayerData, TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
 import { currentUser, User } from '@clerk/nextjs/server';
 import { VideoElement } from '@/components/PlayList';
@@ -238,5 +238,32 @@ export async function getCalendarEntries(
     console.error('Error fetching entries:', error);
     throw error
     // message.error('Failed to load calendar entries');
+  }
+};
+
+export async function getPlayers(roomId: string): Promise<PlayerData[]> {
+  const { data, error } = await supabase
+    .from('players')
+    .select('*')
+    .eq('room_id', roomId);
+
+  if (error) {
+    console.error("Failed to fetch players:", error.message);
+    throw error
+  }
+  console.log("all players", data, roomId)
+  return data.map(it => it as PlayerData)
+}
+
+
+// excalibur vectors cannot do .x on the server
+export async function updateSupabasePlayerState(userId: string, x: number, y: number, direction: Direction): Promise<void> {
+  const {error} = await supabase
+    .from('players')
+    .update({user_id: userId, x: x.toFixed(0), y: y.toFixed(0), direction: direction})
+    .eq('user_id', userId)
+  if (error) {
+    console.error("Failed to update players:", error.message);
+    throw error
   }
 };

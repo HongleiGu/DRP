@@ -1,130 +1,84 @@
 import * as ex from 'excalibur';
 import { Resources } from '../config/resources';
 import { Config } from '../config/config';
+import { updateSupabasePlayerState } from '@/utils/api';
 
 export class Player extends ex.Actor {
-    constructor(args: ex.ActorArgs) {
+    public userId: string;
+    private lastUpdateTime: number = 0;
+    private lastSentPosition: ex.Vector = ex.vec(0, 0);
+    private currentDirection: 'up' | 'down' | 'left' | 'right' = 'down';
+
+    constructor(args: ex.ActorArgs & { userId: string }) {
         super({
             ...args,
             collisionType: ex.CollisionType.Active
-        })
+        });
+
+        this.userId = args.userId;
     }
 
     onInitialize(): void {
-    // onInitialize(engine: ex.Engine): void {
-        const playerSpriteSheet = ex.SpriteSheet.fromImageSource({
-            image: Resources.HeroSpriteSheetPng as ex.ImageSource,
-            grid: {
-                spriteWidth: 16,
-                spriteHeight: 16,
-                rows: 8,
-                columns: 8
-            }
+        const sheet = ex.SpriteSheet.fromImageSource({
+            image: Resources.HeroSpriteSheetPng,
+            grid: { spriteWidth: 16, spriteHeight: 16, rows: 8, columns: 8 }
         });
 
-        const leftIdle = new ex.Animation({
-            frames: [
-                {graphic: playerSpriteSheet.getSprite(0, 1) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(1, 1) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(2, 1) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(3, 1) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-            ]
-        })
-        this.graphics.add('left-idle', leftIdle);
+        const anims: Record<string, number> = {
+            'left-idle': 1, 'right-idle': 2, 'up-idle': 3, 'down-idle': 0,
+            'left-walk': 5, 'right-walk': 6, 'up-walk': 7, 'down-walk': 4
+        };
 
-        const rightIdle = new ex.Animation({
-            frames: [
-                {graphic: playerSpriteSheet.getSprite(0, 2) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(1, 2) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(2, 2) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(3, 2) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-            ]
-        })
-        this.graphics.add('right-idle', rightIdle);
+        for (const [name, row] of Object.entries(anims)) {
+            this.graphics.add(name, new ex.Animation({
+                frames: [
+                    { graphic: sheet.getSprite(0, row), duration: Config.PlayerFrameSpeed },
+                    { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed },
+                    { graphic: sheet.getSprite(2, row), duration: Config.PlayerFrameSpeed },
+                    { graphic: sheet.getSprite(3, row), duration: Config.PlayerFrameSpeed },
+                ]
+            }));
+        }
 
-
-        const upIdle = new ex.Animation({
-            frames: [
-                {graphic: playerSpriteSheet.getSprite(0, 3) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(1, 3) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(2, 3) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(3, 3) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-            ]
-        })
-        this.graphics.add('up-idle', upIdle);
-
-        const downIdle = new ex.Animation({
-            frames: [
-                {graphic: playerSpriteSheet.getSprite(0, 0) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(1, 0) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(2, 0) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(3, 0) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-            ]
-        })
-        this.graphics.add('down-idle', downIdle);
-
-        const leftWalk = new ex.Animation({
-            frames: [
-                {graphic: playerSpriteSheet.getSprite(0, 5) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(1, 5) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(2, 5) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(3, 5) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-            ]
-        })
-        this.graphics.add('left-walk', leftWalk);
-
-        const rightWalk = new ex.Animation({
-            frames: [
-                {graphic: playerSpriteSheet.getSprite(0, 6) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(1, 6) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(2, 6) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(3, 6) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-            ]
-        });
-        this.graphics.add('right-walk', rightWalk);
-
-        const upWalk = new ex.Animation({
-            frames: [
-                {graphic: playerSpriteSheet.getSprite(0, 7) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(1, 7) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(2, 7) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(3, 7) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-            ]
-        });
-        this.graphics.add('up-walk', upWalk);
-
-        const downWalk = new ex.Animation({
-            frames: [
-                {graphic: playerSpriteSheet.getSprite(0, 4) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(1, 4) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(2, 4) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-                {graphic: playerSpriteSheet.getSprite(3, 4) as ex.Sprite, duration: Config.PlayerFrameSpeed},
-            ]
-        });
-        this.graphics.add('down-walk', downWalk);
+        this.graphics.use('down-idle');
     }
 
     onPreUpdate(engine: ex.Engine): void {
-    // onPreUpdate(engine: ex.Engine, elapsedMs: number): void {
         this.vel = ex.Vector.Zero;
+        let direction: 'up' | 'down' | 'left' | 'right' | null = null;
 
-        this.graphics.use('down-idle');
-        if (engine.input.keyboard.isHeld(ex.Keys.ArrowRight) || engine.input.keyboard.isHeld(ex.Keys.D)) {
-            this.vel = ex.vec(Config.PlayerSpeed, 0);
-            this.graphics.use('right-walk');
+        if (engine.input.keyboard.isHeld(ex.Keys.Right) || engine.input.keyboard.isHeld(ex.Keys.D)) {
+            this.vel.x = Config.PlayerSpeed;
+            direction = 'right';
         }
-        if (engine.input.keyboard.isHeld(ex.Keys.ArrowLeft) || engine.input.keyboard.isHeld(ex.Keys.A)) {
-            this.vel = ex.vec(-Config.PlayerSpeed, 0);
-            this.graphics.use('left-walk');
+        if (engine.input.keyboard.isHeld(ex.Keys.Left) || engine.input.keyboard.isHeld(ex.Keys.A)) {
+            this.vel.x = -Config.PlayerSpeed;
+            direction = 'left';
         }
-        if (engine.input.keyboard.isHeld(ex.Keys.ArrowUp) || engine.input.keyboard.isHeld(ex.Keys.W)) {
-            this.vel = ex.vec(0, -Config.PlayerSpeed);
-            this.graphics.use('up-walk');
+        if (engine.input.keyboard.isHeld(ex.Keys.Up) || engine.input.keyboard.isHeld(ex.Keys.W)) {
+            this.vel.y = -Config.PlayerSpeed;
+            direction = 'up';
         }
-        if (engine.input.keyboard.isHeld(ex.Keys.ArrowDown) || engine.input.keyboard.isHeld(ex.Keys.S)) {
-            this.vel = ex.vec(0, Config.PlayerSpeed);
-            this.graphics.use('down-walk');
+        if (engine.input.keyboard.isHeld(ex.Keys.Down) || engine.input.keyboard.isHeld(ex.Keys.S)) {
+            this.vel.y = Config.PlayerSpeed;
+            direction = 'down';
         }
 
+        if (direction) {
+            this.currentDirection = direction;
+            this.graphics.use(`${direction}-walk`);
+        } else {
+            this.graphics.use(`${this.currentDirection}-idle`);
+        }
+
+        // 📦 Update Supabase only if moved significantly
+        const now = Date.now();
+        const distanceMoved = this.pos.distance(this.lastSentPosition);
+
+        if (now - this.lastUpdateTime > 200 && distanceMoved > 1) {
+            this.lastUpdateTime = now;
+            this.lastSentPosition = this.pos.clone();
+            updateSupabasePlayerState(this.userId, this.pos.x, this.pos.y, this.currentDirection);
+        }
     }
 }

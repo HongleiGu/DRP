@@ -16,30 +16,14 @@
 		"WoodenHouseWalls.png",
 		"Tiles.png",
 		"Plants.png",
-		"Plants_premium.png",
 		"Furniture.png",
 		"Doors.png",
 		"Door2.png",
 		"Fences.png",
 		"Paths.png",
-		"Fruits.png",
-		"Fruits_premium.png",
-		"Tiles2.png"
+		"Fruits.png"
 	],
 	"entities": {
-		"PlayerStart": [
-			{
-				"id": "PlayerStart",
-				"iid": "9c166d50-3740-11f0-a92e-7f84d1cba94d",
-				"layer": "Entities",
-				"x": 280,
-				"y": 360,
-				"width": 16,
-				"height": 16,
-				"color": 12470831,
-				"customFields" : {}
-			}
-		],
 		"Television": [
 			{
 				"id": "Television",
@@ -63,6 +47,19 @@
 				"width": 24,
 				"height": 15,
 				"color": 15389866,
+				"customFields" : {}
+			}
+		],
+		"PlayerStart": [
+			{
+				"id": "PlayerStart",
+				"iid": "79b72c10-3740-11f0-98ac-b1973e4663fb",
+				"layer": "Entities",
+				"x": 216,
+				"y": 360,
+				"width": 16,
+				"height": 16,
+				"color": 12470831,
 				"customFields" : {}
 			}
 		]
