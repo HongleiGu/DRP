@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Calendar,
   Modal,
@@ -7,13 +7,13 @@ import {
   Spin,
   message,
   Typography,
-  Radio,
-  Popover,
   Input,
-  Select,
-  List
+  List,
+  Divider,
+  Tag,
+  Popover
 } from 'antd';
-import { CloseOutlined, DeleteOutlined } from '@ant-design/icons';
+import { CloseOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useUser } from '@clerk/nextjs';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -21,51 +21,30 @@ import { supabase } from '@/lib/supabase';
 import { CalendarEntry } from '@/types/datatypes';
 import { getCalendarEntries } from '@/utils/api';
 import { ALL_EMOJIS } from '@/utils/utils';
-import type { BaseOptionType } from 'antd/es/select';
 
 const { Title, Text } = Typography;
 
-type Festival = {
-  name: string;
-  emoji: string;
-  color: string;
-  border: string;
-};
+const PRESET_FESTIVALS = [
+  { name: "Birthday", emoji: "🎂" },
+  { name: "Christmas", emoji: "🎄" },
+  { name: "New Year", emoji: "🎆" },
+  { name: "Easter", emoji: "🐰" },
+  { name: "Halloween", emoji: "🎃" },
+  { name: "Valentine's Day", emoji: "❤️" },
+  { name: "Thanksgiving", emoji: "🦃" },
+  { name: "Anniversary", emoji: "💍" }
+];
 
-type FestivalMap = Record<string, Festival>;
-
-const INITIAL_FESTIVALS: FestivalMap = {
-  birthday: { name: 'Birthday', emoji: '🎂', color: 'bg-pink-100', border: 'border-pink-300' },
-  christmas: { name: 'Christmas', emoji: '🎄', color: 'bg-green-100', border: 'border-green-300' },
-  easter: { name: 'Easter', emoji: '🐰', color: 'bg-yellow-100', border: 'border-yellow-300' },
-  halloween: { name: 'Halloween', emoji: '🎃', color: 'bg-orange-100', border: 'border-orange-300' },
-  newyear: { name: 'New Year', emoji: '🎉', color: 'bg-blue-100', border: 'border-blue-300' },
-};
-
-type FestivalKey = string;
-
-export default function FestivalCalendar({
-  roomId,
-  isOpen,
-  onClose
-}: {
-  roomId: string;
-  isOpen: boolean;
-  onClose: () => void;
-}) {
+export default function FestivalCalendar({ roomId, isOpen, onClose }: { roomId: string; isOpen: boolean; onClose: () => void; }) {
   const { user, isLoaded: userLoaded } = useUser();
   const [entries, setEntries] = useState<Record<string, CalendarEntry[]>>({});
-  const [festivals, setFestivals] = useState<FestivalMap>(INITIAL_FESTIVALS);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedFestival, setSelectedFestival] = useState<FestivalKey | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
 
-  const [customFestivalName, setCustomFestivalName] = useState('');
-  const [customEmoji, setCustomEmoji] = useState('');
-  const [popoverVisible, setPopoverVisible] = useState(false);
+  const [newFestivals, setNewFestivals] = useState<{ name: string; emoji: string; }[]>([]);
+  const [currentFestival, setCurrentFestival] = useState({ name: '', emoji: '' });
 
-  // Load initial entries
   useEffect(() => {
     if (!roomId || !isOpen) return;
     const fetchEntries = async () => {
@@ -75,10 +54,8 @@ export default function FestivalCalendar({
     fetchEntries();
   }, [roomId, isOpen]);
 
-  // Supabase real-time listener
   useEffect(() => {
     if (!isOpen) return;
-
     const channel = supabase
       .channel(`calendar-entries-${roomId}`)
       .on('postgres_changes', {
@@ -88,39 +65,30 @@ export default function FestivalCalendar({
         filter: `room_id=eq.${roomId}`
       }, (payload) => {
         const { eventType, new: newEntry, old: oldEntry } = payload;
-        
         setEntries(prev => {
           const updated = { ...prev };
           const date = (newEntry as CalendarEntry)?.date || (oldEntry as CalendarEntry)?.date;
-          
           if (!date) return prev;
-          
           if (eventType === 'INSERT') {
             updated[date] = [...(prev[date] || []), newEntry as CalendarEntry];
-          } 
-          else if (eventType === 'UPDATE') {
-            updated[date] = (prev[date] || []).map(entry => 
-              entry.id === (newEntry as CalendarEntry).id ? newEntry as CalendarEntry : entry
-            );
-          } 
-          else if (eventType === 'DELETE') {
-            updated[date] = (prev[date] || []).filter(
-              entry => entry.id !== (oldEntry as CalendarEntry).id
-            );
-            
-            if (updated[date].length === 0) {
-              delete updated[date];
-            }
+          } else if (eventType === 'UPDATE') {
+            updated[date] = (prev[date] || []).map(entry => entry.id === (newEntry as CalendarEntry).id ? newEntry as CalendarEntry : entry);
+          } else if (eventType === 'DELETE') {
+            updated[date] = (prev[date] || []).filter(entry => entry.id !== (oldEntry as CalendarEntry).id);
+            if (updated[date].length === 0) delete updated[date];
           }
           return updated;
         });
-      })
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
+      }).subscribe();
+    return () => { channel.unsubscribe(); };
   }, [isOpen, roomId]);
+
+  useEffect(() => {
+    if (isSelectionModalOpen) {
+      setNewFestivals([]);
+      setCurrentFestival({ name: '', emoji: '' });
+    }
+  }, [isSelectionModalOpen]);
 
   const handleDateSelect = (date: Dayjs) => {
     const dateStr = date.format('YYYY-MM-DD');
@@ -128,156 +96,126 @@ export default function FestivalCalendar({
     setIsSelectionModalOpen(true);
   };
 
-  const handleSaveFestival = async () => {
-    if (!selectedDate || !selectedFestival || !user?.id) return;
-    setIsSaving(true);
+  const addPresetFestival = (preset: { name: string; emoji: string; }) => {
+    setNewFestivals(prev => [...prev, preset]);
+    message.success(`${preset.name} added!`);
+  };
 
+  const addToNewFestivals = () => {
+    if (!currentFestival.name || !currentFestival.emoji) {
+      message.error('Emoji and name required');
+      return;
+    }
+    setNewFestivals(prev => [...prev, currentFestival]);
+    setCurrentFestival({ name: '', emoji: '' });
+  };
+
+  const removeNewFestival = (index: number) => {
+    setNewFestivals(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const saveAllFestivals = async () => {
+    if (!selectedDate || !user?.id || newFestivals.length === 0) return;
+    setIsSaving(true);
     try {
-      const { error } = await supabase.from('calendar_entries').insert({
+      const toInsert = newFestivals.map(f => ({
         room_id: roomId,
         user_id: user.id,
         date: selectedDate,
-        content: selectedFestival
-      });
-
+        content: JSON.stringify(f)
+      }));
+      const { error } = await supabase.from('calendar_entries').insert(toInsert);
       if (error) throw error;
-      message.success(`${festivals[selectedFestival].name} added!`);
-      setSelectedFestival(null);
+      message.success('Festivals added!');
+      setNewFestivals([]);
+      setIsSelectionModalOpen(false);
     } catch (err) {
-      console.error('Save error:', err);
-      message.error('Could not save festival.');
+      console.error(err);
+      message.error('Save failed');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteFestival = async (entryId: number) => {
+  const handleDeleteFestival = async (id: number) => {
     setIsSaving(true);
-
     try {
-      const { error } = await supabase
-        .from('calendar_entries')
-        .delete()
-        .eq('id', entryId);
-
+      const { error } = await supabase.from('calendar_entries').delete().eq('id', id);
       if (error) throw error;
-      message.success('Festival removed!');
+      message.success('Deleted');
     } catch (err) {
-      console.error('Delete error:', err);
-      message.error('Could not delete festival.');
+      console.error(err);
+      message.error('Delete failed');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleAddCustomFestival = () => {
-    const key = customFestivalName.toLowerCase().replace(/\s+/g, '_');
-
-    if (!key || !customEmoji) return;
-
-    const newFestival: Festival = {
-      name: customFestivalName,
-      emoji: customEmoji,
-      color: 'bg-yellow-50',
-      border: 'border-yellow-200'
-    };
-
-    setFestivals(prev => ({ ...prev, [key]: newFestival }));
-    setSelectedFestival(key);
-    setCustomFestivalName('');
-    setCustomEmoji('');
-    setPopoverVisible(false);
-  };
-
-  const dateEntries = useMemo(() => {
-    return selectedDate ? entries[selectedDate] || [] : [];
-  }, [selectedDate, entries]);
+  const dateEntries = useMemo(() => selectedDate ? entries[selectedDate] || [] : [], [selectedDate, entries]);
 
   const renderDateCell = (date: Dayjs) => {
     const dateStr = date.format('YYYY-MM-DD');
-    const dateEntries = entries[dateStr] || [];
+    const dayEntries = entries[dateStr] || [];
     const isToday = date.isSame(dayjs(), 'day');
-
     return (
       <div
-        className={`h-32 flex flex-col rounded-lg cursor-pointer transition
-          ${dateEntries.length ? 'bg-gray-50 border border-gray-200' : 'bg-gray-50'}
-          ${isToday ? 'ring-2 ring-blue-300' : ''}
-          hover:shadow-md p-1 gap-1 overflow-hidden`}
+        className={`h-32 flex flex-col p-1 gap-1 overflow-hidden cursor-pointer rounded-lg transition ${dayEntries.length ? 'bg-gray-50 border' : 'bg-gray-50'} ${isToday ? 'ring-2 ring-blue-300' : ''} hover:shadow-md`}
         onClick={() => handleDateSelect(date)}
       >
-        {dateEntries.length === 0 ? (
-          <div className="text-gray-400 text-center h-full flex flex-col items-center justify-center">
+        {dayEntries.length === 0 ? (
+          <div className="text-gray-400 text-center flex-1 flex flex-col justify-center items-center">
             <div className="text-xl">+</div>
             <div className="text-xs mt-1">Add Festival</div>
           </div>
-        ) : dateEntries.length === 1 ? (
-          // Single festival - full display
-          <div className="h-full flex flex-col items-center justify-center p-2">
-            {dateEntries.map(entry => {
-              const festivalKey = entry.content as FestivalKey;
-              const festival = festivals[festivalKey];
-              return festival ? (
-                <div 
-                  key={entry.id}
-                  className={`${festival.color} ${festival.border} border-2 rounded-lg p-3 flex flex-col items-center justify-center w-full h-full`}
-                >
-                  <span className="text-4xl">{festival.emoji}</span>
-                  <span className="font-bold mt-2 text-center">{festival.name}</span>
-                </div>
-              ) : null;
+        ) : dayEntries.length === 1 ? (
+          <div className="flex-1 flex flex-col items-center justify-center">
+            {dayEntries.map(entry => {
+              try {
+                const fest = JSON.parse(entry.content);
+                return (
+                  <div key={entry.id} className="bg-white border rounded p-2 flex flex-col items-center justify-center w-full h-full">
+                    <span className="text-4xl">{fest.emoji}</span>
+                    <span className="mt-2 font-bold text-center">{fest.name}</span>
+                  </div>
+                );
+              } catch {
+                return null;
+              }
             })}
           </div>
         ) : (
-          // Multiple festivals - scrollable list
-          <div className="h-full flex flex-col">
-            <div className="text-xs text-gray-500 text-center mb-1">
-              {dateEntries.length} festivals
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <ul className="space-y-1 px-1">
-                {dateEntries.map(entry => {
-                  const festivalKey = entry.content as FestivalKey;
-                  const festival = festivals[festivalKey];
-                  return festival ? (
-                    <li 
-                      key={entry.id}
-                      className="flex items-center gap-2 bg-white p-1 rounded border"
-                    >
-                      <span className="text-xl">{festival.emoji}</span>
-                      <span className="text-xs truncate">{festival.name}</span>
+          <div className="flex-1">
+            <div className="text-xs text-center text-gray-500">{dayEntries.length} festivals</div>
+            <ul className="overflow-y-auto px-1 space-y-1">
+              {dayEntries.map(entry => {
+                try {
+                  const fest = JSON.parse(entry.content);
+                  return (
+                    <li key={entry.id} className="bg-white border p-1 rounded flex items-center gap-2">
+                      <span className="text-xl">{fest.emoji}</span>
+                      <span className="text-xs truncate">{fest.name}</span>
                     </li>
-                  ) : null;
-                })}
-              </ul>
-            </div>
+                  );
+                } catch {
+                  return null;
+                }
+              })}
+            </ul>
           </div>
         )}
       </div>
     );
   };
 
-  if (!userLoaded) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <Spin size="large" tip="Loading user..." />
-      </div>
-    );
-  }
+  if (!userLoaded) return <div className="flex justify-center items-center min-h-[400px]"><Spin size="large" tip="Loading user..." /></div>;
 
   return (
-    <Modal
-      open={isOpen}
-      onCancel={onClose}
-      footer={null}
-      closeIcon={<CloseOutlined />}
-      width="90%"
-    >
+    <Modal open={isOpen} onCancel={onClose} footer={null} width="90%" closeIcon={<CloseOutlined />}>
       <div className="flex flex-col h-[80vh]">
         <div className="flex justify-between items-center border-b pb-4 mb-4">
           <div>
             <Title level={2} className="!m-0 !text-2xl">Festival Calendar</Title>
-            <Text type="secondary">Click any date to add or remove festivals</Text>
+            <Text type="secondary">Click a date to manage festivals</Text>
           </div>
           <div className="flex gap-3">
             {user && (
@@ -291,11 +229,7 @@ export default function FestivalCalendar({
         </div>
 
         <div className="flex-1 overflow-hidden rounded-xl border p-4 bg-gray-50">
-          <Calendar
-            cellRender={renderDateCell}
-            fullscreen
-            className="bg-white rounded-lg p-2 shadow-sm"
-          />
+          <Calendar cellRender={renderDateCell} fullscreen className="bg-white rounded-lg p-2 shadow-sm" />
         </div>
       </div>
 
@@ -303,112 +237,82 @@ export default function FestivalCalendar({
         title={`Festivals for ${selectedDate ? dayjs(selectedDate).format('MMMM D, YYYY') : ''}`}
         open={isSelectionModalOpen}
         onCancel={() => setIsSelectionModalOpen(false)}
-        footer={null}
-        width={600}
+        footer={[
+          <Button key="cancel" onClick={() => setIsSelectionModalOpen(false)}>Cancel</Button>,
+          <Button key="save" type="primary" onClick={saveAllFestivals} loading={isSaving} disabled={newFestivals.length === 0}>Save All ({newFestivals.length})</Button>
+        ]}
+        width={800}
       >
-        <div className="mb-6">
-          <h3 className="font-medium mb-3">Current Festivals</h3>
-          {dateEntries.length > 0 ? (
+        <div className="flex flex-col gap-6">
+          <div>
+            <Title level={4} className="!mt-0">Existing Festivals</Title>
             <List
+              className="max-h-[200px] overflow-y-auto border rounded"
               dataSource={dateEntries}
-              renderItem={entry => {
-                const festivalKey = entry.content as FestivalKey;
-                const festival = festivals[festivalKey];
-                return festival ? (
-                  <List.Item 
-                    className="border-b py-3 last:border-b-0"
-                    actions={[
-                      <Button 
-                        key="delete"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleDeleteFestival(entry.id)}
-                        loading={isSaving}
-                        size="small"
+              renderItem={(item: CalendarEntry) => {
+                try {
+                  const festival = JSON.parse(item.content);
+                  return (
+                    <List.Item key={item.id} actions={[<Button key="del" icon={<DeleteOutlined />} danger size="small" loading={isSaving} onClick={() => handleDeleteFestival(item.id)} />]}>
+                      <List.Item.Meta
+                        avatar={<span className="text-2xl">{festival.emoji}</span>}
+                        title={festival.name}
+                        description={`Added by ${item.user_id}`}
                       />
-                    ]}
-                  >
-                    <List.Item.Meta
-                      avatar={<span className="text-2xl">{festival.emoji}</span>}
-                      title={festival.name}
-                      description={`Added by ${entry.user_id}`}
-                    />
-                  </List.Item>
-                ) : null;
+                    </List.Item>
+                  );
+                } catch {
+                  return null;
+                }
               }}
             />
-          ) : (
-            <div className="text-gray-400 text-center py-4">
-              No festivals added yet
-            </div>
-          )}
-        </div>
-
-        <div className="border-t pt-4">
-          <h3 className="font-medium mb-3">Add New Festival</h3>
-          <div className="mb-4">
-            <Radio.Group
-              value={selectedFestival}
-              onChange={(e) => setSelectedFestival(e.target.value)}
-              className="w-full"
-            >
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {Object.entries(festivals).map(([key, fest]) => (
-                  <Radio.Button
-                    key={key}
-                    value={key}
-                    className={`h-24 flex flex-col items-center justify-center p-2 rounded-lg ${
-                      selectedFestival === key ? 'ring-2 ring-blue-500' : ''
-                    }`}
-                  >
-                    <span className="text-3xl">{fest.emoji}</span>
-                    <span className="font-medium mt-2">{fest.name}</span>
-                  </Radio.Button>
-                ))}
-              </div>
-            </Radio.Group>
+            {dateEntries.length === 0 && <div className="text-center py-4 text-gray-500">No festivals for this date</div>}
           </div>
 
-          <div className="flex justify-between items-center">
-            <Popover
-              content={
-                <div className="flex flex-col gap-2 w-64">
-                  <Input
-                    value={customFestivalName}
-                    onChange={(e) => setCustomFestivalName(e.target.value)}
-                    placeholder="Festival name"
-                  />
-                  <Select
-                    value={customEmoji}
-                    style={{ width: '100%' }}
-                    placeholder="Choose emoji"
-                    onChange={(e) => setCustomEmoji(e)}
-                    options={ALL_EMOJIS[0].emojis.map(e => ({ value: e, label: e }))}
-                  />
-                  <Button 
-                    type="primary" 
-                    onClick={handleAddCustomFestival}
-                    disabled={!customFestivalName || !customEmoji}
-                  >
-                    Add Custom Festival
-                  </Button>
+          <Divider />
+
+          <div>
+            <Title level={4}>Quick Add Presets</Title>
+            <div className="grid grid-cols-4 gap-2">
+              {PRESET_FESTIVALS.map((preset, idx) => (
+                <Button key={idx} className="flex flex-col items-center h-auto py-2" onClick={() => addPresetFestival(preset)}>
+                  <span className="text-2xl mb-1">{preset.emoji}</span>
+                  <span className="text-xs">{preset.name}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <Divider />
+
+          <div>
+            <Title level={4}>Add Custom Festival</Title>
+            <div className="flex items-center gap-2">
+              <Popover
+                content={
+                  <div className="max-h-48 overflow-y-auto grid grid-cols-6 gap-1 p-2">
+                    {ALL_EMOJIS.flatMap(g => g.emojis).map(emoji => (
+                      <span key={emoji} className="text-xl cursor-pointer hover:scale-110 transition" onClick={() => setCurrentFestival(prev => ({ ...prev, emoji }))}>{emoji}</span>
+                    ))}
+                  </div>
+                }
+                trigger="click"
+              >
+                <Button shape="circle" icon={currentFestival.emoji ? <span className="text-xl">{currentFestival.emoji}</span> : <PlusOutlined />} size="large" className="border border-dashed" />
+              </Popover>
+              <Input placeholder="Festival name" value={currentFestival.name} onChange={(e) => setCurrentFestival(prev => ({ ...prev, name: e.target.value }))} className="w-60" />
+              <Button type="primary" onClick={addToNewFestivals} disabled={!currentFestival.name || !currentFestival.emoji}>Add</Button>
+            </div>
+            {newFestivals.length > 0 && (
+              <div className="mt-4">
+                <Title level={5}>To be added:</Title>
+                <div className="flex flex-wrap gap-2">
+                  {newFestivals.map((f, i) => (
+                    <Tag key={i} closable onClose={() => removeNewFestival(i)} className="text-lg px-3 py-1">{f.emoji} {f.name}</Tag>
+                  ))}
                 </div>
-              }
-              trigger="click"
-              visible={popoverVisible}
-              onVisibleChange={setPopoverVisible}
-            >
-              <Button>Create Custom Festival</Button>
-            </Popover>
-            
-            <Button 
-              type="primary" 
-              onClick={handleSaveFestival} 
-              loading={isSaving}
-              disabled={!selectedFestival}
-            >
-              Add Festival
-            </Button>
+              </div>
+            )}
           </div>
         </div>
       </Modal>
