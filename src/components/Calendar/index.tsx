@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Calendar,
   Modal,
@@ -21,7 +21,6 @@ import { supabase } from '@/lib/supabase';
 import { CalendarEntry } from '@/types/datatypes';
 import { getCalendarEntries } from '@/utils/api';
 import { ALL_EMOJIS } from '@/utils/utils';
-import type { BaseOptionType } from 'antd/es/select';
 
 const { Title, Text } = Typography;
 
