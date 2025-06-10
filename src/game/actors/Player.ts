@@ -67,7 +67,7 @@ export class Player extends ex.Actor {
         });
         
         // Position label relative to television
-        this.label.pos = ex.vec(0, -8);
+        this.label.pos = ex.vec(0, -14);
         this.label.anchor = ex.vec(0.5, 0.5); // Center text
         
         // Add label as child actor
