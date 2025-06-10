@@ -8,6 +8,7 @@ import { PlayerData, SceneCallbacks } from "@/types/datatypes";
 import { supabase } from "@/lib/supabase";
 import { getPlayers } from "@/utils/api";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import { UPDATE_INTERVAL } from "@/utils/utils";
 
 export class MainScene extends Scene {
   private player!: Player;
@@ -19,12 +20,15 @@ export class MainScene extends Scene {
   private roomId: string;
   private userId: string;
   private playerRealtimeChannel: RealtimeChannel | null = null;
+  private username: string;
 
-  constructor(callbacks: SceneCallbacks = {}, userId: string, roomId: string) {
+  constructor(callbacks: SceneCallbacks = {}, userId: string, roomId: string, username: string) {
     super();
     this.callbacks = callbacks;
     this.userId = userId;
+    console.log("roomId:", roomId)
     this.roomId = roomId;
+    this.username = username;
   }
 
   async onInitialize(): Promise<void> {
@@ -34,8 +38,9 @@ export class MainScene extends Scene {
     });
 
     this.findEntities();
-    await this.initPlayers(this.roomId);
+    console.log(this.roomId)
     this.subscribeToPlayerUpdates();
+    await this.initPlayers(this.roomId);
   }
 
   onPostAdd() {
@@ -52,7 +57,7 @@ export class MainScene extends Scene {
   }
 
   private findEntities() {
-    const players = this.world.entityManager.getByName("Player");
+    const players = this.world.entityManager.getByName(this.username);
     const televisions = this.world.entityManager.getByName("Television");
     const calendars = this.world.entityManager.getByName("Calendar");
 
@@ -98,12 +103,14 @@ export class MainScene extends Scene {
 
       if (!this.otherPlayers[id]) {
         const other = new OtherPlayer({
-          pos: position,
-          name: "OtherPlayer",
-          z: 15,
-          width: 16,
-          height: 16,
-          anchor: new Vector(0.5, 0.5)
+            pos: position,
+            z: 15,
+            width: 16,
+            height: 16,
+            anchor: new Vector(0.5, 0.5),
+            userId: playerData.user_id,
+            roomId: playerData.room_id,
+            name: playerData.name,
         });
         other.setDirection(playerData.direction, 'idle');
         this.otherPlayers[id] = other;
@@ -126,16 +133,18 @@ export class MainScene extends Scene {
     const position = vec(playerData.x, playerData.y);
 
     if (this.otherPlayers[id]) {
-      this.otherPlayers[id].walkTo(position, 200); // Smooth 200ms walk
+      this.otherPlayers[id].walkTo(position, UPDATE_INTERVAL); // Smooth 200ms walk
       this.otherPlayers[id].setDirection(playerData.direction, 'walk');
     } else {
       const other = new OtherPlayer({
         pos: position,
-        name: "OtherPlayer",
         z: 15,
         width: 16,
         height: 16,
-        anchor: new Vector(0.5, 0.5)
+        anchor: new Vector(0.5, 0.5),
+        userId: playerData.user_id,
+        roomId: playerData.room_id,
+        name: playerData.name,
       });
       other.setDirection(playerData.direction, 'walk');
       this.otherPlayers[id] = other;

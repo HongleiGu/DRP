@@ -52,3 +52,5 @@ export const pixelFont = new ex.Font({
   family: 'var(--game-font)', // Uses CSS variable
   size: 24
 });
+
+export const UPDATE_INTERVAL = 50 // 100ms = 0.1s

@@ -51,7 +51,8 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
     };
 
     // Initialize game with callbacks
-    initializeGame(game, sceneCallbacks, user?.id ?? "unknown", chatroomId);
+    console.log("inited room", chatroomId)
+    initializeGame(game, sceneCallbacks, user?.id ?? "unknown", user?.publicMetadata.nickname as string ?? "Player", chatroomId);
 
     const loader = new Loader();
     for (const resource of Object.values(Resources)) {

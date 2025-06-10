@@ -242,6 +242,7 @@ export async function getCalendarEntries(
 };
 
 export async function getPlayers(roomId: string): Promise<PlayerData[]> {
+  console.log(roomId)
   const { data, error } = await supabase
     .from('players')
     .select('*')
@@ -256,17 +257,33 @@ export async function getPlayers(roomId: string): Promise<PlayerData[]> {
 }
 
 
-// excalibur vectors cannot do .x on the server
-export async function updateSupabasePlayerState(userId: string, x: number, y: number, direction: Direction): Promise<void> {
-  const {error} = await supabase
+export async function updateSupabasePlayerState(
+  userId: string,
+  x: number,
+  y: number,
+  name: string,
+  direction: Direction,
+  room_id: string
+): Promise<void> {
+  const { error } = await supabase
     .from('players')
-    .update({user_id: userId, x: x.toFixed(0), y: y.toFixed(0), direction: direction})
-    .eq('user_id', userId)
+    .upsert(
+      {
+        user_id: userId,
+        room_id: room_id,
+        x: Math.round(x),
+        y: Math.round(y),
+        name: name,
+        direction: direction
+      },
+      { onConflict: 'user_id, room_id' }  // Specify conflict resolution
+    );
+
   if (error) {
-    console.error("Failed to update players:", error.message);
-    throw error
+    console.error("Failed to update player state:", error.message);
+    throw error;
   }
-};
+}
 
 export async function resetPlayerToDefault(userId: string, name: string, roomId: string): Promise<void> {
   const {error} = await supabase

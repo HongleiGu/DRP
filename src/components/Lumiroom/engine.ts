@@ -7,12 +7,14 @@ import { Resources } from '@/game/config/resources'
 import { Television } from '@/game/actors/Television';
 import { SceneCallbacks } from '@/types/datatypes';
 import { Calendar } from '@/game/actors/Calendar';
+import { User } from '@clerk/backend';
 
 
 // load assets
-export const initializeGame = (game: Engine, callbacks: SceneCallbacks, userId: string, roomId: string) => {
+export const initializeGame = (game: Engine, callbacks: SceneCallbacks, userId: string, username: string, roomId: string) => {
   // Initialize scenes
-  const mainScene = new MainScene(callbacks, userId, roomId)
+  console.log("init room", roomId)
+  const mainScene = new MainScene(callbacks, userId, roomId, username)
 
   
   game.add('main', mainScene)
@@ -22,13 +24,14 @@ export const initializeGame = (game: Engine, callbacks: SceneCallbacks, userId: 
 
   Resources.LdtkResource.registerEntityIdentifierFactory('PlayerStart', (props) => {
     const player = new Player({
-        name: 'Player',
+        name: username,
         anchor: ex.vec(props.entity.__pivot[0],props.entity.__pivot[1]),
         width: props.entity.width,
         height: props.entity.height,
         pos: props.worldPos,
         z: props.layer.order,
-        userId: userId
+        userId: userId,
+        roomId: roomId
     });
     player.graphics.use(Resources.HeroSpriteSheetPng.toSprite());
     return player;

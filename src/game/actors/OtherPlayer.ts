@@ -3,17 +3,24 @@ import { Resources } from '../config/resources';
 import { Config } from '../config/config';
 
 export class OtherPlayer extends ex.Actor {
-  private currentDirection: 'up' | 'down' | 'left' | 'right' = 'down';
-  private currentState: 'idle' | 'walk' = 'idle';
+    private label?: ex.Label; // Reference to the label
+    public userId: string
+    private currentDirection: 'up' | 'down' | 'left' | 'right' = 'down';
+    private currentState: 'idle' | 'walk' = 'idle';
+    public roomId: string;
+    public name: string;
 
-  constructor(args: ex.ActorArgs) {
-    super({
-      ...args,
-      collisionType: ex.CollisionType.PreventCollision
-    });
 
-    this.pos = args.pos ?? new ex.Vector(0, 0);
-  }
+    constructor(args: ex.ActorArgs & { userId: string, roomId: string, name: string}) {
+        super({
+            ...args,
+            collisionType: ex.CollisionType.PreventCollision
+        });
+
+        this.userId = args.userId;
+        this.roomId = args.roomId;
+        this.name = args.name;
+    }
 
   onInitialize(): void {
     const playerSpriteSheet = ex.SpriteSheet.fromImageSource({
@@ -42,6 +49,19 @@ export class OtherPlayer extends ex.Actor {
     }
 
     this.setDirection(this.currentDirection, this.currentState);
+    // Create label as separate actor
+    this.label = new ex.Label({
+        text: this.name,
+        font: Resources.DeliusFont.toFont(),
+        color: ex.Color.Black
+    });
+
+    // Position label relative to television
+    this.label.pos = ex.vec(0, -8);
+    this.label.anchor = ex.vec(0.5, 0.5); // Center text
+
+    // Add label as child actor
+    this.addChild(this.label);
   }
 
   private getFrames(sheet: ex.SpriteSheet, row: number) {
