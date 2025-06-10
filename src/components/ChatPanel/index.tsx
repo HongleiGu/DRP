@@ -219,7 +219,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
         <Button
           type="primary"
           onClick={() => handleSend(newMessage)}
-          loading={isSending}
+          // loading={isSending}
           disabled={!newMessage.trim()}
         >
           Send

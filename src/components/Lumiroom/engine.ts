@@ -7,8 +7,6 @@ import { Resources } from '@/game/config/resources'
 import { Television } from '@/game/actors/Television';
 import { SceneCallbacks } from '@/types/datatypes';
 import { Calendar } from '@/game/actors/Calendar';
-import { User } from '@clerk/backend';
-
 
 // load assets
 export const initializeGame = (game: Engine, callbacks: SceneCallbacks, userId: string, username: string, roomId: string) => {
