@@ -27,24 +27,35 @@ export class Player extends ex.Actor {
     onInitialize(): void {
         const sheet = ex.SpriteSheet.fromImageSource({
             image: Resources.HeroSpriteSheetPng,
-            grid: { spriteWidth: 16, spriteHeight: 16, rows: 8, columns: 8 }
+            grid: { spriteWidth: 16, spriteHeight: 20, rows: 4, columns: 3 }
         });
 
         const anims: Record<string, number> = {
-            'left-idle': 1, 'right-idle': 2, 'up-idle': 3, 'down-idle': 0,
-            'left-walk': 5, 'right-walk': 6, 'up-walk': 7, 'down-walk': 4
+            'left': 1,
+            'right': 2,
+            'up': 3,
+            'down': 0
         };
 
-        for (const [name, row] of Object.entries(anims)) {
-            this.graphics.add(name, new ex.Animation({
-                frames: [
-                    { graphic: sheet.getSprite(0, row), duration: Config.PlayerFrameSpeed },
-                    { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed },
-                    { graphic: sheet.getSprite(2, row), duration: Config.PlayerFrameSpeed },
-                    { graphic: sheet.getSprite(3, row), duration: Config.PlayerFrameSpeed },
-                ]
-            }));
-        }
+        for (const [dir, row] of Object.entries(anims)) {
+        // Idle: use middle frame
+        this.graphics.add(`${dir}-idle`, new ex.Animation({
+            frames: [
+                { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed }
+            ]
+        }));
+
+        // Walk: use 4-frame loop: 0 -> 1 -> 2 -> 1
+        this.graphics.add(`${dir}-walk`, new ex.Animation({
+            frames: [
+                { graphic: sheet.getSprite(0, row), duration: Config.PlayerFrameSpeed },
+                { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed },
+                { graphic: sheet.getSprite(2, row), duration: Config.PlayerFrameSpeed },
+                { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed }
+            ]
+        }));
+    }
+
 
         this.graphics.use('down-idle');
 
