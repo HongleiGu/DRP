@@ -332,7 +332,7 @@
 
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { Calendar, Modal, Button, Spin, message, Typography } from 'antd';
+import { Calendar, Modal, Button, Spin, message, Typography, Radio } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import { useUser } from '@clerk/nextjs';
 import type { Dayjs } from 'dayjs';
@@ -343,14 +343,28 @@ import { getCalendarEntries } from '@/utils/api';
 
 const { Title, Text } = Typography;
 
-export default function BirthdayCalendar({ roomId, isOpen, onClose }: { 
+// Festival types with emojis
+const FESTIVALS = {
+  birthday: { name: 'Birthday', emoji: '🎂', color: 'bg-pink-100', border: 'border-pink-300' },
+  christmas: { name: 'Christmas', emoji: '🎄', color: 'bg-green-100', border: 'border-green-300' },
+  easter: { name: 'Easter', emoji: '🐰', color: 'bg-yellow-100', border: 'border-yellow-300' },
+  halloween: { name: 'Halloween', emoji: '🎃', color: 'bg-orange-100', border: 'border-orange-300' },
+  newyear: { name: 'New Year', emoji: '🎉', color: 'bg-blue-100', border: 'border-blue-300' },
+};
+
+type FestivalKey = keyof typeof FESTIVALS;
+
+export default function FestivalCalendar({ roomId, isOpen, onClose }: { 
   roomId: string; 
   isOpen: boolean; 
   onClose: () => void; 
 }) {
   const { user, isLoaded: userLoaded } = useUser();
   const [entries, setEntries] = useState<Record<string, CalendarEntry>>({});
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedFestival, setSelectedFestival] = useState<FestivalKey | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState<boolean>(false);
 
   // Fetch and subscribe to calendar entries
   useEffect(() => {
@@ -388,75 +402,104 @@ export default function BirthdayCalendar({ roomId, isOpen, onClose }: {
 
   useEffect(() => {
     const helper = async () => {
-      const e = await getCalendarEntries(roomId)
-      setEntries(e)
-    }
+      const e = await getCalendarEntries(roomId);
+      setEntries(e);
+    };
     helper();
-  }, [])
+  }, [roomId]);
 
-  const handleDateSelect = useCallback(async (date: Dayjs) => {
-    if (!user?.id) return;
-    
+  const handleDateSelect = useCallback((date: Dayjs) => {
     const dateString = date.format('YYYY-MM-DD');
-    setIsSaving(true);
+    setSelectedDate(dateString);
     
-    try {
-      // Check if birthday already exists
-      if (entries[dateString]?.content === "birthday") {
-        const { error } = await supabase
-          .from('calendar_entries')
-          .delete()
-          .eq('date', dateString)
-          .eq('room_id', roomId);
-        
-        if (error) throw error;
-        message.success('Birthday removed!');
-      } else {
-        const { error } = await supabase
-          .from('calendar_entries')
-          .upsert({
-            room_id: roomId,
-            user_id: user.id,
-            date: dateString,
-            content: 'birthday'
-          }, {
-            onConflict: 'room_id,date'
-          });
+    // Check if date already has a festival
+    const existingFestival = entries[dateString]?.content as FestivalKey;
+    if (existingFestival && FESTIVALS[existingFestival]) {
+      setSelectedFestival(existingFestival);
+    } else {
+      setSelectedFestival(null);
+    }
+    
+    setIsSelectionModalOpen(true);
+  }, [entries]);
 
-        if (error) throw error;
-        message.success('Birthday added!');
-      }
+  const handleSaveFestival = useCallback(async () => {
+    if (!selectedDate || !selectedFestival || !user?.id) return;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('calendar_entries')
+        .upsert({
+          room_id: roomId,
+          user_id: user.id,
+          date: selectedDate,
+          content: selectedFestival
+        }, {
+          onConflict: 'room_id,date'
+        });
+
+      if (error) throw error;
+      
+      message.success(`${FESTIVALS[selectedFestival].name} added!`);
+      setIsSelectionModalOpen(false);
     } catch (error) {
-      console.error('Error updating birthday:', error);
-      message.error('Failed to update birthday');
+      console.error('Error saving festival:', error);
+      message.error('Failed to save festival');
     } finally {
       setIsSaving(false);
     }
-  }, [roomId, user, entries]);
+  }, [roomId, selectedDate, selectedFestival, user]);
+
+  const handleDelete = useCallback(async () => {
+    if (!selectedDate) return;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('calendar_entries')
+        .delete()
+        .eq('date', selectedDate)
+        .eq('room_id', roomId);
+
+      if (error) throw error;
+      
+      message.success('Festival removed!');
+      setIsSelectionModalOpen(false);
+    } catch (error) {
+      console.error('Error deleting festival:', error);
+      message.error('Failed to remove festival');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [roomId, selectedDate]);
 
   const renderDateCell = useCallback((date: Dayjs) => {
     const dateStr = date.format('YYYY-MM-DD');
     const entry = entries[dateStr];
     const isToday = date.isSame(dayjs(), 'day');
-    const isBirthday = entry?.content === "birthday";
+    
+    // Get festival info if exists
+    const festivalKey = entry?.content as FestivalKey;
+    const festival = festivalKey && FESTIVALS[festivalKey];
     
     return (
       <div 
         className={`h-32 flex items-center justify-center cursor-pointer rounded-lg transition-all
-          ${isBirthday ? 'bg-pink-100 border-2 border-pink-300' : 'bg-gray-50'} 
+          ${festival ? `${festival.color} ${festival.border} border-2` : 'bg-gray-50'} 
           ${isToday ? 'ring-2 ring-blue-300' : ''}
-          hover:shadow-sm hover:border-pink-200`}
+          hover:shadow-sm hover:border-blue-200`}
         onClick={() => handleDateSelect(date)}
       >
-        {isBirthday ? (
-          <div className="flex flex-col items-center">
-            <span className="text-4xl">🎂</span>
-            <span className="font-bold text-pink-700 mt-1">Birthday</span>
+        {festival ? (
+          <div className="flex flex-col items-center p-2">
+            <span className="text-4xl">{festival.emoji}</span>
+            <span className="font-bold mt-1 text-center">{festival.name}</span>
           </div>
         ) : (
           <div className="text-gray-400 text-center">
             <div className="text-xl">+</div>
-            <div className="text-xs mt-1">Add Birthday</div>
+            <div className="text-xs mt-1">Add Festival</div>
           </div>
         )}
       </div>
@@ -484,9 +527,9 @@ export default function BirthdayCalendar({ roomId, isOpen, onClose }: {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 mb-4 border-b">
           <div>
-            <Title level={2} className="!m-0 !text-2xl">Birthday Calendar</Title>
+            <Title level={2} className="!m-0 !text-2xl">Festival Calendar</Title>
             <Text type="secondary" className="text-sm">
-              Click on any date to add/remove birthdays
+              Click on any date to add/remove festivals
             </Text>
           </div>
           
@@ -517,6 +560,60 @@ export default function BirthdayCalendar({ roomId, isOpen, onClose }: {
           />
         </div>
       </div>
+
+      {/* Festival Selection Modal */}
+      <Modal
+        title={`Select Festival for ${selectedDate ? dayjs(selectedDate).format('MMMM D, YYYY') : ''}`}
+        open={isSelectionModalOpen}
+        onCancel={() => setIsSelectionModalOpen(false)}
+        footer={[
+          <Button 
+            key="delete" 
+            danger 
+            onClick={handleDelete}
+            disabled={!selectedFestival || isSaving}
+          >
+            Remove Festival
+          </Button>,
+          <Button 
+            key="cancel" 
+            onClick={() => setIsSelectionModalOpen(false)}
+            disabled={isSaving}
+          >
+            Cancel
+          </Button>,
+          <Button 
+            key="save" 
+            type="primary" 
+            onClick={handleSaveFestival}
+            loading={isSaving}
+            disabled={!selectedFestival}
+          >
+            {selectedFestival ? `Add ${FESTIVALS[selectedFestival].name}` : 'Select Festival'}
+          </Button>
+        ]}
+      >
+        <div className="py-4">
+          <Radio.Group 
+            value={selectedFestival}
+            onChange={(e) => setSelectedFestival(e.target.value)}
+            className="w-full"
+          >
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {Object.entries(FESTIVALS).map(([key, festival]) => (
+                <Radio.Button 
+                  key={key}
+                  value={key}
+                  className={`h-24 flex flex-col items-center justify-center p-2 rounded-lg ${selectedFestival === key ? 'ring-2 ring-blue-500' : ''}`}
+                >
+                  <span className="text-3xl">{festival.emoji}</span>
+                  <span className="font-medium mt-2">{festival.name}</span>
+                </Radio.Button>
+              ))}
+            </div>
+          </Radio.Group>
+        </div>
+      </Modal>
     </Modal>
   );
 }
