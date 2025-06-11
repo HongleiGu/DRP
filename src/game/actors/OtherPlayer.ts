@@ -12,7 +12,7 @@ export class OtherPlayer extends ex.Actor {
   private currentDirection: "up" | "down" | "left" | "right" = "down";
   private currentState: "idle" | "walk" = "idle";
   private targetPos: ex.Vector;
-  private moveSpeed = 100; // px/sec
+  private moveSpeed = 40; // px/sec
 
   constructor(args: ex.ActorArgs & { userId: string; roomId: string; name: string; avatarId: string }) {
     super({ ...args, collisionType: ex.CollisionType.PreventCollision });

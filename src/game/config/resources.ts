@@ -48,6 +48,16 @@ export const Resources = {
       // filtering: ex.ImageFiltering.Pixel,
       size: 8, // set a default size
     }),
+    DeliusMainFont: new FontSource(paths.Fonts.Delius, 'DeliusMain', { 
+      // filtering: ex.ImageFiltering.Pixel,
+      size: 8, // set a default size
+      bold: true,
+      shadow: {
+        blur: 2,
+        offset: ex.vec(2, 2),
+        color: ex.Color.Black,
+      }
+    }),
     ChewyFont: new FontSource(paths.Fonts.Chewy, 'Chewy', { 
       // filtering: ex.ImageFiltering.Pixel,
       size: 8, // set a default size

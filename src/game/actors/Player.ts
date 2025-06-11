@@ -63,8 +63,8 @@ export class Player extends ex.Actor {
         // Create label as separate actor
         this.label = new ex.Label({
             text: this.name,
-            font: Resources.DeliusFont.toFont(),
-            color: ex.Color.Black
+            font: Resources.DeliusMainFont.toFont(),
+            color: ex.Color.fromRGB(255,215,0)
         });
         
         // Position label relative to television
