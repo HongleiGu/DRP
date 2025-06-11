@@ -232,7 +232,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
     <Card
       title={header}
       style={{flex: 1}}
-      bodyStyle={{ padding: 0, height: '100%', display: "flex", flexDirection: "column" }}
+      styles={{body:{ padding: 0, height: '100%', display: "flex", flexDirection: "column" }}}
     >
       {emojiPopoverOpen && createPortal(<div
       style={{
