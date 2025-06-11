@@ -244,7 +244,7 @@ export default function FestivalCalendar({
             <div className="text-xs text-center text-gray-500 mb-1">1 festival</div>
             <div className="bg-white border rounded p-2 flex flex-col items-center justify-center w-full flex-1 overflow-hidden">
               <span className="text-4xl">{dayEntries[0].emoji}</span>
-              <span className="mt-2 font-bold text-center">{dayEntries[0].content}</span>
+              <span className="font-bold text-center">{dayEntries[0].content}</span>
             </div>
           </div>
         ) : (
