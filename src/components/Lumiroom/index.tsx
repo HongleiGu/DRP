@@ -175,7 +175,7 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
       >
         Open Chatroom
       </Button> */}
-      <Alert message="Use WASD or click to move" type="info" showIcon />
+      <Alert message="Use WASD or arrow keys to move" type="info" showIcon />
     </div>
       <MarkdownCalendar isOpen={isCalendarOpen} roomId={chatroomId} onClose={() => setIsCalendarOpen(false)}/>
   </div>
