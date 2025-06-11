@@ -50,7 +50,7 @@ export class OtherPlayer extends ex.Actor {
     this.label = new ex.Label({
       text: this.name,
       font: Resources.DeliusFont.toFont(),
-      anchor: ex.vec(0.5, 0.5),
+      anchor: ex.vec(1, 0.5),
       pos: ex.vec(0, -14),
       color: ex.Color.Black
     });

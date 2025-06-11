@@ -116,6 +116,7 @@ export class MainScene extends Scene {
       if (playerData.user_id === this.userId) {
         this.player.pos = pos;
       } else {
+        console.log(playerData.name)
         const other = new OtherPlayer({
           pos,
           z: 15,
@@ -125,9 +126,9 @@ export class MainScene extends Scene {
           userId: playerData.user_id,
           roomId: playerData.room_id,
           name: playerData.name,
-          avatarId: playerData.avatarId
+          avatarId: playerData.avatarId,
         });
-        this.otherPlayers[playerData.id] = other;
+        this.otherPlayers[playerData.user_id] = other;
         this.add(other);
       }
     });
@@ -139,26 +140,28 @@ export class MainScene extends Scene {
       .on("broadcast", { event: "player_move" }, ({ payload }) => {
         const data = payload as PlayerData;
         if (data.user_id === this.userId) return;
+        console.log("player payload", payload, this.otherPlayers)
 
         const pos = vec(data.x, data.y);
-        const other = this.otherPlayers[data.id];
+        const other = this.otherPlayers[data.user_id];
         if (other) {
           other.walkTo(pos);
-        } else {
-          const newOther = new OtherPlayer({
-            pos,
-            z: 15,
-            width: 16,
-            height: 16,
-            anchor: vec(0.5, 0.5),
-            userId: data.user_id,
-            roomId: data.room_id,
-            name: data.name,
-            avatarId: data.avatarId
-          });
-          this.otherPlayers[data.id] = newOther;
-          this.add(newOther);
         }
+        // } else {
+        //   const newOther = new OtherPlayer({
+        //     pos,
+        //     z: 15,
+        //     width: 16,
+        //     height: 16,
+        //     anchor: vec(0.5, 0.5),
+        //     userId: data.user_id,
+        //     roomId: data.room_id,
+        //     name: data.name,
+        //     avatarId: data.avatarId
+        //   });
+        //   this.otherPlayers[data.id] = newOther;
+        //   this.add(newOther);
+        // }
       })
       .subscribe();
   }
