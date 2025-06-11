@@ -234,7 +234,7 @@ export default function FestivalCalendar({
 
     return (
       <div
-        className={`h-32 flex flex-col p-1 gap-1 overflow-hidden cursor-pointer rounded-lg transition ${dayEntries.length ? 'bg-gray-50 border' : 'bg-gray-50'} ${isToday ? 'ring-2 ring-blue-300' : ''} hover:shadow-md`}
+        className={`w-full h-full overflow-y-scroll flex flex-col p-1 gap-1 cursor-pointer rounded-lg transition ${dayEntries.length ? 'bg-gray-50 border' : 'bg-gray-50'} ${isToday ? 'ring-2 ring-blue-300' : ''} hover:shadow-md`}
         onClick={() => handleDateSelect(date)}
       >
         {dayEntries.length === 0 ? (
@@ -250,9 +250,9 @@ export default function FestivalCalendar({
             </div>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto max-h-96">
+          <div className="flex-1 max-h-96">
             <div className="text-xs text-center text-gray-500">{dayEntries.length} festivals</div>
-            <ul className="px-1 space-y-1">
+            <ul className="px-1 space-y-1 festival-scroll">
               {dayEntries.map((entry) => (
                 <li key={entry.id} className="bg-white border p-1 rounded flex items-center gap-2">
                   <span className="text-xl">{entry.emoji}</span>
