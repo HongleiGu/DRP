@@ -114,26 +114,25 @@ export default function FestivalCalendar({
   }, [isOpen, roomId]);
 
   useEffect(() => {
-    if (!isOpen) return;
+  if (!isOpen || isSelectionModalOpen) return; // ✅ 如果子 modal 打开，就不启用全局滚动劫持
 
-    const handleWheel = (e: WheelEvent) => {
-      // 如果鼠标正在 festival-scroll 区域上，就不处理全局 scroll
-      const target = e.target as HTMLElement;
-      if (target.closest('.festival-scroll')) return;
+  const handleWheel = (e: WheelEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('.festival-scroll')) return;
 
-      const container = scrollRef.current;
-      if (container) {
-        container.scrollTop += e.deltaY;
-        e.preventDefault();
-      }
-    };
+    const container = scrollRef.current;
+    if (container) {
+      container.scrollTop += e.deltaY;
+      e.preventDefault();
+    }
+  };
 
-    window.addEventListener('wheel', handleWheel, { passive: false });
+  window.addEventListener('wheel', handleWheel, { passive: false });
+  return () => {
+    window.removeEventListener('wheel', handleWheel);
+  };
+}, [isOpen, isSelectionModalOpen]); // ✅ 加上 isSelectionModalOpen
 
-    return () => {
-      window.removeEventListener('wheel', handleWheel);
-    };
-  }, [isOpen]);
 
   useEffect(() => {
     if (isSelectionModalOpen) {
@@ -303,15 +302,25 @@ export default function FestivalCalendar({
         </div>
 
         <Modal
+          centered // ✅ 居中显示
           title={`Festivals for ${selectedDate ? dayjs(selectedDate).format('MMMM D, YYYY') : ''}`}
           open={isSelectionModalOpen}
           onCancel={() => setIsSelectionModalOpen(false)}
           footer={[
             <Button key="cancel" onClick={() => setIsSelectionModalOpen(false)}>Cancel</Button>,
-            <Button key="save" type="primary" onClick={saveAllFestivals} loading={isSaving} disabled={newFestivals.length === 0}>Save All ({newFestivals.length})</Button>
+            <Button
+              key="save"
+              type="primary"
+              onClick={saveAllFestivals}
+              loading={isSaving}
+              disabled={newFestivals.length === 0}
+            >
+              Save All ({newFestivals.length})
+            </Button>
           ]}
           width={800}
         >
+
           <div className="flex flex-col gap-6">
             <div>
               <Title level={4} className="!mt-0">Existing Festivals</Title>
