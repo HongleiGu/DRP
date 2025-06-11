@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 const HUD = dynamic(() => import('@/components/Lumiroom/UI/Overlay/HUD'), { ssr: false });
 const Game = dynamic(() => import('@/components/Lumiroom'), {
   ssr: false,
-  loading: () => <div className="text-center p-8">Loading game...</div>,
+  loading: () => <div className="text-center p-8">Joining lumiroom...</div>,
 });
 
 // const { Content } = Layout;

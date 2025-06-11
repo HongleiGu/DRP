@@ -1,18 +1,14 @@
-// components/GateLoadingCSS.tsx
 import React from 'react';
 import { Spin } from 'antd';
-import "@/app/globals.css"
+import styles from './GateLoadingCSS.module.css';
+import "@/app/globals.css";
 
-const GateLoadingCSS: React.FC = () => {
+const GateLoading: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[200px]">
-      <div className="relative w-40 h-40">
-        <div className="absolute top-0 left-0 w-1/2 h-full overflow-hidden">
-          <div className="animate-gate-left bg-blue-600 w-full h-full origin-right"></div>
-        </div>
-        <div className="absolute top-0 right-0 w-1/2 h-full overflow-hidden">
-          <div className="animate-gate-right bg-blue-600 w-full h-full origin-left"></div>
-        </div>
+    <div className="w-screen h-screen bg-white text-black flex flex-col items-center justify-start pt-20">
+      <div className={styles.gateContainer}>
+        <div className={styles.leftGate} />
+        <div className={styles.rightGate} />
       </div>
       <Spin tip="Opening the gates..." className="mt-6" />
       <p>Loading ...</p>
@@ -20,4 +16,4 @@ const GateLoadingCSS: React.FC = () => {
   );
 };
 
-export default GateLoadingCSS;
+export default GateLoading;

@@ -51,7 +51,7 @@ export class OtherPlayer extends ex.Actor {
       text: this.name,
       font: Resources.DeliusFont.toFont(),
       anchor: ex.vec(1, 0.5),
-      pos: ex.vec(0, -14),
+      pos: ex.vec(0, -Math.round(20)),
       color: ex.Color.Black
     });
     this.addChild(this.label);
@@ -65,11 +65,12 @@ export class OtherPlayer extends ex.Actor {
     const deltaSec = delta / 1000;
     const toTarget = this.targetPos.sub(this.pos);
     const dist = toTarget.magnitude;
+    this.pos = ex.vec(Math.round(this.pos.x), Math.round(this.pos.y));
 
-    if (dist > 1) {
+    if (dist > 0.5) {
       const step = toTarget.normalize().scale(this.moveSpeed * deltaSec);
       if (step.magnitude >= dist) {
-        this.pos = this.targetPos.clone();
+        this.pos = this.pos.add(step.clampMagnitude(dist));
       } else {
         this.pos = this.pos.add(step);
       }
@@ -80,8 +81,10 @@ export class OtherPlayer extends ex.Actor {
 
       this.setDirection(dir, "walk");
     } else {
+      this.pos = this.targetPos.clone(); // snap to stop cleanly
       this.setDirection(this.currentDirection, "idle");
     }
+
   }
 
   private setDirection(dir: "up" | "down" | "left" | "right", state: "idle" | "walk") {

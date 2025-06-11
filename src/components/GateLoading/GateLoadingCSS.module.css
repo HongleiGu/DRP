@@ -1,0 +1,43 @@
+.gateContainer {
+  position: relative;
+  width: 552px;  /* 你原图的宽度 */
+  height: 290px; /* 你原图的高度 */
+  overflow: hidden;
+}
+
+/* 左门和右门 */
+.leftGate,
+.rightGate {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background-image: url('./pixel-gate.png');
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  animation-duration: 2s;
+  animation-fill-mode: forwards;
+}
+
+.leftGate {
+  left: 0;
+  background-position: left;
+  animation-name: gateLeft;
+}
+
+.rightGate {
+  right: 0;
+  background-position: right;
+  animation-name: gateRight;
+}
+
+@keyframes gateLeft {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+
+@keyframes gateRight {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}

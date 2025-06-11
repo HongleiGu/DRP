@@ -27,7 +27,7 @@ export const initializeGame = (game: Engine, callbacks: SceneCallbacks, userId: 
         width: props.entity.width,
         height: props.entity.height,
         pos: props.worldPos,
-        z: props.layer.order,
+        z: props.layer.order + 10,
         userId: userId,
         roomId: roomId,
         avatarId: avatarId,

@@ -36,7 +36,8 @@ export class Television extends ex.Actor {
     this.label = new ex.Label({
       text: 'TELEVISION',
       font: Resources.DeliusFont.toFont(),
-      color: ex.Color.Black
+      color: ex.Color.Black,
+      pos: ex.vec(0, -12)
     });
     
     // Position label relative to television
