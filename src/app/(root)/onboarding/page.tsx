@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { completeOnboarding } from '@/actions/onboarding'
-import { Form, Input, Button, Typography } from 'antd'
+import { Form, Input, Button, Typography, Row, Col, Image } from 'antd'
 import { z } from 'zod'
-// import { getUsers } from '@/utils/api'
+import { paths } from '@/game/config/resources'
 const { Title } = Typography
 
 // Zod schema matching your custom JWT claims
@@ -20,10 +20,16 @@ type OnboardingFormValues = z.infer<typeof onboardingSchema>
 
 export default function OnboardingComponent() {
   const [error, setError] = React.useState<string>('')
-  // const { userId } = useAuth()
   const { user } = useUser()
   const router = useRouter()
   const [form] = Form.useForm()
+  const [currentAvatarId, setCurrentAvatarId] = useState('1')
+
+  // Generate avatar images array
+  const avatarImages = Array.from({ length: 32 }, (_, i) => ({
+    id: (i + 1).toString(),
+    image: paths.Sprites.CharacterSpritePaths(i + 1)
+  }))
 
   useEffect(() => {
     if (user?.publicMetadata?.nickname) {
@@ -60,6 +66,29 @@ export default function OnboardingComponent() {
     }
   }
 
+  const handleAvatarIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setCurrentAvatarId(value)
+    form.setFieldsValue({ avatarId: value })
+  }
+
+  const handleAvatarNavigation = (direction: 'prev' | 'next') => {
+    let newId = parseInt(currentAvatarId)
+    if (isNaN(newId)) newId = 1
+    
+    if (direction === 'prev') {
+      newId = newId <= 1 ? 32 : newId - 1
+    } else {
+      newId = newId >= 32 ? 1 : newId + 1
+    }
+    
+    const newIdString = newId.toString()
+    setCurrentAvatarId(newIdString)
+    form.setFieldsValue({ avatarId: newIdString })
+  }
+
+  const currentAvatar = avatarImages.find(avatar => avatar.id === currentAvatarId) || avatarImages[0]
+
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
       <Title level={1} style={{ textAlign: 'center' }}>Welcome</Title>
@@ -68,6 +97,7 @@ export default function OnboardingComponent() {
         layout="vertical"
         onFinish={onFinish}
         autoComplete="off"
+        initialValues={{ avatarId: '1' }}
       >
         <Form.Item
           label="Nickname"
@@ -79,12 +109,45 @@ export default function OnboardingComponent() {
         </Form.Item>
 
         <Form.Item
+          label="Avatar"
+          help="Choose your avatar"
+        >
+          <Row gutter={16} align="middle" justify="center">
+            <Col>
+              <Button onClick={() => handleAvatarNavigation('prev')}>Previous</Button>
+            </Col>
+            <Col>
+              <Image
+                src={currentAvatar.image}
+                alt={`Avatar ${currentAvatar.id}`}
+                width={100}
+                height={100}
+                preview={false}
+                style={{ 
+                  borderRadius: '50%', 
+                  objectFit: 'cover',
+                  imageRendering: 'pixelated'
+                }}
+              />
+            </Col>
+            <Col>
+              <Button onClick={() => handleAvatarNavigation('next')}>Next</Button>
+            </Col>
+          </Row>
+        </Form.Item>
+
+        <Form.Item
           label="AvatarID"
           name="avatarId"
-          help="Enter a number from 1 to 32"
+          help="Enter a number from 1 to 32 or use the arrows above"
           rules={[{ required: true }]}
         >
-          <Input />
+          <Input 
+            type="number" 
+            min="1" 
+            max="32" 
+            onChange={handleAvatarIdChange}
+          />
         </Form.Item>
 
         {error && (

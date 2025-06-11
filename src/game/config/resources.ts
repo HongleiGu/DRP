@@ -2,7 +2,7 @@ import { FontSource, ImageSource } from 'excalibur'
 import { LdtkResource } from '@excaliburjs/plugin-ldtk'
 import * as ex from 'excalibur';
 
-const paths = {
+export const paths = {
   Sprites: {
     CharacterSpritePaths: (id: number) => `/game/assets/character-pack-full_version/sprite_split/character_${id}/character_${id}_frame16x20.png`,
     CharacterSpritePath: "/game/assets/character-pack-full_version/sprite_split/character_1/character_1_frame16x20.png",//"/game/assets/tilemaps/sprout/Characters/Basic Charakter Spritesheet.png",
