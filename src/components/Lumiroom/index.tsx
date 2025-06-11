@@ -189,7 +189,7 @@ export default function Game({
               📅 Calendar
             </div>
             <div style={{ fontSize: 12, marginBottom: 12, color: "#555" }}>
-              Do you want to check today's schedule?
+              Do you want to check schedule?
             </div>
             <div style={{ display: "flex", justifyContent: "space-around" }}>
               <Button
