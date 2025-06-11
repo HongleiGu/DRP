@@ -36,7 +36,8 @@ export class Calendar extends ex.Actor {
     this.label = new ex.Label({
       text: 'CALENDAR',
       font: Resources.DeliusFont.toFont(),
-      color: ex.Color.Black
+      color: ex.Color.Black,
+      pos: ex.vec(0, -12)
     });
     
     // Position label relative to Calendar
