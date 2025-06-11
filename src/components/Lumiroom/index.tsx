@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Engine, DisplayMode, Color, FadeInOut, Loader } from 'excalibur'
 import { initializeGame } from './engine'
 import { Resources } from '@/game/config/resources'
-import { Alert, Button } from 'antd';
+import { Alert, Button, Card } from 'antd';
 import { CalendarOutlined, YoutubeOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation'
 import MarkdownCalendar from '../Calendar'
@@ -111,6 +111,50 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
   <div className="relative w-full h-full">
     <canvas ref={canvasRef} className="w-full h-full" />
 
+    {showButtonCalendar && (
+  <div
+    style={{
+      position: "absolute",
+      top: "20%",
+      left: "50%",
+      transform: "translateX(-50%)",
+      zIndex: 20,
+      width: "14%", // 屏幕大约1/7
+      minWidth: 180,
+    }}
+  >
+    <Card
+      size="small"
+      style={{
+        backgroundColor: "#fffbe6",
+        borderRadius: 12,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+        textAlign: "center",
+      }}
+    >
+      <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+        📅 Calendar
+      </div>
+      <div style={{ fontSize: 12, marginBottom: 12, color: "#555" }}>
+        Do you want to check today's schedule?
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-around" }}>
+        <Button
+          size="small"
+          type="primary"
+          onClick={handleCalendarButtonClick}
+        >
+          Enter
+        </Button>
+        <Button size="small" onClick={() => setShowButtonCalendar(false)}>
+          Skip
+        </Button>
+      </div>
+    </Card>
+  </div>
+)}
+
+
     {/* Buttons container - positioned bottom right */}
     <div
       style={{
@@ -144,22 +188,6 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
           }}
         >
           Television
-        </Button>
-      )}
-      {showButtonCalendar && (
-        <Button
-          type="primary"
-          icon={<CalendarOutlined />}
-          onClick={handleCalendarButtonClick}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            borderRadius: '8px',
-            padding: '10px 20px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-          }}
-        >
-          Calendar
         </Button>
       )}
       {/* <Button
