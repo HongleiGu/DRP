@@ -117,10 +117,14 @@ export default function FestivalCalendar({
     if (!isOpen) return;
 
     const handleWheel = (e: WheelEvent) => {
+      // 如果鼠标正在 festival-scroll 区域上，就不处理全局 scroll
+      const target = e.target as HTMLElement;
+      if (target.closest('.festival-scroll')) return;
+
       const container = scrollRef.current;
       if (container) {
         container.scrollTop += e.deltaY;
-        e.preventDefault(); 
+        e.preventDefault();
       }
     };
 
@@ -130,7 +134,6 @@ export default function FestivalCalendar({
       window.removeEventListener('wheel', handleWheel);
     };
   }, [isOpen]);
-
 
   useEffect(() => {
     if (isSelectionModalOpen) {
@@ -243,7 +246,7 @@ export default function FestivalCalendar({
         ) : (
           <div className="flex-1">
             <div className="text-xs text-center text-gray-500">{dayEntries.length} festivals</div>
-            <ul className="overflow-y-auto px-1 space-y-1">
+            <ul className="overflow-y-auto px-1 space-y-1 festival-scroll">
               {dayEntries.map((entry) => (
                 <li key={entry.id} className="bg-white border p-1 rounded flex items-center gap-2">
                   <span className="text-xl">{entry.emoji}</span>
