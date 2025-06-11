@@ -1,14 +1,12 @@
 import type { Metadata } from 'next'
-import {
-  ClerkProvider,
-} from '@clerk/nextjs'
+import { ClerkProvider } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
 import '@ant-design/v5-patch-for-react-19';
 import "@/app/globals.css"
 import { AntdRegistry } from '@ant-design/nextjs-registry'
 import { StreamVideoProvider } from '@/providers/StreamProvider';
 import { Pixelify_Sans } from 'next/font/google';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App } from 'antd'; // ✅ Import App
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -20,12 +18,11 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-
 export const gameFont = Pixelify_Sans({
   subsets: ['latin'],
   weight: '400',
   display: 'swap',
-  variable: '--game-font' // CSS variable approach
+  variable: '--game-font'
 });
 
 export const metadata: Metadata = {
@@ -54,7 +51,9 @@ export default function RootLayout({
                   },
                 }}
               >
-                {children}
+                <App>
+                  {children}
+                </App>
               </ConfigProvider>
             </AntdRegistry>
           </StreamVideoProvider>

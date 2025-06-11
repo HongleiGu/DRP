@@ -215,34 +215,15 @@ export async function removeVideoFromPlaylist(
   }
 }
 
-export async function getCalendarEntries(
-  roomId: string
-): Promise<Record<string, CalendarEntry[]>> {  // Changed return type
-  try {
-    const { data, error } = await supabase
-      .from('calendar_entries')
-      .select('*')
-      .eq('room_id', roomId)
-      .order('date', { ascending: true })
-      .order('created_at', { ascending: true }); // Add secondary sort
-
-    if (error) throw error;
-
-    // Group entries by date
-    const entriesByDate = data.reduce((acc, entry) => {
-      if (!acc[entry.date]) {
-        acc[entry.date] = [];
-      }
-      acc[entry.date].push(entry);
-      return acc;
-    }, {} as Record<string, CalendarEntry[]>);
-  
-    return entriesByDate;
-  } catch (error) {
-    console.error('Error fetching entries:', error);
-    throw error;
-  }
-};
+// Example structure for getCalendarEntries
+export async function getCalendarEntries(roomId: string): Promise<CalendarEntry[]> {
+  const { data, error } = await supabase
+    .from('calendar_entries')
+    .select('*')
+    .eq('room_id', roomId);
+  if (error) throw error;
+  return data || [];
+}
 
 export async function getPlayers(roomId: string): Promise<PlayerData[]> {
   console.log(roomId)

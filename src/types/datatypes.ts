@@ -39,6 +39,7 @@ export interface CalendarEntry {
   user_id: string;
   date: string; // YYYY-MM-DD format
   content: string;
+  emoji: string;
   created_at: string;
   updated_at: string;
 }
