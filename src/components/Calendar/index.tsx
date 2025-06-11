@@ -138,6 +138,7 @@ export default function FestivalCalendar({
     messageApi.success(`${preset.name} added!`);
   }, [messageApi]);
 
+  
   const addToNewFestivals = useCallback(() => {
     if (!currentFestival.name || !currentFestival.emoji) {
       messageApi.error('Emoji and name required');
