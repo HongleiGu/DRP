@@ -32,17 +32,18 @@ export interface TVState {
   time: number; // the number of seconds in the video, only updated when paused, reload, seek
 }
 
-// Define TypeScript interfaces
 export interface CalendarEntry {
-  id: number;
+  id?: number; // optional for inserts
   room_id: string;
   user_id: string;
-  date: string; // YYYY-MM-DD format
-  content: string;
+  date: string;
   emoji: string;
-  created_at: string;
-  updated_at: string;
+  content: string;
+  note?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
+
 
 export interface PlayerData {
   id: string; // useless
