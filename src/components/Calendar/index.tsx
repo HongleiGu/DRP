@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   Calendar,
   Modal,
@@ -48,6 +48,7 @@ export default function FestivalCalendar({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const { user, isLoaded: userLoaded } = useUser();
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -111,6 +112,27 @@ export default function FestivalCalendar({
       channel.unsubscribe();
     };
   }, [isOpen, roomId]);
+
+  useEffect(() => {
+  if (!isOpen || isSelectionModalOpen) return; // ✅ 如果子 modal 打开，就不启用全局滚动劫持
+
+  const handleWheel = (e: WheelEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('.festival-scroll')) return;
+
+    const container = scrollRef.current;
+    if (container) {
+      container.scrollTop += e.deltaY;
+      e.preventDefault();
+    }
+  };
+
+  window.addEventListener('wheel', handleWheel, { passive: false });
+  return () => {
+    window.removeEventListener('wheel', handleWheel);
+  };
+}, [isOpen, isSelectionModalOpen]); // ✅ 加上 isSelectionModalOpen
+
 
   useEffect(() => {
     if (isSelectionModalOpen) {
@@ -223,7 +245,7 @@ export default function FestivalCalendar({
         ) : (
           <div className="flex-1">
             <div className="text-xs text-center text-gray-500">{dayEntries.length} festivals</div>
-            <ul className="overflow-y-auto px-1 space-y-1">
+            <ul className="overflow-y-auto px-1 space-y-1 festival-scroll">
               {dayEntries.map((entry) => (
                 <li key={entry.id} className="bg-white border p-1 rounded flex items-center gap-2">
                   <span className="text-xl">{entry.emoji}</span>
@@ -251,7 +273,7 @@ export default function FestivalCalendar({
   return (
     <>
       {contextHolder}
-      <Modal open={isOpen} onCancel={onClose} footer={null} width="90%" closeIcon={<CloseOutlined />}>
+      <Modal open={isOpen} onCancel={onClose} footer={null} width="90%" closeIcon={false} centered>
         <div className="flex flex-col h-[80vh]">
           <div className="flex justify-between items-center border-b pb-4 mb-4">
             <div>
@@ -269,21 +291,36 @@ export default function FestivalCalendar({
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden rounded-xl border p-4 bg-gray-50">
-            <Calendar cellRender={renderDateCell} fullscreen className="bg-white rounded-lg p-2 shadow-sm" />
+          <div ref={scrollRef}
+          className="flex-1 overflow-y-auto rounded-xl border p-4 bg-gray-50 max-h-[calc(80vh-120px)]">
+            <Calendar
+              cellRender={renderDateCell}
+              fullscreen
+              className="bg-white rounded-lg p-2 shadow-sm"
+            />
           </div>
         </div>
 
         <Modal
+          centered // ✅ 居中显示
           title={`Festivals for ${selectedDate ? dayjs(selectedDate).format('MMMM D, YYYY') : ''}`}
           open={isSelectionModalOpen}
           onCancel={() => setIsSelectionModalOpen(false)}
           footer={[
             <Button key="cancel" onClick={() => setIsSelectionModalOpen(false)}>Cancel</Button>,
-            <Button key="save" type="primary" onClick={saveAllFestivals} loading={isSaving} disabled={newFestivals.length === 0}>Save All ({newFestivals.length})</Button>
+            <Button
+              key="save"
+              type="primary"
+              onClick={saveAllFestivals}
+              loading={isSaving}
+              disabled={newFestivals.length === 0}
+            >
+              Save All ({newFestivals.length})
+            </Button>
           ]}
           width={800}
         >
+
           <div className="flex flex-col gap-6">
             <div>
               <Title level={4} className="!mt-0">Existing Festivals</Title>
