@@ -21,7 +21,7 @@ import { useUser } from '@clerk/nextjs';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { supabase } from '@/lib/supabase';
-import { getCalendarEntries } from '@/utils/api';
+import { getCalendarEntries, insertChatHistory } from '@/utils/api';
 // import { ALL_EMOJIS } from '@/utils/utils';
 import { CalendarEntry } from '@/types/datatypes';
 
@@ -206,6 +206,16 @@ export default function FestivalCalendar({
       console.error(err);
       messageApi.error('Save failed');
     } finally {
+      // send a message
+      const messageObj = {
+        speaker: user.id,
+        speaker_name: user.publicMetadata.nickname as string ?? "Mr. unknown",
+        chat_message: `/alert ${user.publicMetadata.nickname as string ?? "Mr. unknown"}`,
+        created_at: new Date().toISOString(),
+        chat_room_id: roomId
+      }
+      await insertChatHistory(messageObj);
+      
       setIsSaving(false);
     }
   }, [selectedDate, user, newFestivals, note, roomId, messageApi]);

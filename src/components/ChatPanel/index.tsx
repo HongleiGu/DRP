@@ -88,8 +88,13 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
         table: 'chat_history',
         filter: `chat_room_id=eq.${chatroomId}`,
       }, async (payload) => {
-        console.log("payload", payload.new)
+        console.log("payload", payload.new, payload.new.speaker !== userId, payload.new.chat_message.startsWith("/invite"))
         if (payload.new.speaker !== userId) {
+          if (payload.new.chat_message.startsWith("/alert")) {
+            const a = payload.new.chat_message.split(" ")[1]
+            message.info(`${a} has made a change in the calendar, please check`)
+            alert(`${a} has made a change in the calendar, please check`)
+          }
           if (payload.new.chat_message.startsWith("/invite")) {
             const msgUserNickName = payload.new.chat_message.split(" ")[1]
             const senderUserNickName = payload.new.chat_message.split(" ")[2]
