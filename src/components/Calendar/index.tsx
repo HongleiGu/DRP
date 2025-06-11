@@ -224,47 +224,53 @@ export default function FestivalCalendar({
   );
 
   const renderDateCell = useCallback(
-    (date: Dayjs) => {
-      const ds = date.format("YYYY-MM-DD");
-      const dayEntries = dateEntriesMap[ds] || [];
-      const isToday = date.isSame(dayjs(), "day");
-      return (
-        <div
-          className={`w-full h-full overflow-y-scroll flex flex-col p-1 gap-1 cursor-pointer rounded-lg transition ${dayEntries.length ? "bg-gray-50 border" : "bg-gray-50"} ${
-            isToday ? "ring-2 ring-blue-300" : ""
-          } hover:shadow-md`}
-          onClick={() => handleDateSelect(date)}
-        >
-          {dayEntries.length === 0 ? (
-            <div className="text-gray-400 text-center flex-1 flex flex-col justify-center items-center">
-              <div className="text-xl">+</div>
-              <div className="text-xs mt-1">Add Festival</div>
+  (date: Dayjs) => {
+    const dateStr = date.format("YYYY-MM-DD");
+    const dayEntries = dateEntriesMap[dateStr] || [];
+    const isToday = date.isSame(dayjs(), "day");
+
+    return (
+      <div
+        className={`w-full h-full flex flex-col p-1 gap-1 cursor-pointer rounded-lg transition ${dayEntries.length ? 'bg-gray-50 border' : 'bg-gray-50'} ${isToday ? 'ring-2 ring-blue-300' : ''} hover:shadow-md`}
+        onClick={() => handleDateSelect(date)}
+      >
+        {dayEntries.length === 0 ? (
+          <div className="text-gray-400 text-center flex-1 flex flex-col justify-center items-center">
+            <div className="text-xl">+</div>
+            <div className="text-xs mt-1">Add Festival</div>
+          </div>
+        ) : dayEntries.length === 1 ? (
+          <div className="flex-1 flex flex-col items-center justify-start overflow-hidden">
+            <div className="text-xs text-center text-gray-500 mb-1">1 festival</div>
+            <div className="bg-white border rounded p-2 flex flex-col items-center justify-center w-full flex-1 overflow-hidden">
+              <span className="text-4xl">{dayEntries[0].emoji}</span>
+              <span className="mt-2 font-bold text-center">{dayEntries[0].content}</span>
             </div>
-          ) : dayEntries.length === 1 ? (
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <div className="bg-white border rounded p-2 flex flex-col items-center justify-center w-full h-full">
-                <span className="text-4xl">{dayEntries[0].emoji}</span>
-                <span className="mt-2 font-bold text-center">{dayEntries[0].content}</span>
-              </div>
+          </div>
+        ) : (
+          <div className="flex-1 overflow-hidden">
+            <div className="text-xs text-center text-gray-500">
+              {dayEntries.length} festivals
             </div>
-          ) : (
-            <div className="flex-1 max-h-96">
-              <div className="text-xs text-center text-gray-500">{dayEntries.length} festivals</div>
-              <ul className="px-1 space-y-1 festival-scroll">
-                {dayEntries.map((e) => (
-                  <li key={e.id} className="bg-white border p-1 rounded flex items-center gap-2">
-                    <span className="text-xl">{e.emoji}</span>
-                    <span className="text-xs truncate">{e.content}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      );
-    },
-    [dateEntriesMap, handleDateSelect]
-  );
+            <ul className="px-1 space-y-1 festival-scroll overflow-y-auto max-h-[80%]">
+              {dayEntries.map((entry) => (
+                <li
+                  key={entry.id}
+                  className="bg-white border p-1 rounded flex items-center gap-2"
+                >
+                  <span className="text-xl">{entry.emoji}</span>
+                  <span className="text-xs truncate">{entry.content}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  },
+  [dateEntriesMap, handleDateSelect]
+);
+
 
   const selectedDateEntries = useMemo(
     () => (selectedDate ? dateEntriesMap[selectedDate] || [] : []),
