@@ -251,7 +251,7 @@ export default function FestivalCalendar({
   return (
     <>
       {contextHolder}
-      <Modal open={isOpen} onCancel={onClose} footer={null} width="90%" closeIcon={<CloseOutlined />}>
+      <Modal open={isOpen} onCancel={onClose} footer={null} width="90%" closeIcon={false}>
         <div className="flex flex-col h-[80vh]">
           <div className="flex justify-between items-center border-b pb-4 mb-4">
             <div>
