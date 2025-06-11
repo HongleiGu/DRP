@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   Calendar,
   Modal,
@@ -48,6 +48,7 @@ export default function FestivalCalendar({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const { user, isLoaded: userLoaded } = useUser();
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -111,6 +112,25 @@ export default function FestivalCalendar({
       channel.unsubscribe();
     };
   }, [isOpen, roomId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      const container = scrollRef.current;
+      if (container) {
+        container.scrollTop += e.deltaY;
+        e.preventDefault(); 
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, [isOpen]);
+
 
   useEffect(() => {
     if (isSelectionModalOpen) {
@@ -269,7 +289,8 @@ export default function FestivalCalendar({
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto rounded-xl border p-4 bg-gray-50 max-h-[calc(80vh-120px)]">
+          <div ref={scrollRef}
+          className="flex-1 overflow-y-auto rounded-xl border p-4 bg-gray-50 max-h-[calc(80vh-120px)]">
             <Calendar
               cellRender={renderDateCell}
               fullscreen
