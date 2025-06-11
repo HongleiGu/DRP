@@ -51,7 +51,7 @@ export class OtherPlayer extends ex.Actor {
       text: this.name,
       font: Resources.DeliusFont.toFont(),
       anchor: ex.vec(1, 0.5),
-      pos: ex.vec(0, -Math.round(14)),
+      pos: ex.vec(0, -Math.round(20)),
       color: ex.Color.Black
     });
     this.addChild(this.label);
