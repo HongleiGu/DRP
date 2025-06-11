@@ -15,6 +15,10 @@
   }
 }
 
+html, body {
+  background-color: white !important;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
