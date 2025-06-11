@@ -12,6 +12,7 @@ const { Title } = Typography
 // Zod schema matching your custom JWT claims
 const onboardingSchema = z.object({
   nickname: z.string().min(2, 'Nickname must be at least 2 characters'),
+  avatarId: z.string(),
   onboardingComplete: z.literal(true)
 })
 
@@ -72,6 +73,15 @@ export default function OnboardingComponent() {
           label="Nickname"
           name="nickname"
           help="Enter your preferred nickname (min 2 characters)"
+          rules={[{ required: true }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label="AvatarID"
+          name="avatarId"
+          help="Enter a number from 1 to 32"
           rules={[{ required: true }]}
         >
           <Input />

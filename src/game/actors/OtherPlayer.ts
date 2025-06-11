@@ -9,9 +9,9 @@ export class OtherPlayer extends ex.Actor {
     private currentState: 'idle' | 'walk' = 'idle';
     public roomId: string;
     public name: string;
+    public avatarId: string;
 
-
-    constructor(args: ex.ActorArgs & { userId: string, roomId: string, name: string}) {
+    constructor(args: ex.ActorArgs & { userId: string, roomId: string, name: string, avatarId: string}) {
         super({
             ...args,
             collisionType: ex.CollisionType.PreventCollision
@@ -20,33 +20,42 @@ export class OtherPlayer extends ex.Actor {
         this.userId = args.userId;
         this.roomId = args.roomId;
         this.name = args.name;
+        this.avatarId = args.avatarId
     }
 
   onInitialize(): void {
-    const playerSpriteSheet = ex.SpriteSheet.fromImageSource({
-      image: Resources.HeroSpriteSheetPng,
-      grid: {
-        spriteWidth: 16,
-        spriteHeight: 16,
-        rows: 8,
-        columns: 8
-      }
+    const sheet = ex.SpriteSheet.fromImageSource({
+        image: Resources.CharacterSpriteSheets[Number.parseInt(this.avatarId ?? "0")],
+        grid: { spriteWidth: 16, spriteHeight: 20, rows: 4, columns: 3 }
     });
 
-    const animationMap: Record<string, ex.Animation> = {
-      'left-idle': new ex.Animation({ frames: this.getFrames(playerSpriteSheet, 1) }),
-      'right-idle': new ex.Animation({ frames: this.getFrames(playerSpriteSheet, 2) }),
-      'up-idle': new ex.Animation({ frames: this.getFrames(playerSpriteSheet, 3) }),
-      'down-idle': new ex.Animation({ frames: this.getFrames(playerSpriteSheet, 0) }),
-      'left-walk': new ex.Animation({ frames: this.getFrames(playerSpriteSheet, 5) }),
-      'right-walk': new ex.Animation({ frames: this.getFrames(playerSpriteSheet, 6) }),
-      'up-walk': new ex.Animation({ frames: this.getFrames(playerSpriteSheet, 7) }),
-      'down-walk': new ex.Animation({ frames: this.getFrames(playerSpriteSheet, 4) }),
+    const anims: Record<string, number> = {
+        'left': 1,
+        'right': 2,
+        'up': 3,
+        'down': 0
     };
 
-    for (const [key, anim] of Object.entries(animationMap)) {
-      this.graphics.add(key, anim);
+    for (const [dir, row] of Object.entries(anims)) {
+      // Idle: use middle frame
+      this.graphics.add(`${dir}-idle`, new ex.Animation({
+          frames: [
+              { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed }
+          ]
+      }));
+
+      // Walk: use 4-frame loop: 0 -> 1 -> 2 -> 1
+      this.graphics.add(`${dir}-walk`, new ex.Animation({
+          frames: [
+              { graphic: sheet.getSprite(0, row), duration: Config.PlayerFrameSpeed },
+              { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed },
+              { graphic: sheet.getSprite(2, row), duration: Config.PlayerFrameSpeed },
+              { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed }
+          ]
+      }));
     }
+
+    this.graphics.use('down-idle');
 
     this.setDirection(this.currentDirection, this.currentState);
     // Create label as separate actor
@@ -57,7 +66,7 @@ export class OtherPlayer extends ex.Actor {
     });
 
     // Position label relative to television
-    this.label.pos = ex.vec(0, -8);
+    this.label.pos = ex.vec(0, -14);
     this.label.anchor = ex.vec(0.5, 0.5); // Center text
 
     // Add label as child actor

@@ -12,8 +12,6 @@ import { CalendarOutlined, YoutubeOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation'
 import MarkdownCalendar from '../Calendar'
 import { useUser } from "@clerk/nextjs";
-import { supabase } from '@/lib/supabase'
-import { PlayerData } from '@/types/datatypes'
 import { resetPlayerToDefault } from '@/utils/api'
 
 
@@ -52,11 +50,17 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
 
     // Initialize game with callbacks
     console.log("inited room", chatroomId)
-    initializeGame(game, sceneCallbacks, user?.id ?? "unknown", user?.publicMetadata.nickname as string ?? "Player", chatroomId);
+    initializeGame(game, sceneCallbacks, user?.id ?? "unknown", user?.publicMetadata.nickname as string ?? "Player", chatroomId, user?.publicMetadata.avatarId as string);
 
     const loader = new Loader();
     for (const resource of Object.values(Resources)) {
-        loader.addResource(resource);
+        if (Array.isArray(resource)) {
+          for (const res of resource) {
+            loader.addResource(res);
+          }
+        } else {
+          loader.addResource(resource);
+        }
     }
 
     const inTransition = new FadeInOut({
@@ -89,7 +93,7 @@ export default function Game({sendMessage, addReceiver, chatroomId, chatPanelVis
         router.push("/onboarding")
         return
       }
-      await resetPlayerToDefault(user?.id, user?.publicMetadata.nickname as string, chatroomId)
+      await resetPlayerToDefault(user?.id, user?.publicMetadata.nickname as string, chatroomId, user?.publicMetadata.avatarId as string)
     }
     helper()
   }, [])

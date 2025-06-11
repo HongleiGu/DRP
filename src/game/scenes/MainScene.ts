@@ -111,6 +111,7 @@ export class MainScene extends Scene {
             userId: playerData.user_id,
             roomId: playerData.room_id,
             name: playerData.name,
+            avatarId: playerData.avatarId
         });
         other.setDirection(playerData.direction, 'idle');
         this.otherPlayers[id] = other;
@@ -145,6 +146,7 @@ export class MainScene extends Scene {
         userId: playerData.user_id,
         roomId: playerData.room_id,
         name: playerData.name,
+        avatarId: playerData.avatarId
       });
       other.setDirection(playerData.direction, 'walk');
       this.otherPlayers[id] = other;

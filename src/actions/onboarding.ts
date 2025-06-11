@@ -19,7 +19,8 @@ export const completeOnboarding = async (formData: CustomJwtSessionClaims) => {
     const res = await client.users.updateUser(userId, {
       publicMetadata: {
         onboardingComplete: formData.metadata.onboardingComplete,
-        nickname: formData.metadata.nickname
+        nickname: formData.metadata.nickname,
+        avatarId: formData.metadata.avatarId
       },
     })
     return { message: res.publicMetadata }

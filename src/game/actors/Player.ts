@@ -12,8 +12,9 @@ export class Player extends ex.Actor {
     private currentDirection: 'up' | 'down' | 'left' | 'right' = 'down';
     public roomId: string;
     public name: string;
+    public avatarId: string;
 
-    constructor(args: ex.ActorArgs & { userId: string, roomId: string, name: string}) {
+    constructor(args: ex.ActorArgs & { userId: string, roomId: string, name: string, avatarId: string}) {
         super({
             ...args,
             collisionType: ex.CollisionType.Active
@@ -22,11 +23,12 @@ export class Player extends ex.Actor {
         this.userId = args.userId;
         this.roomId = args.roomId;
         this.name = args.name;
+        this.avatarId = args.avatarId;
     }
 
     onInitialize(): void {
         const sheet = ex.SpriteSheet.fromImageSource({
-            image: Resources.CharacterSpriteSheet,
+            image: Resources.CharacterSpriteSheets[Number.parseInt(this.avatarId ?? "0")],
             grid: { spriteWidth: 16, spriteHeight: 20, rows: 4, columns: 3 }
         });
 
@@ -38,24 +40,23 @@ export class Player extends ex.Actor {
         };
 
         for (const [dir, row] of Object.entries(anims)) {
-        // Idle: use middle frame
-        this.graphics.add(`${dir}-idle`, new ex.Animation({
-            frames: [
-                { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed }
-            ]
-        }));
+            // Idle: use middle frame
+            this.graphics.add(`${dir}-idle`, new ex.Animation({
+                frames: [
+                    { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed }
+                ]
+            }));
 
-        // Walk: use 4-frame loop: 0 -> 1 -> 2 -> 1
-        this.graphics.add(`${dir}-walk`, new ex.Animation({
-            frames: [
-                { graphic: sheet.getSprite(0, row), duration: Config.PlayerFrameSpeed },
-                { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed },
-                { graphic: sheet.getSprite(2, row), duration: Config.PlayerFrameSpeed },
-                { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed }
-            ]
-        }));
-    }
-
+            // Walk: use 4-frame loop: 0 -> 1 -> 2 -> 1
+            this.graphics.add(`${dir}-walk`, new ex.Animation({
+                frames: [
+                    { graphic: sheet.getSprite(0, row), duration: Config.PlayerFrameSpeed },
+                    { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed },
+                    { graphic: sheet.getSprite(2, row), duration: Config.PlayerFrameSpeed },
+                    { graphic: sheet.getSprite(1, row), duration: Config.PlayerFrameSpeed }
+                ]
+            }));
+        }
 
         this.graphics.use('down-idle');
 

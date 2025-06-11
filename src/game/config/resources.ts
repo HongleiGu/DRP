@@ -4,8 +4,9 @@ import * as ex from 'excalibur';
 
 const paths = {
   Sprites: {
+    CharacterSpritePaths: (id: number) => `/game/assets/character-pack-full_version/sprite_split/character_${id}/character_${id}_frame16x20.png`,
     CharacterSpritePath: "/game/assets/character-pack-full_version/sprite_split/character_1/character_1_frame16x20.png",//"/game/assets/tilemaps/sprout/Characters/Basic Charakter Spritesheet.png",
-    Hero01: "/game/assets/Hero 01.png",
+    Hero01: "/game/assets/character-pack-full_version/sprite_split/character_1/character_1_frame16x20.png",
     Television: "/game/assets/television.png",
     Calendar: "/game/assets/calendar.png"
   },
@@ -36,6 +37,7 @@ const paths = {
 export const Resources = {
     CharacterSpriteSheet: new ImageSource(paths.Sprites.CharacterSpritePath),
     HeroSpriteSheetPng: new ImageSource(paths.Sprites.Hero01),
+    CharacterSpriteSheets: Array.from(Array(32).keys()).map((i) => new ImageSource(paths.Sprites.CharacterSpritePaths(i + 1))),
     TelevisionSprite: new ImageSource(paths.Sprites.Television),
     CalendarSprite: new ImageSource(paths.Sprites.Calendar),
     PixelifySansFont: new FontSource(paths.Fonts.Pixelify_Sans, 'PixelifySans', { 

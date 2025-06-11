@@ -58,6 +58,7 @@ export default function ProtectedContent() {
                 <Text><MailOutlined /> <strong>Email:</strong> {user.primaryEmailAddress?.emailAddress ?? "No email"}</Text>
                 <Text><IdcardOutlined /> <strong>User ID:</strong> {user.id}</Text>
                 <Text><SmileOutlined /> <strong>Nickname:</strong> {user.publicMetadata?.nickname as string ?? "None"}</Text>
+                <Text><IdcardOutlined /> <strong>Avatar ID:</strong> {user.publicMetadata?.avatarId as string ?? "None"}</Text>
               </Space>
               <Flex gap="small" style={{ marginTop: "16px" }}>
                 <Button onClick={() => router.push("/lobby")}>Lumiroom Lobby</Button>

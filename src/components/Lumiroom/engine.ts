@@ -9,7 +9,7 @@ import { SceneCallbacks } from '@/types/datatypes';
 import { Calendar } from '@/game/actors/Calendar';
 
 // load assets
-export const initializeGame = (game: Engine, callbacks: SceneCallbacks, userId: string, username: string, roomId: string) => {
+export const initializeGame = (game: Engine, callbacks: SceneCallbacks, userId: string, username: string, roomId: string, avatarId: string) => {
   // Initialize scenes
   console.log("init room", roomId)
   const mainScene = new MainScene(callbacks, userId, roomId, username)
@@ -29,9 +29,10 @@ export const initializeGame = (game: Engine, callbacks: SceneCallbacks, userId: 
         pos: props.worldPos,
         z: props.layer.order,
         userId: userId,
-        roomId: roomId
+        roomId: roomId,
+        avatarId: avatarId,
     });
-    player.graphics.use(Resources.HeroSpriteSheetPng.toSprite());
+    // player.graphics.use(Resources.HeroSpriteSheetPng.toSprite());
     return player;
   });
 
