@@ -243,9 +243,9 @@ export default function FestivalCalendar({
             </div>
           </div>
         ) : (
-          <div className="flex-1">
+          <div className="flex-1 overflow-y-auto max-h-96">
             <div className="text-xs text-center text-gray-500">{dayEntries.length} festivals</div>
-            <ul className="overflow-y-auto px-1 space-y-1 festival-scroll">
+            <ul className="px-1 space-y-1">
               {dayEntries.map((entry) => (
                 <li key={entry.id} className="bg-white border p-1 rounded flex items-center gap-2">
                   <span className="text-xl">{entry.emoji}</span>
