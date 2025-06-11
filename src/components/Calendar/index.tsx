@@ -359,8 +359,7 @@ export default function FestivalCalendar({
               <div className="grid grid-cols-4 gap-2">
                 {PRESET_FESTIVALS.map((preset, idx) => (
                   <Button key={idx} className="flex flex-col items-center h-auto py-2" onClick={() => addPresetFestival(preset)}>
-                    <span className="text-2xl mb-1">{preset.emoji}</span>
-                    <span className="text-xs">{preset.name}</span>
+                    {preset.emoji} {preset.name}
                   </Button>
                 ))}
               </div>
