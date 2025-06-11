@@ -288,7 +288,7 @@ export async function updateSupabasePlayerState(
   }
 }
 
-export async function resetPlayerToDefault(userId: string, name: string, roomId: string): Promise<void> {
+export async function resetPlayerToDefault(userId: string, name: string, roomId: string, avatarId: string): Promise<void> {
   const {error} = await supabase
     .from('players')
     .upsert({
@@ -297,7 +297,8 @@ export async function resetPlayerToDefault(userId: string, name: string, roomId:
       room_id: roomId,
       x: 200,
       y: 300,
-      direction: "down" as Direction
+      direction: "down" as Direction,
+      avatarId: avatarId,
     } as PlayerData,
     {
       onConflict: 'user_id, room_id'

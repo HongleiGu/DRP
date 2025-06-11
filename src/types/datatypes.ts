@@ -50,7 +50,8 @@ export interface PlayerData {
   room_id: string;
   x: number;
   y: number;
-  direction: Direction
+  direction: Direction;
+  avatarId: string
 }
 
 export type Direction = "up" | "down" | "right" | "left"

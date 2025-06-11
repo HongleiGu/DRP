@@ -5,6 +5,7 @@ declare global {
     metadata: {
       onboardingComplete?: boolean
       nickname: string, // a random attribute for testing
+      avatarId: string
     }
   }
 }

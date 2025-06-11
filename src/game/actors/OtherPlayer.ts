@@ -9,9 +9,9 @@ export class OtherPlayer extends ex.Actor {
     private currentState: 'idle' | 'walk' = 'idle';
     public roomId: string;
     public name: string;
+    public avatarId: string;
 
-
-    constructor(args: ex.ActorArgs & { userId: string, roomId: string, name: string}) {
+    constructor(args: ex.ActorArgs & { userId: string, roomId: string, name: string, avatarId: string}) {
         super({
             ...args,
             collisionType: ex.CollisionType.PreventCollision
@@ -20,11 +20,12 @@ export class OtherPlayer extends ex.Actor {
         this.userId = args.userId;
         this.roomId = args.roomId;
         this.name = args.name;
+        this.avatarId = args.avatarId
     }
 
   onInitialize(): void {
     const sheet = ex.SpriteSheet.fromImageSource({
-        image: Resources.CharacterSpriteSheet,
+        image: Resources.CharacterSpriteSheets[Number.parseInt(this.avatarId ?? "0")],
         grid: { spriteWidth: 16, spriteHeight: 20, rows: 4, columns: 3 }
     });
 
