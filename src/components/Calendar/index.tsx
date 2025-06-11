@@ -237,7 +237,11 @@ export default function FestivalCalendar({
       <Modal open={isOpen} onCancel={onClose} footer={null} title="Festival Calendar" width={800}>
         <Calendar
           fullscreen={false}
-          onSelect={handleDateSelect}
+          onSelect={(date, info) => {
+            if (info.source === 'date') {
+              handleDateSelect(date);
+            }
+          }}
           cellRender={(date) => {
             const formatted = date.format('YYYY-MM-DD');
             const events = dateEntriesMap[formatted] || [];
