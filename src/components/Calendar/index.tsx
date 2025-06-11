@@ -251,7 +251,7 @@ export default function FestivalCalendar({
   return (
     <>
       {contextHolder}
-      <Modal open={isOpen} onCancel={onClose} footer={null} width="90%" closeIcon={false}>
+      <Modal open={isOpen} onCancel={onClose} footer={null} width="90%" closeIcon={false} centered>
         <div className="flex flex-col h-[80vh]">
           <div className="flex justify-between items-center border-b pb-4 mb-4">
             <div>
@@ -269,8 +269,12 @@ export default function FestivalCalendar({
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden rounded-xl border p-4 bg-gray-50">
-            <Calendar cellRender={renderDateCell} fullscreen className="bg-white rounded-lg p-2 shadow-sm" />
+          <div className="flex-1 overflow-y-auto rounded-xl border p-4 bg-gray-50 max-h-[calc(80vh-120px)]">
+            <Calendar
+              cellRender={renderDateCell}
+              fullscreen
+              className="bg-white rounded-lg p-2 shadow-sm"
+            />
           </div>
         </div>
 
