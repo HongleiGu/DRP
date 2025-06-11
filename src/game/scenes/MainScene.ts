@@ -7,8 +7,6 @@ import { Calendar } from "../actors/Calendar";
 import { PlayerData, SceneCallbacks } from "@/types/datatypes";
 import { supabase } from "@/lib/supabase";
 import { getPlayers } from "@/utils/api";
-import { RealtimeChannel } from "@supabase/supabase-js";
-import { UPDATE_INTERVAL } from "@/utils/utils";
 
 export class MainScene extends Scene {
   private player!: Player;
@@ -19,14 +17,16 @@ export class MainScene extends Scene {
   private callbacks: SceneCallbacks;
   private roomId: string;
   private userId: string;
-  private playerRealtimeChannel: RealtimeChannel | null = null;
   private username: string;
+  private lastBroadcast = 0;
+  private lastPersist = 0;
+  private BROADCAST_INTERVAL = 100; // ms
+  private PERSIST_INTERVAL = 1000;   // ms
 
   constructor(callbacks: SceneCallbacks = {}, userId: string, roomId: string, username: string) {
     super();
     this.callbacks = callbacks;
     this.userId = userId;
-    console.log("roomId:", roomId)
     this.roomId = roomId;
     this.username = username;
   }
@@ -36,11 +36,15 @@ export class MainScene extends Scene {
       pos: vec(0, 0),
       levelFilter: ["Level_0"]
     });
-
     this.findEntities();
-    console.log(this.roomId)
-    this.subscribeToPlayerUpdates();
     await this.initPlayers(this.roomId);
+    this.setupRealtimeChannel();
+  }
+
+  private findEntities() {
+    this.player = this.world.entityManager.getByName(this.username)[0] as Player;
+    this.television = this.world.entityManager.getByName("Television")[0] as Television;
+    this.calendar = this.world.entityManager.getByName("Calendar")[0] as Calendar;
   }
 
   onPostAdd() {
@@ -48,22 +52,11 @@ export class MainScene extends Scene {
   }
 
   onActivate(): void {
-    this.findEntities();
     if (this.player) {
       this.camera.strategy.lockToActor(this.player);
       const bounds = Resources.LdtkResource.getLevelBounds(["Level_0"]);
       this.camera.strategy.limitCameraBounds(bounds);
     }
-  }
-
-  private findEntities() {
-    const players = this.world.entityManager.getByName(this.username);
-    const televisions = this.world.entityManager.getByName("Television");
-    const calendars = this.world.entityManager.getByName("Calendar");
-
-    if (players.length > 0) this.player = players[0] as Player;
-    if (televisions.length > 0) this.television = televisions[0] as Television;
-    if (calendars.length > 0) this.calendar = calendars[0] as Calendar;
   }
 
   onPreUpdate(): void {
@@ -73,109 +66,105 @@ export class MainScene extends Scene {
     if (this.callbacks.showInteractButtonCalendar) {
       this.callbacks.showInteractButtonCalendar(this.isPlayerNearCalendar());
     }
+
+    const now = Date.now();
+    if (this.player) {
+      if (now - this.lastBroadcast > this.BROADCAST_INTERVAL) {
+        supabase.channel(`realtime:room:${this.roomId}`)
+          .send({
+            type: "broadcast",
+            event: "player_move",
+            payload: {
+              user_id: this.userId,
+              room_id: this.roomId,
+              name: this.username,
+              avatarId: this.player.avatarId,
+              x: this.player.pos.x,
+              y: this.player.pos.y
+            },
+          });
+        this.lastBroadcast = now;
+      }
+
+      if (now - this.lastPersist > this.PERSIST_INTERVAL) {
+        supabase
+          .from("players")
+          .update({ x: this.player.pos.x, y: this.player.pos.y })
+          .eq("user_id", this.userId)
+          .eq("room_id", this.roomId);
+        this.lastPersist = now;
+      }
+    }
   }
 
-  private isPlayerNearTV() {
-    return this.player
-      ? this.player.globalPos.distance(this.television.globalPos) <= this.INTERACTION_DISTANCE
-      : false;
+  private isPlayerNearTV(): boolean {
+    if (!this.player || !this.television) return false;
+    return this.player.globalPos.distance(this.television.globalPos) <= this.INTERACTION_DISTANCE;
   }
 
-  private isPlayerNearCalendar() {
-    return this.player
-      ? this.player.globalPos.distance(this.calendar.globalPos) <= this.INTERACTION_DISTANCE
-      : false;
+  private isPlayerNearCalendar(): boolean {
+    if (!this.player || !this.calendar) return false;
+    return this.player.globalPos.distance(this.calendar.globalPos) <= this.INTERACTION_DISTANCE;
   }
 
   private async initPlayers(roomId: string) {
     const players = await getPlayers(roomId);
     if (!players) return;
 
-    for (const playerData of players) {
-      const id = playerData.id;
-      const position = vec(playerData.x, playerData.y);
-
+    players.forEach(playerData => {
+      const pos = vec(playerData.x, playerData.y);
       if (playerData.user_id === this.userId) {
-        this.player.pos = position;
-        this.setupCamera();
-        continue;
-      }
-
-      if (!this.otherPlayers[id]) {
+        this.player.pos = pos;
+      } else {
         const other = new OtherPlayer({
-            pos: position,
+          pos,
+          z: 15,
+          width: 16,
+          height: 16,
+          anchor: new Vector(0.5, 0.5),
+          userId: playerData.user_id,
+          roomId: playerData.room_id,
+          name: playerData.name,
+          avatarId: playerData.avatarId
+        });
+        this.otherPlayers[playerData.id] = other;
+        this.add(other);
+      }
+    });
+  }
+
+  private setupRealtimeChannel() {
+    supabase
+      .channel(`realtime:room:${this.roomId}`)
+      .on("broadcast", { event: "player_move" }, ({ payload }) => {
+        const data = payload as PlayerData;
+        if (data.user_id === this.userId) return;
+
+        const pos = vec(data.x, data.y);
+        const other = this.otherPlayers[data.id];
+        if (other) {
+          other.walkTo(pos);
+        } else {
+          const newOther = new OtherPlayer({
+            pos,
             z: 15,
             width: 16,
             height: 16,
-            anchor: new Vector(0.5, 0.5),
-            userId: playerData.user_id,
-            roomId: playerData.room_id,
-            name: playerData.name,
-            avatarId: playerData.avatarId
-        });
-        other.setDirection(playerData.direction, 'idle');
-        this.otherPlayers[id] = other;
-        this.add(other);
-      }
-    }
-  }
-
-  private setupCamera() {
-    if (!this.player) throw new Error("Player not found for camera");
-    this.camera.strategy.lockToActor(this.player);
-    const bounds = Resources.LdtkResource.getLevelBounds(["Level_0"]);
-    this.camera.strategy.limitCameraBounds(bounds);
-  }
-
-  public updateOtherPlayers(playerData: PlayerData) {
-    if (!playerData || playerData.user_id === this.userId) return;
-
-    const id = playerData.id;
-    const position = vec(playerData.x, playerData.y);
-
-    if (this.otherPlayers[id]) {
-      this.otherPlayers[id].walkTo(position, UPDATE_INTERVAL); // Smooth 200ms walk
-      this.otherPlayers[id].setDirection(playerData.direction, 'walk');
-    } else {
-      const other = new OtherPlayer({
-        pos: position,
-        z: 15,
-        width: 16,
-        height: 16,
-        anchor: new Vector(0.5, 0.5),
-        userId: playerData.user_id,
-        roomId: playerData.room_id,
-        name: playerData.name,
-        avatarId: playerData.avatarId
-      });
-      other.setDirection(playerData.direction, 'walk');
-      this.otherPlayers[id] = other;
-      this.add(other);
-    }
-  }
-
-  private subscribeToPlayerUpdates() {
-    this.playerRealtimeChannel = supabase.channel(`realtime:players:${this.roomId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'players',
-          filter: `room_id=eq.${this.roomId}`
-        },
-        (payload) => {
-          const data = payload.new as PlayerData;
-          this.updateOtherPlayers(data);
+            anchor: vec(0.5, 0.5),
+            userId: data.user_id,
+            roomId: data.room_id,
+            name: data.name,
+            avatarId: data.avatarId
+          });
+          this.otherPlayers[data.id] = newOther;
+          this.add(newOther);
         }
-      )
+      })
       .subscribe();
   }
 
   onDeactivate(): void {
-    if (this.playerRealtimeChannel) {
-      supabase.removeChannel(this.playerRealtimeChannel);
-      this.playerRealtimeChannel = null;
-    }
+    supabase.removeAllChannels();
+    this.otherPlayers = {};
   }
 }

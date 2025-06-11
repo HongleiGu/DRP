@@ -290,3 +290,22 @@ export async function resetPlayerToDefault(userId: string, name: string, roomId:
     throw error
   }
 }
+
+export async function updatePlayerPosition(userId: string, position: {
+  x: number;
+  y: number;
+  direction: Direction
+}) {
+  const { error } = await supabase
+    .from("players")
+    .update({
+      x: position.x,
+      y: position.y,
+      direction: position.direction
+    })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("Failed to update player position:", error.message);
+  }
+}

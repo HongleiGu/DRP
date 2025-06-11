@@ -53,7 +53,7 @@ export const pixelFont = new ex.Font({
   size: 24
 });
 
-export const UPDATE_INTERVAL = 50 // 100ms = 0.1s
+export const UPDATE_INTERVAL = 200 // 100ms = 0.1s
 
 export const ALL_EMOJIS = [
     {
