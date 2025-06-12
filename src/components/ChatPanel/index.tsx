@@ -12,7 +12,8 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 // import { createPortal } from "react-dom";
 // import VideoDetails from "../VideoDetails";
 import { StarOutlined } from "@ant-design/icons";
-import { extractVideoId, getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
+import { getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
+import VideoDetails from "../VideoDetails";
 // import VideoDetails from "../VideoDetails";
 
 // const { Text, Title } = Typography;
@@ -284,15 +285,28 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
 
-  const starPopover = (name: string, videoUrl: string | undefined, videoTime: number | undefined) => {
-    if (videoUrl && videoTime) {
+  // Function to reload the video and jump to a specific time (in seconds)
+  const reloadAndJumpToSeconds = (videoId: string, seconds: number) => {
+    const player = getYtPlayer(); // Get the player instance
+    
+    if (player) {
+      // Reload the video and set the time to 'seconds'
+      // player.loadVideoById(videoId); // Load the video by ID
+      // player.seekTo(seconds, true);   // Jump to the specified second and start from there
+      handleSend(`/play ${seconds} ${videoId}`)
+    }
+  };
+
+  const starPopover = (name: string, videoId: string | undefined, videoTime: number | undefined) => {
+    if (videoId && videoTime) {
       return (
       <div style={{ width: 220 }}>
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Typography.Title level={5} style={{ margin: 0 }}>{name} watching {extractVideoId(videoUrl)}</Typography.Title>
+          <Typography.Title level={5} style={{ margin: 0 }}>{name} watching</Typography.Title>
+          <VideoDetails videoId={videoId}/>
           <Divider style={{ margin: '8px 0' }} />
           <Typography.Text strong>Timestamp: {toTimestamp(videoTime)}</Typography.Text>
-          <Button type="primary" block style={{ marginTop: 8 }}>
+          <Button type="primary" block style={{ marginTop: 8 }} onClick={() => reloadAndJumpToSeconds(videoId, videoTime)}>
             Jump to Moment
           </Button>
         </Space>
