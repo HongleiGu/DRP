@@ -635,6 +635,7 @@ export default function Television({
                   <img
                     src={`/game/assets/character-pack-full_version/sprite_split/character_${avatarId + 1}/character_${avatarId + 1}_frame16x20.png`}
                     alt="sprite-frame"
+                    draggable={false}
                     style={{
                       display: 'block',
                       objectFit: 'none',
