@@ -62,7 +62,7 @@ export default function Television({
   const ytPlayer = useRef<any>(null);
   const [timeInput, setTimeInput] = useState<string>("");
   const [videoUrl, setVideoUrl] = useState<string>("");
-  const [videoId, setVideoId] = useState<string>("");
+  // const [videoId, setVideoId] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
   const [playerReady, setPlayerReady] = useState<boolean>(false);
   const [nickname, setNickname] = useState<string>("");
@@ -235,7 +235,7 @@ export default function Television({
   const handleInvite = async (username: string) => {
     // console.log(username);
     // console.log(`/invite ${username} ${nickname}`);
-    sendMessage(`/invite ${username} ${nickname} ${videoId}`);
+    sendMessage(`/invite ${username} ${nickname} ${extractVideoId(ytPlayer.current?.getVideoUrl())}`);
   };
 
   const extractVideoId = (videoUrl: string): string => {
@@ -282,7 +282,7 @@ export default function Television({
         />
         {copied ? <span className="ml-4 text-green-500">Copied!</span> : null}
       </Space.Compact>
-      
+{/*       
       <p>Video ID</p>
       <Input
         placeholder="Enter video ID"
@@ -297,7 +297,7 @@ export default function Television({
           </Tooltip>
         }
       />
-      
+       */}
       <p>OR enter userId and we will send the invitation directly</p>
       <Space.Compact className="w-full">
         <Input

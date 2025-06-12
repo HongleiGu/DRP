@@ -1,4 +1,4 @@
-import { VideoInfo, YouTubeApiResponse } from '@/types/datatypes';
+import { VideoInfo } from '@/types/datatypes';
 import { YOUTUBE_CATEGORIES } from '@/utils/utils';
 import { useState, useEffect } from 'react';
 
