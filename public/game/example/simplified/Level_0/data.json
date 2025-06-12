@@ -21,7 +21,8 @@
 		"Door2.png",
 		"Fences.png",
 		"Paths.png",
-		"Fruits.png"
+		"Fruits.png",
+		"Fruits_new.png"
 	],
 	"entities": {
 		"Television": [
