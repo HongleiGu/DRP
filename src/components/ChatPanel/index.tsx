@@ -360,7 +360,7 @@ export default function ChatPanel({
               style={{ marginTop: 8 }}
               onClick={() => reloadAndJumpToSeconds(videoId, videoTime)}
             >
-              Jump to Moment
+              Jump to Highlight
             </Button>
           </Space>
         </div>
