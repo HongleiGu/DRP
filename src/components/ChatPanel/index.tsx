@@ -11,6 +11,7 @@ import EmojiGrid from "../EmojiGrids";
 import InfiniteScroll from 'react-infinite-scroll-component';
 // import { getNicknameById } from "@/actions/onboarding";
 import { createPortal } from "react-dom";
+import VideoDetails from "../VideoDetails";
 
 interface ChatPanelProps {
   chatroomId: string;
@@ -29,7 +30,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   const { user } = useUser();
   const router = useRouter();
   const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
-  const [invitationData, setInvitationData] = useState<{ from: string; roomId: string } | null>(null);
+  const [invitationData, setInvitationData] = useState<{ from: string; roomId: string; videoId: string } | null>(null);
   const [emojiPopoverOpen, setEmojiPopoverOpen] = useState(false);
 
   const memoizedMessages = useMemo(() => messages, [messages]);
@@ -88,7 +89,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
         table: 'chat_history',
         filter: `chat_room_id=eq.${chatroomId}`,
       }, async (payload) => {
-        console.log("payload", payload.new, payload.new.speaker !== userId, payload.new.chat_message.startsWith("/invite"))
+        // console.log("payload", payload.new, payload.new.speaker !== userId, payload.new.chat_message.startsWith("/invite"))
         if (payload.new.speaker !== userId) {
           if (payload.new.chat_message.startsWith("/alert")) {
             const a = payload.new.chat_message.split(" ")[1]
@@ -98,12 +99,13 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
           if (payload.new.chat_message.startsWith("/invite")) {
             const msgUserNickName = payload.new.chat_message.split(" ")[1]
             const senderUserNickName = payload.new.chat_message.split(" ")[2]
+            const videoId = payload.new.chat_message.split(" ")[3]
             // const roomId = payload.new.chat_message.split(" ")[2]
             if (msgUserNickName === nickname) {
               // senderUserNickName)
               // const newMsg = payload.new as Message;
               // setMessages(prev => [...prev, newMsg]);
-              setInvitationData({from: senderUserNickName, roomId: chatroomId})
+              setInvitationData({from: senderUserNickName, roomId: chatroomId, videoId: videoId})
               setIsInviteModalVisible(true)
               // should pop up an invite
             }
@@ -296,7 +298,11 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
         {invitationData && (
           <p>
             <strong>{invitationData.from}</strong> has invited you to join room:
-            <strong> {invitationData.roomId}</strong>
+            <strong> {invitationData.roomId}</strong> {invitationData.videoId && <span>to watch</span>}
+            {
+              invitationData.videoId && 
+                <VideoDetails videoId={invitationData.videoId}/>
+            }
           </p>
         )}
       </Modal>

@@ -57,3 +57,40 @@ export interface PlayerData {
 }
 
 export type Direction = "up" | "down" | "right" | "left"
+
+// Type for the YouTube API response
+export interface YouTubeApiResponse {
+  items: {
+    snippet: {
+      title: string;
+      description: string;
+      categoryId: string;
+      thumbnails: {
+        default: { url: string };
+        medium: { url: string };
+        high: { url: string };
+        standard?: { url: string };
+      };
+      publishedAt: string;
+      channelTitle: string;
+    };
+  }[];
+  error?: {
+    message: string;
+    code: number;
+    errors: {
+      message: string;
+      domain: string;
+      reason: string;
+    }[];
+  };
+}
+
+export interface VideoInfo {
+  title: string;
+  description: string;
+  category: string;
+  thumbnails: YouTubeApiResponse['items'][0]['snippet']['thumbnails'];
+  publishedAt: string;
+  channelTitle: string;
+}

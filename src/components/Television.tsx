@@ -12,6 +12,7 @@ import {
   Card,
   Space,
   Slider,
+  Tooltip,
 } from "antd";
 import { useEffect, useRef, useState } from "react";
 // import { VideoElement } from './PlayList';
@@ -22,6 +23,7 @@ import {
   FastForwardOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
+  ReloadOutlined,
   SendOutlined,
   ShareAltOutlined,
 } from "@ant-design/icons";
@@ -60,6 +62,7 @@ export default function Television({
   const ytPlayer = useRef<any>(null);
   const [timeInput, setTimeInput] = useState<string>("");
   const [videoUrl, setVideoUrl] = useState<string>("");
+  const [videoId, setVideoId] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
   const [playerReady, setPlayerReady] = useState<boolean>(false);
   const [nickname, setNickname] = useState<string>("");
@@ -226,9 +229,9 @@ export default function Television({
   };
 
   const handleInvite = async (username: string) => {
-    console.log(username);
-    console.log(`/invite ${username} ${nickname}`);
-    sendMessage(`/invite ${username} ${nickname}`);
+    // console.log(username);
+    // console.log(`/invite ${username} ${nickname}`);
+    sendMessage(`/invite ${username} ${nickname} ${videoId}`);
   };
 
   const extractVideoId = (videoUrl: string): string => {
@@ -268,11 +271,6 @@ export default function Television({
     <div className="flex-1 flex flex-col" style={{ gap: "8px" }}>
       <p>Copy invitation link</p>
       <Space.Compact className="w-full">
-        {/* <Input
-          value={`http://drp-nu.vercel.app/television/${chatroomId}`}
-          readOnly
-          onClick={handleCopy}
-        /> */}
         <Button
           icon={<CopyOutlined />}
           iconPosition="end"
@@ -280,6 +278,22 @@ export default function Television({
         />
         {copied ? <span className="ml-4 text-green-500">Copied!</span> : null}
       </Space.Compact>
+      
+      <p>Video ID</p>
+      <Input
+        placeholder="Enter video ID"
+        value={videoId}
+        onChange={(e) => setVideoId(e.target.value)}
+        addonBefore={
+          <Tooltip title="Reset to extracted video ID">
+            <Button 
+              icon={<ReloadOutlined />} 
+              onClick={() => setVideoId(extractVideoId(videoUrl))}
+            />
+          </Tooltip>
+        }
+      />
+      
       <p>OR enter userId and we will send the invitation directly</p>
       <Space.Compact className="w-full">
         <Input
