@@ -3,17 +3,17 @@
 import { supabase } from "@/lib/supabase";
 import { getChannel, getMessages, insertChatHistory } from "@/utils/api";
 import { useUser } from "@clerk/nextjs";
-import { message, Badge, List, Input, Button, Popover, Modal, Card, Space, Divider, Typography } from "antd";
+import { message, Badge, List, Input, Button, Popover, Card, Space, Divider, Typography } from "antd";
 import { Message, PlayerData } from "@/types/datatypes";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import EmojiGrid from "../EmojiGrids";
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { createPortal } from "react-dom";
-import VideoDetails from "../VideoDetails";
+// import { createPortal } from "react-dom";
+// import VideoDetails from "../VideoDetails";
 import { StarOutlined } from "@ant-design/icons";
 
-const { Text, Title } = Typography;
+// const { Text, Title } = Typography;
 
 interface ChatPanelProps {
   isTV?: boolean;
@@ -29,12 +29,12 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [userId, setUserId] = useState<string>('');
   const [nickname, setNickname] = useState<string>('');
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  // const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const router = useRouter();
-  const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
-  const [invitationData, setInvitationData] = useState<{ from: string; roomId: string; videoId: string } | null>(null);
+  const [, setIsInviteModalVisible] = useState(false);
+  const [, setInvitationData] = useState<{ from: string; roomId: string; videoId: string } | null>(null);
   const [emojiPopoverOpen, setEmojiPopoverOpen] = useState(false);
 
   const memoizedMessages = useMemo(() => messages, [messages]);
@@ -255,16 +255,16 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
     onMount(handleSend);
   });
 
-  const handleAcceptInvite = () => {
-    setIsInviteModalVisible(false);
-    if (invitationData) {
-      router.push(`/television/${chatroomId}`);
-    }
-  };
+  // const handleAcceptInvite = () => {
+  //   setIsInviteModalVisible(false);
+  //   if (invitationData) {
+  //     router.push(`/television/${chatroomId}`);
+  //   }
+  // };
 
-  const handleDeclineInvite = () => {
-    setIsInviteModalVisible(false);
-  };
+  // const handleDeclineInvite = () => {
+  //   setIsInviteModalVisible(false);
+  // };
 
   const header = (
     <div className="flex justify-between">
@@ -281,7 +281,7 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
 
-  const starPopover = (name: string, videoUrl: string, videoTime: number) => {
+  const starPopover = (name: string, videoUrl: string | undefined, videoTime: number | undefined) => {
     if (videoUrl && videoTime) {
       return (
       <div style={{ width: 220 }}>
@@ -367,6 +367,7 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
                 className={msg.speaker === userId ? 'bg-blue-50' : ''}
                 actions={isTV ? [
                   <Popover
+                    key={msg.id}
                     content={starPopover(msg.speaker_name, msg.video_url, msg.video_time)} // Passing video_url and video_time
                     title="Moment"
                     trigger="click"
