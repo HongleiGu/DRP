@@ -4,8 +4,10 @@ export interface Message {
   speaker_name: string;
   chat_message: string;
   created_at: string;
-  is_optimistic?: boolean;
+  // is_optimistic?: boolean;
   chat_room_id: string;
+  video_url?: string;
+  video_time?: number;
 }
 
 export interface Room {
