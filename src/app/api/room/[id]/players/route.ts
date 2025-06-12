@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { NextRequest, NextResponse } from 'next/server';
 import {auth} from '@clerk/nextjs/server'
 import { getPlayers } from '@/utils/api';

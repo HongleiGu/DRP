@@ -3,7 +3,7 @@
 import { supabase } from "@/lib/supabase";
 import { getMessages, insertChatHistory } from "@/utils/api";
 import { useUser } from "@clerk/nextjs";
-import { message, Badge, List, Avatar, Input, Button, Popover, Modal, Card } from "antd";
+import { message, Badge, List, Input, Button, Popover, Modal, Card } from "antd";
 import { Message, PlayerData } from "@/types/datatypes";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
