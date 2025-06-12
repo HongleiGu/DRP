@@ -29,7 +29,7 @@ import {
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { getRandomNumber, isEmoji } from "@/utils/utils";
-import { Message } from "@/types/datatypes";
+import { Message, PlayerData } from "@/types/datatypes";
 import { useUser } from "@clerk/nextjs";
 import { FullscreenOutlined } from "@ant-design/icons";
 
@@ -101,7 +101,7 @@ export default function Television({
     setSendEmojis((prev) => ({
       [(user.publicMetadata?.nickname as string) ?? "Mr.Unknown"]: {
         emoji: "",
-        avatarId: getRandomNumber(0, 30),
+        avatarId: Number.parseInt(user.publicMetadata?.avatarId as string ?? "0"),
       },
     }));
 
@@ -156,16 +156,20 @@ export default function Television({
 
   // Setup message receiver
   useEffect(() => {
-    const receiver = (msg: Message) => {
+    const receiver = async (msg: Message) => {
       const messageText: string = msg.chat_message;
       console.log("check emoji", isEmoji(messageText));
+
+      const res = await fetch(`/api/room/${msg.chat_room_id}/players`);
+      const members = (await res.json() as { players: PlayerData[] }).players
+      const player = members.find((member) => member.user_id == msg.speaker)
 
       if (isEmoji(messageText)) {
         setSendEmojis((prev) => ({
           ...prev,
           [msg.speaker_name]: {
             emoji: messageText,
-            avatarId: getRandomNumber(0, 30),
+            avatarId: Number.parseInt(player?.avatarId ?? "0"),
           },
         }));
       } else if (messageText.startsWith("/play")) {
@@ -633,17 +637,29 @@ export default function Television({
                 >
                   {emoji}
                 </Card>
-                <img
-                  src={`https://avatar.iran.liara.run/public/${avatarId}`}
-                  alt={`${userId}`}
+                <div
                   style={{
-                    marginTop: 8,
-                    borderRadius: 8,
-                    border: "1px solid #f0f0f0",
-                    width: 60,
-                    height: 60,
+                    width: 48, // 16 * 2
+                    height: 60, // 20 * 2
+                    overflow: 'hidden',
+                    display: 'inline-block',
+                    paddingTop: '4px',
                   }}
-                />
+                >
+                  <img
+                    src={`/game/assets/character-pack-full_version/sprite_split/character_${avatarId + 1}/character_${avatarId + 1}_frame16x20.png`}
+                    alt="sprite-frame"
+                    draggable={false}
+                    style={{
+                      display: 'block',
+                      objectFit: 'none',
+                      objectPosition: '-16px -60px',
+                      transform: 'scale(3)',
+                      transformOrigin: 'top left',
+                      imageRendering: 'pixelated',
+                    }}
+                  />
+                </div>
                 <div style={{ marginTop: 4, fontSize: 12 }}>{userId}</div>
               </div>
             ))}
