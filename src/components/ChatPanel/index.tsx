@@ -1,21 +1,22 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 // ChatPanel.tsx
 "use client"
 import { supabase } from "@/lib/supabase";
 import { getMessages, insertChatHistory } from "@/utils/api";
 import { useUser } from "@clerk/nextjs";
-import { message, Badge, List, Input, Button, Popover, Card, Space, Divider, Typography } from "antd";
+import { message, Badge, List, Input, Button, Popover, Modal, Card, Space, Divider, Typography } from "antd";
 import { Message, PlayerData } from "@/types/datatypes";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import EmojiGrid from "../EmojiGrids";
 import InfiniteScroll from 'react-infinite-scroll-component';
-// import { createPortal } from "react-dom";
-// import VideoDetails from "../VideoDetails";
-import { StarOutlined } from "@ant-design/icons";
-import { extractVideoId, getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
+// import { getNicknameById } from "@/actions/onboarding";
+import { createPortal } from "react-dom";
 import VideoDetails from "../VideoDetails";
+import { StarOutlined } from "@ant-design/icons";
 
-// const { Text, Title } = Typography;
+const { Text, Title } = Typography;
 
 interface ChatPanelProps {
   isTV?: boolean;
@@ -31,12 +32,11 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [userId, setUserId] = useState<string>('');
   const [nickname, setNickname] = useState<string>('');
-  // const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const router = useRouter();
-  const [, setIsInviteModalVisible] = useState(false);
-  const [, setInvitationData] = useState<{ from: string; roomId: string; videoId: string } | null>(null);
+  const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
+  const [invitationData, setInvitationData] = useState<{ from: string; roomId: string; videoId: string } | null>(null);
   const [emojiPopoverOpen, setEmojiPopoverOpen] = useState(false);
 
   const memoizedMessages = useMemo(() => messages, [messages]);
@@ -49,33 +49,33 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
     setMembers(members)
   }
 
-  function LumiAvatar(param: { avatarId: string }) {
+  function LumiAvatar(param: {avatarId: string}) {
     const avatarId = Number.parseInt(param.avatarId)
     return (
-      <div
-        style={{
-          width: 48, // 16 * 2
-          height: 60, // 20 * 2
-          overflow: 'hidden',
-          display: 'inline-block',
-          paddingTop: '4px',
-        }}
-      >
-        <img
-          src={`/game/assets/character-pack-full_version/sprite_split/character_${avatarId + 1}/character_${avatarId + 1}_frame16x20.png`}
-          alt="sprite-frame"
-          draggable={false}
-          style={{
-            display: 'block',
-            objectFit: 'none',
-            objectPosition: '-16px 6px',
-            transform: 'scale(3)',
-            transformOrigin: 'top left',
-            imageRendering: 'pixelated',
-          }}
-        />
-      </div>
-    );
+                    <div
+                    style={{
+                      width: 48, // 16 * 2
+                      height: 60, // 20 * 2
+                      overflow: 'hidden',
+                      display: 'inline-block',
+                      paddingTop: '4px',
+                    }}
+                  >
+                    <img
+                      src={`/game/assets/character-pack-full_version/sprite_split/character_${avatarId + 1}/character_${avatarId + 1}_frame16x20.png`}
+                      alt="sprite-frame"
+                      draggable={false}
+                      style={{
+                        display: 'block',
+                        objectFit: 'none',
+                        objectPosition: '-16px 4px',
+                        transform: 'scale(3)',
+                        transformOrigin: 'top left',
+                        imageRendering: 'pixelated',
+                      }}
+                    />
+                  </div>
+      );
   }
 
   useEffect(() => {
@@ -112,20 +112,20 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
     const presenceTrack = supabase.channel(`room:${chatroomId}`, {
       config: { presence: { key: userId } }
     })
-      .on('presence', { event: 'sync' }, () => {
-        const state = presenceTrack.presenceState();
-        setOnlineUsers(Object.keys(state));
+    .on('presence', { event: 'sync' }, () => {
+      const state = presenceTrack.presenceState();
+      setOnlineUsers(Object.keys(state));
+      updateMembers();
+    })
+    .subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await presenceTrack.track({
+          user_id: userId,
+          online_at: new Date().toISOString(),
+        });
         updateMembers();
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await presenceTrack.track({
-            user_id: userId,
-            online_at: new Date().toISOString(),
-          });
-          updateMembers();
-        }
-      });
+      }
+    });
 
     const messageSub = supabase.channel(`messages:${chatroomId}`)
       .on('postgres_changes', {
@@ -134,6 +134,7 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
         table: 'chat_history',
         filter: `chat_room_id=eq.${chatroomId}`,
       }, async (payload) => {
+        // console.log("payload", payload.new, payload.new.speaker !== userId, payload.new.chat_message.startsWith("/invite"))
         if (payload.new.speaker !== userId) {
           if (payload.new.chat_message.startsWith("/alert")) {
             const a = payload.new.chat_message.split(" ")[1]
@@ -144,9 +145,14 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
             const msgUserNickName = payload.new.chat_message.split(" ")[1]
             const senderUserNickName = payload.new.chat_message.split(" ")[2]
             const videoId = payload.new.chat_message.split(" ")[3]
+            // const roomId = payload.new.chat_message.split(" ")[2]
             if (msgUserNickName === nickname) {
-              setInvitationData({ from: senderUserNickName, roomId: chatroomId, videoId: videoId })
+              // senderUserNickName)
+              // const newMsg = payload.new as Message;
+              // setMessages(prev => [...prev, newMsg]);
+              setInvitationData({from: senderUserNickName, roomId: chatroomId, videoId: videoId})
               setIsInviteModalVisible(true)
+              // should pop up an invite
             }
           }
           if (!payload.new.chat_message.startsWith("/")) {
@@ -173,6 +179,7 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
     if (!theMessage.trim() || isSending || !userId || !nickname) return;
     let messageObj: Message;
     if (theMessage.startsWith("/invite")) {
+      // const roomId = theMessage.split(" ")[2]
       messageObj = {
         speaker: userId,
         speaker_name: nickname,
@@ -207,47 +214,8 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
   }, [isSending, userId, nickname, chatroomId]);
 
   const handleTVSpecialSend = useCallback(async (theMessage: string) => {
-    if (!theMessage.trim() || isSending || !userId || !nickname) return;
-    if (!getYtPlayer()) return;
-    let messageObj: Message;
-    // const channel = await getChannel(chatroomId)
-    if (theMessage.startsWith("/invite")) {
-      messageObj = {
-        speaker: userId,
-        speaker_name: nickname,
-        chat_message: theMessage,
-        created_at: new Date().toISOString(),
-        chat_room_id: chatroomId,
-        video_url: getCurrentVideoId(),
-        video_time: getCurrentTime(),
-      }
-    } else {
-      messageObj = {
-        speaker: userId,
-        speaker_name: nickname,
-        chat_message: theMessage,
-        created_at: new Date().toISOString(),
-        chat_room_id: chatroomId,
-        video_url: getCurrentVideoId(),
-        video_time: getCurrentTime(),
-      };
-    }
-
-    setIsSending(true);
-
-    try {
-      if (!theMessage.startsWith("/")) {
-        setMessages(prev => [...prev, messageObj]);
-      }
-      setNewMessage('');
-
-      await insertChatHistory(messageObj);
-    } catch {
-      message.error('Failed to send message');
-    } finally {
-      setIsSending(false);
-    }
-  }, [isSending, userId, nickname, chatroomId]);
+    // TODO
+  }, []);
 
   const handleEmojiSelect = useCallback((emoji: string) => {
     handleSend(emoji);
@@ -258,54 +226,26 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
     onMount(handleSend);
   });
 
-  // const handleAcceptInvite = () => {
-  //   setIsInviteModalVisible(false);
-  //   if (invitationData) {
-  //     router.push(`/television/${chatroomId}`);
-  //   }
-  // };
+  // Add modal handlers
+  const handleAcceptInvite = () => {
+    setIsInviteModalVisible(false);
+    if (invitationData) {
+      router.push(`/television/${chatroomId}`);
+    }
+  };
 
-  // const handleDeclineInvite = () => {
-  //   setIsInviteModalVisible(false);
-  // };
+  const handleDeclineInvite = () => {
+    setIsInviteModalVisible(false);
+  };
 
   const header = (
-    <div className="flex justify-between">
-      <div className="flex space-x-2 items-center">
-        <Badge count={onlineUsers.length} className="ml-3 text-lg text-blue-500" />
-        <h3 className="text-xl font-semibold">Chat</h3>
+    <div className="p-4 z-1000">
+      <div className="flex" style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+        <h3 className="text-lg font-semibold">Chat Room</h3>
+        <Badge status="success" text={`${onlineUsers.length} online`} />
       </div>
     </div>
   );
-
-  function toTimestamp(seconds: number): string {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  }
-
-  const starPopover = (name: string, videoUrl: string | undefined, videoTime: number | undefined) => {
-    if (videoUrl && videoTime) {
-      return (
-      <div style={{ width: 220 }}>
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Typography.Title level={5} style={{ margin: 0 }}>{name} watching {extractVideoId(videoUrl)}</Typography.Title>
-          <Divider style={{ margin: '8px 0' }} />
-          <Typography.Text strong>Timestamp: {toTimestamp(videoTime)}</Typography.Text>
-          <Button type="primary" block style={{ marginTop: 8 }}>
-            Jump to Moment
-          </Button>
-        </Space>
-      </div>
-    )
-    } else {
-      return (
-        <div style={{ width: 220 }}>
-          <span>no movie data available</span>
-        </div>
-      )
-    }
-  };
 
   const footer = (
     <div className="bg-white pl-2 flex">
@@ -322,27 +262,30 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
             }
           }}
         />
-        <Popover
+        <Popover 
           content={<EmojiGrid onSelect={handleEmojiSelect} />}
           open={emojiPopoverOpen}
+          // onOpenChange={(open)=>setEmojiPopoverOpen(!open)}
           trigger="click"
           placement="topRight"
           zIndex={101}
-        />
-        <Button
+        ></Popover>
+        <Button 
           className="text-xl"
-          onClick={() => setEmojiPopoverOpen(!emojiPopoverOpen)}>😊</Button>
+          onClick={()=>setEmojiPopoverOpen(!emojiPopoverOpen)}>😊</Button>
         <Button
           type="primary"
           onClick={() => handleSend(newMessage)}
+          // loading={isSending}
           disabled={!newMessage.trim()}
         >
           Send
         </Button>
-        {isTV && (
+        {isTV &&(
           <Button
             type="primary"
             onClick={() => handleTVSpecialSend(newMessage)}
+            // loading={isSending}
             disabled={!newMessage.trim()}
           >
             Moment
@@ -352,35 +295,63 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
     </div>
   );
 
+  const starPopover = (
+    <div style={{ width: 220 }}>
+      <Space direction="vertical" style={{ width: '100%' }}>
+        <Title level={5} style={{ margin: 0 }}>Honkai: Star Rail EP: Proi Proi</Title>
+        <Divider style={{ margin: '8px 0' }} />
+        <Text strong>Timestamp: 01:21</Text>
+        <Button type="primary" block style={{ marginTop: 8 }}>
+          Jump to Moment
+        </Button>
+      </Space>
+    </div>
+  );
+
   return (
     <Card
       title={header}
-      style={{ flex: 1 }}
-      styles={{ body: { padding: 0, height: '100%', display: "flex", flexDirection: "column" } }}
+      style={{flex: 1}}
+      styles={{body:{ padding: 0, height: '100%', display: "flex", flexDirection: "column" }}}
     >
+      {emojiPopoverOpen && createPortal(<div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0)',
+        zIndex: 100,
+        pointerEvents: 'auto',
+      }}
+      onClick={()=>setEmojiPopoverOpen(false)}
+    />, document.body)}
       <div className="relative flex flex-col h-full" id="scrollableDiv" style={{ overflowY: 'auto', height: "calc(100vh - 100px)" }}>
-        <InfiniteScroll dataLength={memoizedMessages.length} next={() => {}} hasMore={false} loader={undefined} scrollableTarget="scrollableDiv">
+        <InfiniteScroll 
+          dataLength={memoizedMessages.length} 
+          next={() => {}} 
+          hasMore={false} 
+          loader={undefined} 
+          scrollableTarget="scrollableDiv"
+        >
           <List
             itemLayout="horizontal"
             dataSource={memoizedMessages}
             className="overflow-y-auto"
             renderItem={(msg) => (
-              <List.Item
-                style={{ margin: "8px" }}
-                className={msg.speaker === userId ? 'bg-blue-50' : ''}
-                actions={isTV ? [
-                  <Popover
-                    key={msg.id}
-                    content={starPopover(msg.speaker_name, msg.video_url, msg.video_time)} // Passing video_url and video_time
-                    title="Moment"
-                    trigger="click"
-                  >
-                    <StarOutlined />
-                  </Popover>
-                ] : []}
+              <List.Item 
+              style={{margin: "8px"}} className={msg.speaker === userId ? 'bg-blue-50' : ''}
+              actions={isTV?[(
+              <Popover content={starPopover} title="Moment" trigger="click">
+                <StarOutlined />
+              </Popover>
+              )] : []}
               >
                 <List.Item.Meta
-                  avatar={<LumiAvatar avatarId={members.find((member) => member.user_id === msg.speaker)?.avatarId ?? "0"} />}
+                  avatar={<LumiAvatar avatarId={
+                    members.find((member) => member.user_id === msg.speaker)?.avatarId ?? "0"
+                  }></LumiAvatar>}
                   title={<span className="font-semibold">{msg.speaker_name}</span>}
                   description={msg.chat_message}
                 />
@@ -391,6 +362,32 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
         </InfiniteScroll>
       </div>
       {footer}
+
+      <Modal
+        title="Room Invitation"
+        open={isInviteModalVisible}
+        onOk={handleAcceptInvite}
+        onCancel={handleDeclineInvite}
+        footer={[
+          <Button key="decline" onClick={handleDeclineInvite}>
+            Decline
+          </Button>,
+          <Button key="accept" type="primary" onClick={handleAcceptInvite}>
+            Accept
+          </Button>
+        ]}
+      >
+        {invitationData && (
+          <p>
+            <strong>{invitationData.from}</strong> has invited you to join room:
+            <strong> {invitationData.roomId}</strong> {invitationData.videoId && <span>to watch</span>}
+            {
+              invitationData.videoId && 
+                <VideoDetails videoId={invitationData.videoId}/>
+            }
+          </p>
+        )}
+      </Modal>
     </Card>
   );
 }
