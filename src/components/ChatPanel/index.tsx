@@ -354,7 +354,17 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
 
   return (
     <Card
-      title={header}
+      title="Chat Room"
+extra={
+  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <Badge status="success" />
+    <span>
+      {onlineUsers.length} {onlineUsers.length === 1 ? "player" : "players"} online
+    </span>
+  </span>
+}
+
+
       style={{ flex: 1 }}
       styles={{ body: { padding: 0, height: '100%', display: "flex", flexDirection: "column" } }}
     >
