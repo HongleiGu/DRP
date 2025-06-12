@@ -68,7 +68,7 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
                       style={{
                         display: 'block',
                         objectFit: 'none',
-                        objectPosition: '-16px 6px',
+                        objectPosition: '-16px 4px',
                         transform: 'scale(3)',
                         transformOrigin: 'top left',
                         imageRendering: 'pixelated',
