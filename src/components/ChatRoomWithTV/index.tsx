@@ -87,6 +87,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           display: "flex"
         }}>
           <ChatPanel
+            isTV
             chatroomId={chatroomId}
             onMount={(sendFn) => (sendMessage.current = sendFn)}
             receiveMessage={(msg) => receiveMessage.current?.(msg)}
