@@ -33,6 +33,7 @@ export default function EmojiGrid({ onSelect }: EmojiGridProps) {
           <h4 className="font-semibold mb-2">{category.name}</h4>
           <div className="grid grid-cols-6 gap-2">
             {category.emojis.map((emoji, idx) => (
+              // eslint-disable-next-line react/jsx-key
               <Emoji key={idx} emoji={emoji} onSend={onSelect} />
             ))}
           </div>
