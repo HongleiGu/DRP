@@ -12,7 +12,7 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 // import { createPortal } from "react-dom";
 // import VideoDetails from "../VideoDetails";
 import { BookOutlined } from "@ant-design/icons";
-import { extractVideoId, getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
+import { getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
 import VideoDetails from "../VideoDetails";
 // import VideoDetails from "../VideoDetails";
 
@@ -45,8 +45,6 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
   const memoizedMessages = useMemo(() => messages, [messages]);
 
   const [members, setMembers] = useState<PlayerData[]>([]);
-
-  const [isMoment, setIsMoment] = useState(false);
 
   const updateMembers = async () => {
     const res = await fetch(`/api/room/${chatroomId}/players`);
