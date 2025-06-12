@@ -22,8 +22,13 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { supabase } from '@/lib/supabase';
 import { getCalendarEntries, insertChatHistory } from '@/utils/api';
-// import { ALL_EMOJIS } from '@/utils/utils';
 import { CalendarEntry } from '@/types/datatypes';
+
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const { Title, Text } = Typography;
 
@@ -49,6 +54,7 @@ export default function FestivalCalendar({
 }) {
   const { user } = useUser();
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
+  const [selectedTimeZone, setSelectedTimeZone] = useState(dayjs.tz.guess());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
@@ -58,52 +64,81 @@ export default function FestivalCalendar({
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
 
+  // Fetch entries when modal opens or timezone changes
   useEffect(() => {
-    if (!isOpen) return;
-    
     const fetchEntries = async () => {
-      const data = await getCalendarEntries(roomId);
-      setEntries(data.flat());
+      if (!isOpen) return;
+      
+      try {
+        const data = await getCalendarEntries(roomId);
+        const enriched = data.flat().map((entry) => {
+          if (entry.countdown) {
+            const futureDate = dayjs.unix(entry.countdown).tz(selectedTimeZone);
+            return {
+              ...entry,
+              content: futureDate.format('HH:mm'),
+              note: entry.note || `Scheduled at ${futureDate.format('HH:mm')}`,
+              date: futureDate.format('YYYY-MM-DD'),
+            };
+          }
+          return entry;
+        });
+        console.log("enriched", enriched)
+        setEntries(enriched);
+      } catch (error) {
+        console.error("Failed to fetch entries:", error);
+      }
     };
-    fetchEntries();
-  }, [isOpen, roomId]); // Added isOpen dependency
 
+    fetchEntries();
+  }, [isOpen, roomId, selectedTimeZone]);
+
+  // Realtime updates
   useEffect(() => {
     if (!isOpen) return;
 
     const channel = supabase
-  .channel(`calendar-entries-${roomId}`)
-  .on(
-    'postgres_changes',
-    {
-      event: '*',
-      schema: 'public',
-      table: 'calendar_entries',
-      filter: `room_id=eq.${roomId}`, // already good
-    },
-    () => {
-      // REPLACE this block:
-      // setEntries((prev) => { ...custom update logic... });
-
-      // TEMPORARY FIX: Just reload all entries on any change
-      getCalendarEntries(roomId).then((data) => {
-        setEntries(data.flat());
-      });
-    }
-  )
-  .subscribe();
-
+      .channel(`calendar-entries-${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'calendar_entries',
+          filter: `room_id=eq.${roomId}`,
+        },
+        async () => {
+          const data = await getCalendarEntries(roomId);
+          const enriched = data.flat().map((entry) => {
+            if (entry.countdown) {
+              const futureDate = dayjs.unix(entry.countdown).tz(selectedTimeZone);
+              return {
+                ...entry,
+                content: futureDate.format('HH:mm'),
+                note: entry.note || `Scheduled at ${futureDate.format('HH:mm')}`,
+                date: futureDate.format('YYYY-MM-DD'),
+              };
+            }
+            return entry;
+          });
+          setEntries(enriched);
+        }
+      )
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [isOpen, roomId]);
+  }, [isOpen, roomId, selectedTimeZone]);
 
+  // Reset modal state when opening
   useEffect(() => {
     if (isSelectionModalOpen) {
       setNewFestivals([]);
       setCurrentFestival({ name: '', emoji: '' });
-      const noteEntry = entries.find((e) => e.date === selectedDate && e.note);
+      const noteEntry = entries.find(
+        e => e.date === selectedDate && e.content === 'Note'
+      );
       setNote(noteEntry?.note || '');
     }
   }, [isSelectionModalOpen, entries, selectedDate]);
@@ -111,8 +146,9 @@ export default function FestivalCalendar({
   const dateEntriesMap = useMemo(() => {
     const map: Record<string, CalendarEntry[]> = {};
     entries.forEach((entry) => {
-      if (!map[entry.date]) map[entry.date] = [];
-      map[entry.date].push(entry);
+      const dateKey = dayjs(entry.date).format('YYYY-MM-DD');
+      if (!map[dateKey]) map[dateKey] = [];
+      map[dateKey].push(entry);
     });
     return map;
   }, [entries]);
@@ -128,7 +164,6 @@ export default function FestivalCalendar({
       return;
     }
     setNewFestivals((prev) => [...prev, preset]);
-    messageApi.success(`${preset.name} added!`);
   }, [messageApi, newFestivals]);
 
   const addToNewFestivals = useCallback(() => {
@@ -163,25 +198,20 @@ export default function FestivalCalendar({
         note: null,
       }));
 
-      // 🔁 FIX: Only delete if you're replacing festivals
-      if (newFestivals.length > 0) {
-        const { error: deleteError } = await supabase
-          .from('calendar_entries')
-          .delete()
-          .match({ room_id: roomId, date: selectedDate, note: null }); // only delete festival entries
-
-        if (deleteError) throw deleteError;
-      }
+      // Delete existing festivals and note for this date
+      await supabase
+        .from('calendar_entries')
+        .delete()
+        .match({ 
+          room_id: roomId, 
+          date: selectedDate,
+          $or: [{ note: null }, { content: 'Note' }]
+        });
 
       const entriesToInsert: Partial<CalendarEntry>[] = [...festivalEntries];
 
-      // Always update note: delete existing note first
+      // Add note if exists
       if (hasNote) {
-        await supabase
-          .from('calendar_entries')
-          .delete()
-          .match({ room_id: roomId, date: selectedDate, content: 'Note' });
-
         entriesToInsert.push({
           room_id: roomId,
           user_id: user.id,
@@ -193,11 +223,9 @@ export default function FestivalCalendar({
       }
 
       if (entriesToInsert.length > 0) {
-        const { error: insertError } = await supabase
+        await supabase
           .from('calendar_entries')
           .insert(entriesToInsert);
-
-        if (insertError) throw insertError;
       }
 
       messageApi.success('Saved successfully!');
@@ -206,63 +234,78 @@ export default function FestivalCalendar({
       console.error(err);
       messageApi.error('Save failed');
     } finally {
-      // send a message
-      const messageObj = {
-        speaker: user.id,
-        speaker_name: user.publicMetadata.nickname as string ?? "Mr. unknown",
-        chat_message: `/alert ${user.publicMetadata.nickname as string ?? "Mr. unknown"}`,
-        created_at: new Date().toISOString(),
-        chat_room_id: roomId
+      if (user) {
+        const messageObj = {
+          speaker: user.id,
+          speaker_name: (user.publicMetadata.nickname as string) ?? "Mr. unknown",
+          chat_message: `/alert ${(user.publicMetadata.nickname as string) ?? "Mr. unknown"}`,
+          created_at: new Date().toISOString(),
+          chat_room_id: roomId
+        }
+        await insertChatHistory(messageObj);
       }
-      await insertChatHistory(messageObj);
-      
       setIsSaving(false);
     }
   }, [selectedDate, user, newFestivals, note, roomId, messageApi]);
 
-
   const handleDeleteFestival = useCallback(async (id: number) => {
     setIsSaving(true);
     setDeletingId(id);
-    setEntries((prev) => prev.filter((entry) => entry.id !== id));
-
     try {
-      const { error } = await supabase.from('calendar_entries').delete().eq('id', id);
-      if (error) throw error;
+      await supabase.from('calendar_entries').delete().eq('id', id);
+      setEntries(prev => prev.filter(entry => entry.id !== id));
       messageApi.success('Deleted');
     } catch (err) {
       console.error(err);
-      const fetchAgain = await getCalendarEntries(roomId);
-      setEntries(fetchAgain.flat());
       messageApi.error('Delete failed');
     } finally {
       setIsSaving(false);
       setDeletingId(null);
     }
-  }, [messageApi, roomId]);
+  }, [messageApi]);
 
   return (
     <>
       {contextHolder}
-      <Modal open={isOpen} onCancel={onClose} footer={null} title="Festival Calendar" width={800}>
+      <Modal 
+        open={isOpen} 
+        onCancel={onClose} 
+        footer={null} 
+        title="Festival Calendar" 
+        width={800}
+        destroyOnClose
+      >
+        <div className="mb-4">
+          <label style={{ marginRight: 8 }}>Time Zone:</label>
+          <select 
+            value={selectedTimeZone} 
+            onChange={(e) => setSelectedTimeZone(e.target.value)}
+            className="p-1 border rounded"
+          >
+            {Intl.supportedValuesOf('timeZone').map((tz) => (
+              <option key={tz} value={tz}>{tz}</option>
+            ))}
+          </select>
+        </div>
+
         <Calendar
           fullscreen={false}
-          onSelect={(date, info) => {
-            if (info.source === 'date') {
-              handleDateSelect(date);
-            }
-          }}
+          onSelect={(date) => handleDateSelect(date)}
           cellRender={(date) => {
             const formatted = date.format('YYYY-MM-DD');
             const events = dateEntriesMap[formatted] || [];
 
-            const visible = events.filter(it => it.emoji != '📝').slice(0, 3);
-            const hasMore = events.filter(it => it.emoji != '📝').length > 3;
+            const festivals = events.filter(e => e.content !== 'Note');
+            const visible = festivals.slice(0, 3);
+            const hasMore = festivals.length > 3;
 
             return (
               <div className="flex flex-wrap gap-1">
                 {visible.map((entry) => (
-                  <Popover key={entry.id} content={entry.note || entry.content}>
+                  <Popover 
+                    key={entry.id} 
+                    content={entry.note || entry.content}
+                  >
                     <span>{entry.emoji}</span>
                   </Popover>
                 ))}
@@ -270,7 +313,7 @@ export default function FestivalCalendar({
                   <Popover
                     content={
                       <div>
-                        {events.slice(3).map((entry) => (
+                        {festivals.slice(3).map((entry) => (
                           <div key={entry.id}>
                             <span className="mr-1">{entry.emoji}</span>
                             {entry.note || entry.content}
@@ -293,9 +336,18 @@ export default function FestivalCalendar({
         onCancel={() => setIsSelectionModalOpen(false)}
         footer={[
           <Button key="cancel" onClick={() => setIsSelectionModalOpen(false)}>Cancel</Button>,
-          <Button key="save" type="primary" loading={isSaving} onClick={saveAllFestivals}>Save</Button>,
+          <Button 
+            key="save" 
+            type="primary" 
+            loading={isSaving} 
+            onClick={saveAllFestivals}
+            disabled={newFestivals.length === 0 && !note.trim()}
+          >
+            Save
+          </Button>,
         ]}
         title={dayjs(selectedDate).format('MMMM D, YYYY')}
+        destroyOnClose
       >
         <div>
           <Title level={5}>Add Festivals</Title>
@@ -306,6 +358,7 @@ export default function FestivalCalendar({
                 color="blue"
                 onClick={() => addPresetFestival(preset)}
                 style={{ cursor: 'pointer' }}
+                className="py-1"
               >
                 {preset.emoji} {preset.name}
               </Tag>
@@ -317,15 +370,20 @@ export default function FestivalCalendar({
               placeholder="Emoji"
               style={{ width: 80 }}
               value={currentFestival.emoji}
-              onChange={(e) => setCurrentFestival((prev) => ({ ...prev, emoji: e.target.value }))}
+              onChange={(e) => setCurrentFestival(prev => ({ ...prev, emoji: e.target.value }))}
+              maxLength={2}
             />
             <Input
               placeholder="Festival Name"
               style={{ flex: 1 }}
               value={currentFestival.name}
-              onChange={(e) => setCurrentFestival((prev) => ({ ...prev, name: e.target.value }))}
+              onChange={(e) => setCurrentFestival(prev => ({ ...prev, name: e.target.value }))}
             />
-            <Button icon={<PlusOutlined />} onClick={addToNewFestivals} />
+            <Button 
+              icon={<PlusOutlined />} 
+              onClick={addToNewFestivals}
+              disabled={!currentFestival.emoji || !currentFestival.name}
+            />
           </div>
 
           <List
@@ -333,9 +391,17 @@ export default function FestivalCalendar({
             dataSource={newFestivals}
             locale={{ emptyText: 'No new festivals added yet.' }}
             renderItem={(item, idx) => (
-              <List.Item key={idx} actions={[
-                <Button key="remove" size="small" danger icon={<CloseOutlined />} onClick={() => removeNewFestival(idx)} />,
-              ]}>
+              <List.Item 
+                actions={[
+                  <Button 
+                    key="remove" 
+                    size="small" 
+                    danger 
+                    icon={<CloseOutlined />} 
+                    onClick={() => removeNewFestival(idx)} 
+                  />,
+                ]}
+              >
                 <span>{item.emoji} {item.name}</span>
               </List.Item>
             )}
@@ -345,12 +411,24 @@ export default function FestivalCalendar({
           <Title level={5}>Existing Festivals</Title>
           <List
             bordered
-            dataSource={entries.filter((e) => e.date === selectedDate && !e.note)}
+            dataSource={entries.filter(e => 
+              e.date === selectedDate && 
+              e.content !== 'Note' &&
+              !newFestivals.some(nf => nf.name === e.content)
+            )}
             locale={{ emptyText: 'No existing festivals.' }}
-            renderItem={(item, idx) => (
-              <List.Item key={idx} actions={[
-                <Button key="delete" size="small" icon={<DeleteOutlined />} loading={deletingId === item.id} onClick={() => handleDeleteFestival(item.id!)} />,
-              ]}>
+            renderItem={(item) => (
+              <List.Item 
+                actions={[
+                  <Button 
+                    key="delete" 
+                    size="small" 
+                    icon={<DeleteOutlined />} 
+                    loading={deletingId === item.id} 
+                    onClick={() => handleDeleteFestival(item.id!)} 
+                  />,
+                ]}
+              >
                 <span>{item.emoji} {item.content}</span>
               </List.Item>
             )}

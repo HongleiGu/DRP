@@ -13,6 +13,8 @@ import {
   Space,
   Slider,
   Tooltip,
+  DatePicker,
+  Select,
 } from "antd";
 import { useEffect, useRef, useState } from "react";
 // import { VideoElement } from './PlayList';
@@ -28,10 +30,20 @@ import {
   ShareAltOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { getRandomNumber, isEmoji } from "@/utils/utils";
+import { isEmoji } from "@/utils/utils";
+import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId } from "@/utils/ytPlayerManager";
+
 import { Message, PlayerData } from "@/types/datatypes";
 import { useUser } from "@clerk/nextjs";
 import { FullscreenOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+import { supabase } from "@/lib/supabase";
 
 const { Title } = Typography;
 
@@ -59,14 +71,15 @@ export default function Television({
 }: TelevisionProps) {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const playerRef = useRef<HTMLDivElement>(null);
-  const ytPlayer = useRef<any>(null);
+  // const ytPlayer = useRef<any>(null);
   const [timeInput, setTimeInput] = useState<string>("");
   const [videoUrl, setVideoUrl] = useState<string>("");
-  // const [videoId, setVideoId] = useState<string>("");
+  const [videoId, setVideoId] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
   const [playerReady, setPlayerReady] = useState<boolean>(false);
   const [nickname, setNickname] = useState<string>("");
   const [messageApi, contextHolder] = message.useMessage();
+  const [selectedTimeZone, setSelectedTimeZone] = useState<string>(dayjs.tz.guess());
   const { user } = useUser();
   const [sendEmojis, setSendEmojis] = useState<Record<string, RenderedEmoji>>({
     placeholder: {
@@ -82,6 +95,7 @@ export default function Television({
   const [duration, setDuration] = useState<number>(0);
   const [copied, setCopied] = useState<boolean>(true);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
+  const [reservedTimestamp, setReservedTimestamp] = useState<number | null>(null);
 
   // Initialize YouTube Player
   useEffect(() => {
@@ -110,7 +124,7 @@ export default function Television({
     document.body.appendChild(tag);
 
     (window as any).onYouTubeIframeAPIReady = () => {
-      ytPlayer.current = new (window as any).YT.Player("yt-player", {
+      const player = new (window as any).YT.Player("yt-player", {
         videoId: "loWA5o1RdTY",
         playerVars: {
           controls: 0,
@@ -122,19 +136,24 @@ export default function Television({
           onReady: () => setPlayerReady(true),
           onStateChange: (event: any) => {
             const state = event.data;
-            // 1 = playing, 2 = paused
             if (state === 1) setIsPlaying(true);
             else if (state === 2) setIsPlaying(false);
           },
         },
       });
+
+      setYtPlayer(player);
     };
 
+
     return () => {
-      ytPlayer.current?.destroy();
+      const player = getYtPlayer();
+      player?.destroy();
+      clearYtPlayer();
       delete (window as any).onYouTubeIframeAPIReady;
       document.removeEventListener("fullscreenchange", handler);
     };
+
   }, [user, router]);
 
   // Update video time
@@ -142,9 +161,9 @@ export default function Television({
     if (!playerReady) return;
 
     const intervalId = setInterval(() => {
-      if (ytPlayer.current) {
-        const newTime = ytPlayer.current.getCurrentTime();
-        const newDuration = ytPlayer.current.getDuration();
+      if (getYtPlayer()) {
+        const newTime = getYtPlayer().getCurrentTime();
+        const newDuration = getYtPlayer().getDuration();
 
         if (!isNaN(newTime)) setCurrentTime(newTime);
         if (!isNaN(newDuration)) setDuration(newDuration);
@@ -174,23 +193,23 @@ export default function Television({
         }));
       } else if (messageText.startsWith("/play")) {
         const [_, seconds, id] = messageText.split(" ");
-        if (extractVideoId(ytPlayer.current?.getVideoUrl()) !== id) {
-          ytPlayer.current?.loadVideoById(id, seconds);
+        if (extractVideoId(getYtPlayer()?.getVideoUrl()) !== id) {
+          getYtPlayer()?.loadVideoById(id, seconds);
         } else {
-          ytPlayer.current?.seekTo(parseFloat(seconds));
-          ytPlayer.current?.pauseVideo();
+          getYtPlayer()?.seekTo(parseFloat(seconds));
+          getYtPlayer()?.pauseVideo();
         }
-        ytPlayer.current?.playVideo();
+        getYtPlayer()?.playVideo();
       } else if (messageText.startsWith("/seek")) {
         const seconds = messageText.split(" ")[1];
-        ytPlayer.current?.seekTo(parseFloat(seconds));
+        getYtPlayer()?.seekTo(parseFloat(seconds));
       } else if (messageText.startsWith("/load")) {
         const videoId = messageText.split(" ")[1];
-        if (videoId && ytPlayer.current?.loadVideoById) {
-          ytPlayer.current.loadVideoById(videoId);
+        if (videoId && getYtPlayer()?.loadVideoById) {
+          getYtPlayer().loadVideoById(videoId);
         }
       } else if (messageText === "/pause") {
-        ytPlayer.current?.pauseVideo();
+        getYtPlayer()?.pauseVideo();
       }
     };
 
@@ -212,10 +231,10 @@ export default function Television({
   };
 
   const handlePlay = () => {
-    if (ytPlayer.current) {
+    if (getYtPlayer()) {
       sendMessage(
-        `/play ${ytPlayer.current.getCurrentTime()} ${extractVideoId(
-          ytPlayer.current.getVideoUrl()
+        `/play ${getYtPlayer().getCurrentTime()} ${extractVideoId(
+          getYtPlayer().getVideoUrl()
         )}`
       );
     }
@@ -232,25 +251,28 @@ export default function Television({
     }
   };
 
-  const handleInvite = async (username: string) => {
-    // console.log(username);
-    // console.log(`/invite ${username} ${nickname}`);
-    sendMessage(`/invite ${username} ${nickname} ${extractVideoId(ytPlayer.current?.getVideoUrl())}`);
-  };
+  const handleInvite = async (username: string, timestamp: number | null) => {
+    if (timestamp) {
+      // Convert timestamp to a Date object
+      const date = dayjs(timestamp).format('YYYY-MM-DD'); // e.g., "2025-06-12"
+      
+      const { error } = await supabase.from('calendar_entries').insert({
+        room_id: chatroomId,
+        user_id: username,
+        date: null,
+        content: `Video session for ${nickname} with ID ${videoId}`,
+        note: `Video session for ${nickname} with ID ${videoId}`,
+        emoji: '📹',
+        countdown: Math.floor(timestamp / 1000), // only this is valid, leave the rest aside
+      });
 
-  const extractVideoId = (videoUrl: string): string => {
-    if (!videoUrl) return "";
-    try {
-      const url = new URL(videoUrl);
-      if (
-        url.hostname.includes("youtube.com") ||
-        url.hostname.includes("youtu.be")
-      ) {
-        return url.searchParams.get("v") || url.pathname.split("/").pop() || "";
+      if (error) {
+        console.error('Failed to insert calendar entry:', error.message);
+      } else {
+        console.log('Calendar entry added!');
       }
-      return "";
-    } catch (e) {
-      return "";
+    } else {
+      sendMessage(`/invite ${username} ${nickname} ${videoId}`);
     }
   };
 
@@ -282,7 +304,7 @@ export default function Television({
         />
         {copied ? <span className="ml-4 text-green-500">Copied!</span> : null}
       </Space.Compact>
-{/*       
+
       <p>Video ID</p>
       <Input
         placeholder="Enter video ID"
@@ -297,7 +319,7 @@ export default function Television({
           </Tooltip>
         }
       />
-       */}
+
       <p>OR enter userId and we will send the invitation directly</p>
       <Space.Compact className="w-full">
         <Input
@@ -308,9 +330,43 @@ export default function Television({
         <Button
           icon={<SendOutlined />}
           iconPosition="end"
-          onClick={() => handleInvite(inputUserId)}
+          onClick={() => handleInvite(inputUserId, reservedTimestamp)}
         />
       </Space.Compact>
+
+      <p>you can also reserve a time</p>
+      <p>Choose Time Zone</p>
+      <Select
+        showSearch
+        placeholder="Select a timezone"
+        optionFilterProp="children"
+        value={selectedTimeZone}
+        onChange={(value) => setSelectedTimeZone(value)}
+        className="w-full"
+      >
+        {Intl.supportedValuesOf("timeZone").map((tz) => (
+          <Select.Option key={tz} value={tz}>
+            {tz}
+          </Select.Option>
+        ))}
+      </Select>
+
+      <DatePicker
+        allowClear
+        showTime={{ format: 'HH:mm' }}
+        format="YYYY-MM-DD HH:mm"
+        className="w-full"
+        onChange={(value) => {
+          if (value) {
+            const zoned = dayjs.tz(value, selectedTimeZone);
+            const timestamp = zoned.valueOf(); // milliseconds in UTC
+            setReservedTimestamp(timestamp);
+          } else {
+            setReservedTimestamp(null);
+          }
+        }}
+      />
+
     </div>
   );
 

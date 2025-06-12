@@ -108,3 +108,4 @@ export type YouTubeCategoryId = keyof typeof YOUTUBE_CATEGORIES;
 export const getCategoryName = (id: string): string => {
   return YOUTUBE_CATEGORIES[id] || `Category ${id}`;
 };
+

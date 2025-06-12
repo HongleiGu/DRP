@@ -1,7 +1,7 @@
 // ChatPanel.tsx
 "use client"
 import { supabase } from "@/lib/supabase";
-import { getChannel, getMessages, insertChatHistory } from "@/utils/api";
+import { getMessages, insertChatHistory } from "@/utils/api";
 import { useUser } from "@clerk/nextjs";
 import { message, Badge, List, Input, Button, Popover, Card, Space, Divider, Typography } from "antd";
 import { Message, PlayerData } from "@/types/datatypes";
@@ -12,6 +12,8 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 // import { createPortal } from "react-dom";
 // import VideoDetails from "../VideoDetails";
 import { StarOutlined } from "@ant-design/icons";
+import { extractVideoId, getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
+import VideoDetails from "../VideoDetails";
 
 // const { Text, Title } = Typography;
 
@@ -206,8 +208,9 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
 
   const handleTVSpecialSend = useCallback(async (theMessage: string) => {
     if (!theMessage.trim() || isSending || !userId || !nickname) return;
+    if (!getYtPlayer()) return;
     let messageObj: Message;
-    const channel = await getChannel(chatroomId)
+    // const channel = await getChannel(chatroomId)
     if (theMessage.startsWith("/invite")) {
       messageObj = {
         speaker: userId,
@@ -215,8 +218,8 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
         chat_message: theMessage,
         created_at: new Date().toISOString(),
         chat_room_id: chatroomId,
-        video_url: channel.channel,
-        video_time: channel.time
+        video_url: getCurrentVideoId(),
+        video_time: getCurrentTime(),
       }
     } else {
       messageObj = {
@@ -225,8 +228,8 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
         chat_message: theMessage,
         created_at: new Date().toISOString(),
         chat_room_id: chatroomId,
-        video_url: channel.channel,
-        video_time: channel.time
+        video_url: getCurrentVideoId(),
+        video_time: getCurrentTime(),
       };
     }
 
@@ -286,7 +289,7 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
       return (
       <div style={{ width: 220 }}>
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Typography.Title level={5} style={{ margin: 0 }}>{name}</Typography.Title>
+          <Typography.Title level={5} style={{ margin: 0 }}>{name} watching {extractVideoId(videoUrl)}</Typography.Title>
           <Divider style={{ margin: '8px 0' }} />
           <Typography.Text strong>Timestamp: {toTimestamp(videoTime)}</Typography.Text>
           <Button type="primary" block style={{ marginTop: 8 }}>

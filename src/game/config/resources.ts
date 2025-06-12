@@ -87,3 +87,8 @@ export const Resources = {
 // for (const resource of Object.values(Resources)) {
 //     loader.addResource(resource);
 // }
+
+export const pixelFont = new ex.Font({
+  family: 'var(--game-font)', // Uses CSS variable
+  size: 24
+});
