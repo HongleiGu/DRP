@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { getMessages, insertChatHistory } from "@/utils/api";
 import { useUser } from "@clerk/nextjs";
 import { message, Badge, List, Avatar, Input, Button, Popover, Modal, Card } from "antd";
-import { Message } from "@/types/datatypes";
+import { Message, PlayerData } from "@/types/datatypes";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import EmojiGrid from "../EmojiGrids";
@@ -33,6 +33,42 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
   const [emojiPopoverOpen, setEmojiPopoverOpen] = useState(false);
 
   const memoizedMessages = useMemo(() => messages, [messages]);
+
+  const [members, setMembers] = useState<PlayerData[]>([]);
+
+  const updateMembers = async () => {
+    const res = await fetch(`/api/room/${chatroomId}/players`);
+    const members = (await res.json() as { players: PlayerData[] }).players
+    setMembers(members)
+  }
+
+  function LumiAvatar(param: {avatarId: string}) {
+    const avatarId = Number.parseInt(param.avatarId)
+    return (
+                    <div
+                    style={{
+                      width: 48, // 16 * 2
+                      height: 60, // 20 * 2
+                      overflow: 'hidden',
+                      display: 'inline-block',
+                      paddingTop: '4px',
+                    }}
+                  >
+                    <img
+                      src={`/game/assets/character-pack-full_version/sprite_split/character_${avatarId + 1}/character_${avatarId + 1}_frame16x20.png`}
+                      alt="sprite-frame"
+                      style={{
+                        display: 'block',
+                        objectFit: 'none',
+                        objectPosition: '-16px 6px',
+                        transform: 'scale(3)',
+                        transformOrigin: 'top left',
+                        imageRendering: 'pixelated',
+                      }}
+                    />
+                  </div>
+      );
+  }
 
   useEffect(() => {
     if (!user?.id) {
@@ -71,6 +107,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
     .on('presence', { event: 'sync' }, () => {
       const state = presenceTrack.presenceState();
       setOnlineUsers(Object.keys(state));
+      updateMembers();
     })
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
@@ -78,6 +115,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
           user_id: userId,
           online_at: new Date().toISOString(),
         });
+        updateMembers();
       }
     });
 
@@ -113,6 +151,7 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
             setMessages(prev => [...prev, newMsg]);
           }
         }
+        updateMembers();
         receiveMessage(payload.new as Message);
       })
       .subscribe();
@@ -267,7 +306,9 @@ export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatP
             renderItem={(msg) => (
               <List.Item style={{margin: "8px"}} className={msg.speaker === userId ? 'bg-blue-50' : ''}>
                 <List.Item.Meta
-                  avatar={<Avatar>{msg.speaker_name?.charAt(0) || 'U'}</Avatar>}
+                  avatar={<LumiAvatar avatarId={
+                    members.find((member) => member.user_id === msg.speaker)?.avatarId ?? "0"
+                  }></LumiAvatar>}
                   title={<span className="font-semibold">{msg.speaker_name}</span>}
                   description={msg.chat_message}
                 />
