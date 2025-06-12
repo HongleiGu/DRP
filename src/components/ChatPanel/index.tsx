@@ -1,11 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 // ChatPanel.tsx
 "use client"
 import { supabase } from "@/lib/supabase";
 import { getMessages, insertChatHistory } from "@/utils/api";
 import { useUser } from "@clerk/nextjs";
-import { message, Badge, List, Input, Button, Popover, Modal, Card, Space, Divider, Typography } from "antd";
+import { message, Badge, List, Input, Button, Popover, Modal, Card } from "antd";
 import { Message, PlayerData } from "@/types/datatypes";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
@@ -14,18 +12,14 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 // import { getNicknameById } from "@/actions/onboarding";
 import { createPortal } from "react-dom";
 import VideoDetails from "../VideoDetails";
-import { StarOutlined } from "@ant-design/icons";
-
-const { Text, Title } = Typography;
 
 interface ChatPanelProps {
-  isTV?: boolean;
   chatroomId: string;
   onMount: (fn: (msg: string) => void) => void;
   receiveMessage: (msg: Message) => void;
 }
 
-export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }: ChatPanelProps) {
+export default function ChatPanel({ chatroomId, onMount, receiveMessage }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -68,7 +62,7 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
                       style={{
                         display: 'block',
                         objectFit: 'none',
-                        objectPosition: '-16px 4px',
+                        objectPosition: '-16px 6px',
                         transform: 'scale(3)',
                         transformOrigin: 'top left',
                         imageRendering: 'pixelated',
@@ -213,10 +207,6 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
     }
   }, [isSending, userId, nickname, chatroomId]);
 
-  const handleTVSpecialSend = useCallback(async (theMessage: string) => {
-    // TODO
-  }, []);
-
   const handleEmojiSelect = useCallback((emoji: string) => {
     handleSend(emoji);
     setEmojiPopoverOpen(false);
@@ -281,30 +271,7 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
         >
           Send
         </Button>
-        {isTV &&(
-          <Button
-            type="primary"
-            onClick={() => handleTVSpecialSend(newMessage)}
-            // loading={isSending}
-            disabled={!newMessage.trim()}
-          >
-            Moment
-          </Button>
-        )}
       </div>
-    </div>
-  );
-
-  const starPopover = (
-    <div style={{ width: 220 }}>
-      <Space direction="vertical" style={{ width: '100%' }}>
-        <Title level={5} style={{ margin: 0 }}>Honkai: Star Rail EP: Proi Proi</Title>
-        <Divider style={{ margin: '8px 0' }} />
-        <Text strong>Timestamp: 01:21</Text>
-        <Button type="primary" block style={{ marginTop: 8 }}>
-          Jump to Moment
-        </Button>
-      </Space>
     </div>
   );
 
@@ -340,14 +307,7 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
             dataSource={memoizedMessages}
             className="overflow-y-auto"
             renderItem={(msg) => (
-              <List.Item 
-              style={{margin: "8px"}} className={msg.speaker === userId ? 'bg-blue-50' : ''}
-              actions={isTV?[(
-              <Popover content={starPopover} title="Moment" trigger="click">
-                <StarOutlined />
-              </Popover>
-              )] : []}
-              >
+              <List.Item style={{margin: "8px"}} className={msg.speaker === userId ? 'bg-blue-50' : ''}>
                 <List.Item.Meta
                   avatar={<LumiAvatar avatarId={
                     members.find((member) => member.user_id === msg.speaker)?.avatarId ?? "0"
