@@ -11,10 +11,12 @@ import EmojiGrid from "../EmojiGrids";
 import InfiniteScroll from 'react-infinite-scroll-component';
 // import { createPortal } from "react-dom";
 // import VideoDetails from "../VideoDetails";
-import { StarOutlined } from "@ant-design/icons";
-import { getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
+import { BookOutlined } from "@ant-design/icons";
+import { extractVideoId, getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
 import VideoDetails from "../VideoDetails";
 // import VideoDetails from "../VideoDetails";
+
+import React from 'react';
 
 // const { Text, Title } = Typography;
 
@@ -43,6 +45,8 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
   const memoizedMessages = useMemo(() => messages, [messages]);
 
   const [members, setMembers] = useState<PlayerData[]>([]);
+
+  const [isMoment, setIsMoment] = useState(false);
 
   const updateMembers = async () => {
     const res = await fetch(`/api/room/${chatroomId}/players`);
@@ -379,28 +383,35 @@ extra={
             itemLayout="horizontal"
             dataSource={memoizedMessages}
             className="overflow-y-auto"
-            renderItem={(msg) => (
-              <List.Item
-                style={{ margin: "8px" }}
-                className={msg.speaker === userId ? 'bg-blue-50' : ''}
-                actions={isTV ? [
-                  <Popover
-                    key={msg.id}
-                    content={starPopover(msg.speaker_name, msg.video_url, msg.video_time)} // Passing video_url and video_time
-                    title="Moment"
-                    trigger="click"
-                  >
-                    <StarOutlined />
-                  </Popover>
-                ] : []}
-              >
-                <List.Item.Meta
-                  avatar={<LumiAvatar avatarId={members.find((member) => member.user_id === msg.speaker)?.avatarId ?? "0"} />}
-                  title={<span className="font-semibold">{msg.speaker_name}</span>}
-                  description={msg.chat_message}
-                />
-              </List.Item>
-            )}
+            renderItem={(msg) => {
+  const isMomentMsg = !!(msg.video_url && msg.video_time); // 判断是否是 moment 消息
+
+  return (
+    <List.Item
+      style={{ margin: "8px" }}
+      className={msg.speaker === userId ? 'bg-blue-50' : ''}
+      actions={isMomentMsg ? [
+        <Popover
+          key={msg.id}
+          content={starPopover(msg.speaker_name, msg.video_url, msg.video_time)}
+          title="Moment"
+          trigger="click"
+        >
+          <BookOutlined />
+        </Popover>
+      ] : []}
+    >
+      <List.Item.Meta
+        avatar={
+          <LumiAvatar avatarId={members.find((member) => member.user_id === msg.speaker)?.avatarId ?? "0"} />
+        }
+        title={<span className="font-semibold">{msg.speaker_name}</span>}
+        description={msg.chat_message}
+      />
+    </List.Item>
+  );
+}}
+
           />
           <div ref={messagesEndRef} />
         </InfiniteScroll>
