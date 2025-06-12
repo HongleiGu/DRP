@@ -269,15 +269,6 @@ export default function ChatPanel({ isTV, chatroomId, onMount, receiveMessage }:
   //   setIsInviteModalVisible(false);
   // };
 
-  const header = (
-    <div className="flex justify-between">
-      <div className="flex space-x-2 items-center">
-        <Badge count={onlineUsers.length} className="ml-3 text-lg text-blue-500" />
-        <h3 className="text-xl font-semibold">Chat</h3>
-      </div>
-    </div>
-  );
-
   function toTimestamp(seconds: number): string {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
