@@ -12,7 +12,8 @@ export class OtherPlayer extends ex.Actor {
   private currentDirection: "up" | "down" | "left" | "right" = "down";
   private currentState: "idle" | "walk" = "idle";
   private targetPos: ex.Vector;
-  private moveSpeed = 40; // px/sec
+  private moveSpeed = 300;
+  private smoothFactor = 0.1; // Interpolation factor for smoothing
 
   constructor(args: ex.ActorArgs & { userId: string; roomId: string; name: string; avatarId: string }) {
     super({ ...args, collisionType: ex.CollisionType.PreventCollision });
@@ -20,7 +21,7 @@ export class OtherPlayer extends ex.Actor {
     this.roomId = args.roomId;
     this.name = args.name;
     this.avatarId = args.avatarId;
-    this.targetPos = (args.pos ?? new ex.Vector(200,300)).clone();
+    this.targetPos = (args.pos ?? new ex.Vector(200, 300)).clone();
   }
 
   onInitialize(): void {
@@ -58,6 +59,7 @@ export class OtherPlayer extends ex.Actor {
   }
 
   public walkTo(position: ex.Vector) {
+    // Set the target position but apply smoothing in the next update
     this.targetPos = position.clone();
   }
 
@@ -65,26 +67,23 @@ export class OtherPlayer extends ex.Actor {
     const deltaSec = delta / 1000;
     const toTarget = this.targetPos.sub(this.pos);
     const dist = toTarget.magnitude;
-    this.pos = ex.vec(Math.round(this.pos.x), Math.round(this.pos.y));
 
+    // Smooth interpolation between current and target position
+    const step = toTarget.normalize().scale(this.moveSpeed * deltaSec * this.smoothFactor);
     if (dist > 0.5) {
-      const step = toTarget.normalize().scale(this.moveSpeed * deltaSec);
-      if (step.magnitude >= dist) {
-        this.pos = this.pos.add(step.clampMagnitude(dist));
-      } else {
-        this.pos = this.pos.add(step);
-      }
-
-      const dir = Math.abs(toTarget.x) > Math.abs(toTarget.y)
-        ? (toTarget.x > 0 ? "right" : "left")
-        : (toTarget.y > 0 ? "down" : "up");
-
-      this.setDirection(dir, "walk");
+      // Apply smoother movement using lerp
+      this.pos = this.pos.add(step);
     } else {
-      this.pos = this.targetPos.clone(); // snap to stop cleanly
-      this.setDirection(this.currentDirection, "idle");
+      this.pos = this.targetPos.clone(); // Snap to target when very close
     }
 
+    // Interpolate the direction
+    const dir = Math.abs(toTarget.x) > Math.abs(toTarget.y)
+      ? (toTarget.x > 0 ? "right" : "left")
+      : (toTarget.y > 0 ? "down" : "up");
+
+    // Smooth transition between walking and idle
+    this.setDirection(dir, dist > 0.5 ? "walk" : "idle");
   }
 
   private setDirection(dir: "up" | "down" | "left" | "right", state: "idle" | "walk") {
