@@ -55,6 +55,7 @@ export default function ChatPanel({
   const [userId, setUserId] = useState<string>("");
   const [nickname, setNickname] = useState<string>("");
   // const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [messageApi, contextHolder] = message.useMessage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const router = useRouter();
@@ -171,10 +172,10 @@ export default function ChatPanel({
           if (payload.new.speaker !== userId) {
             if (payload.new.chat_message.startsWith("/alert")) {
               const a = payload.new.chat_message.split(" ")[1];
-              message.info(
+              messageApi.info(
                 `${a} has made a change in the calendar, please check`
               );
-              alert(`${a} has made a change in the calendar, please check`);
+              // alert(`${a} has made a change in the calendar, please check`);
             }
             if (payload.new.chat_message.startsWith("/invite")) {
               const msgUserNickName = payload.new.chat_message.split(" ")[1];
@@ -444,6 +445,7 @@ export default function ChatPanel({
         },
       }}
     >
+      {contextHolder}
       <div
         className="relative flex flex-col h-full"
         id="scrollableDiv"
