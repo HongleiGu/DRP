@@ -30,6 +30,7 @@ const { Option, OptGroup } = Select;
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { ALL_EMOJIS, cascaderOptions } from '@/utils/utils';
+import VideoDetails from '../VideoDetails';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -79,7 +80,7 @@ export default function FestivalCalendar({
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
   const [newFestivals, setNewFestivals] = useState<{ name: string; emoji: string }[]>([]);
   const [currentFestival, setCurrentFestival] = useState({ name: '', emoji: '' });
-  const [selectedGroup, setSelectedGroup] = useState(null);
+  // const [selectedGroup, setSelectedGroup] = useState(null);
   const [note, setNote] = useState<string>('');
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
@@ -454,18 +455,25 @@ export default function FestivalCalendar({
             )}
             locale={{ emptyText: 'No existing festivals.' }}
             renderItem={(item) => (
-              <List.Item 
-                actions={[
-                  <Button 
-                    key="delete" 
-                    size="small" 
-                    icon={<DeleteOutlined />} 
-                    loading={deletingId === item.id} 
-                    onClick={() => handleDeleteFestival(item.id!)} 
-                  />,
-                ]}
-              >
-                <span>{item.emoji} {item.content}</span>
+              <List.Item>
+                <div className="w-full">
+                  <div className="flex justify-between items-start">
+                    <span>{item.emoji} {item.content}</span>
+                    <Button 
+                      key="delete" 
+                      size="small" 
+                      icon={<DeleteOutlined />} 
+                      loading={deletingId === item.id} 
+                      onClick={() => handleDeleteFestival(item.id!)} 
+                    />
+                  </div>
+
+                  {item.video_id && (
+                    <div className="mt-2">
+                      <VideoDetails videoId={item.video_id} />
+                    </div>
+                  )}
+                </div>
               </List.Item>
             )}
           />

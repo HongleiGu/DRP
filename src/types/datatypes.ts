@@ -45,6 +45,7 @@ export interface CalendarEntry {
   created_at?: string;
   updated_at?: string;
   countdown?: number;
+  video_id?: string;
 }
 
 
@@ -97,3 +98,4 @@ export interface VideoInfo {
   publishedAt: string;
   channelTitle: string;
 }
+
