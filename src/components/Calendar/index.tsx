@@ -4,6 +4,7 @@ import {
   Calendar,
   Modal,
   Button,
+  Select,
   message,
   Typography,
   Input,
@@ -23,9 +24,11 @@ import dayjs from 'dayjs';
 import { supabase } from '@/lib/supabase';
 import { getCalendarEntries, insertChatHistory } from '@/utils/api';
 import { CalendarEntry } from '@/types/datatypes';
+const { Option, OptGroup } = Select;
 
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { ALL_EMOJIS } from '@/utils/utils';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -366,13 +369,25 @@ export default function FestivalCalendar({
           </div>
 
           <div className="flex items-center gap-2 mb-3">
-            <Input
-              placeholder="Emoji"
-              style={{ width: 80 }}
+            <Select
+              placeholder="Select Emoji"
+              style={{ width: 120 }}
               value={currentFestival.emoji}
-              onChange={(e) => setCurrentFestival(prev => ({ ...prev, emoji: e.target.value }))}
-              maxLength={2}
-            />
+              onChange={(value) => setCurrentFestival(prev => ({ ...prev, emoji: value }))}
+              showSearch
+              optionLabelProp="label"
+              dropdownMatchSelectWidth={false}
+            >
+              {ALL_EMOJIS.map(group => (
+                <OptGroup key={group.name} label={group.name}>
+                  {group.emojis.map(emoji => (
+                    <Option key={emoji} value={emoji} label={emoji}>
+                      <span style={{ fontSize: 20 }}>{emoji}</span>
+                    </Option>
+                  ))}
+                </OptGroup>
+              ))}
+            </Select>
             <Input
               placeholder="Festival Name"
               style={{ flex: 1 }}
