@@ -15,6 +15,7 @@ import {
   Tooltip,
   DatePicker,
   Select,
+  Cascader,
 } from "antd";
 import { useEffect, useRef, useState } from "react";
 // import { VideoElement } from './PlayList';
@@ -30,7 +31,7 @@ import {
   ShareAltOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { isEmoji } from "@/utils/utils";
+import { cascaderOptions, isEmoji } from "@/utils/utils";
 import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId } from "@/utils/ytPlayerManager";
 
 import { Message, PlayerData } from "@/types/datatypes";
@@ -254,7 +255,7 @@ export default function Television({
   const handleInvite = async (username: string, timestamp: number | null) => {
     if (timestamp) {
       // Convert timestamp to a Date object
-      const date = dayjs(timestamp).format('YYYY-MM-DD'); // e.g., "2025-06-12"
+      // const date = dayjs(timestamp).format('YYYY-MM-DD'); // e.g., "2025-06-12"
       
       const { error } = await supabase.from('calendar_entries').insert({
         room_id: chatroomId,
@@ -336,20 +337,24 @@ export default function Television({
 
       <p>you can also reserve a time</p>
       <p>Choose Time Zone</p>
-      <Select
+      <Cascader
+        options={cascaderOptions}
+        placeholder="Select Time Zone"
+        style={{ width: "100%" }}
         showSearch
-        placeholder="Select a timezone"
-        optionFilterProp="children"
-        value={selectedTimeZone}
-        onChange={(value) => setSelectedTimeZone(value)}
-        className="w-full"
-      >
-        {Intl.supportedValuesOf("timeZone").map((tz) => (
-          <Select.Option key={tz} value={tz}>
-            {tz}
-          </Select.Option>
-        ))}
-      </Select>
+        value={
+          selectedTimeZone && selectedTimeZone.includes("/")
+            ? [selectedTimeZone.split("/")[0], selectedTimeZone]
+            : undefined
+        }
+        onChange={(value) => {
+          const selected = value?.[1]; // full time zone like "America/New_York"
+          if (selected) {
+            setSelectedTimeZone(selected);
+          }
+        }}
+        displayRender={(labels) => labels.join(" / ")} // e.g., America / New York
+      />
 
       <DatePicker
         allowClear

@@ -109,3 +109,32 @@ export const getCategoryName = (id: string): string => {
   return YOUTUBE_CATEGORIES[id] || `Category ${id}`;
 };
 
+// timezone utils
+
+const rawTimeZones = Intl.supportedValuesOf("timeZone");
+
+const cascaderTimeZones = rawTimeZones.reduce((acc, tz) => {
+  const parts = tz.split("/");
+
+  if (parts.length < 2) return acc; // Skip root-level or malformed zones
+
+  const [region, ...cityParts] = parts;
+  const city = cityParts.join(" ").replace(/_/g, " "); // Convert to "New York", "Los Angeles"
+
+  if (!acc[region]) {
+    acc[region] = [];
+  }
+
+  acc[region].push({
+    value: tz,
+    label: city,
+  });
+
+  return acc;
+}, {} as Record<string, { value: string; label: string }[]>);
+
+export const cascaderOptions = Object.entries(cascaderTimeZones).map(([region, cities]) => ({
+  value: region,
+  label: region,
+  children: cities.sort((a, b) => a.label.localeCompare(b.label)),
+}));

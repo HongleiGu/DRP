@@ -12,6 +12,7 @@ import {
   Divider,
   Tag,
   Popover,
+  Cascader,
 } from 'antd';
 import {
   CloseOutlined,
@@ -28,7 +29,7 @@ const { Option, OptGroup } = Select;
 
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
-import { ALL_EMOJIS } from '@/utils/utils';
+import { ALL_EMOJIS, cascaderOptions } from '@/utils/utils';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -45,6 +46,21 @@ const PRESET_FESTIVALS = [
   { name: 'Thanksgiving', emoji: '🦃' },
   { name: 'Anniversary', emoji: '💍' },
 ];
+
+const findGroup = (emoji: string) => {
+  const group = ALL_EMOJIS.find(g => g.emojis.includes(emoji));
+  return group ? group.name : undefined;
+};
+
+// same old story, must be BaseOptionType
+const EMOJI_OPTIONS = ALL_EMOJIS.map(group => ({
+  value: group.name,
+  label: group.name,
+  children: group.emojis.map(emoji => ({
+    value: emoji,
+    label: emoji,
+  })),
+}));
 
 export default function FestivalCalendar({
   roomId,
@@ -63,6 +79,7 @@ export default function FestivalCalendar({
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
   const [newFestivals, setNewFestivals] = useState<{ name: string; emoji: string }[]>([]);
   const [currentFestival, setCurrentFestival] = useState({ name: '', emoji: '' });
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [note, setNote] = useState<string>('');
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
@@ -278,18 +295,25 @@ export default function FestivalCalendar({
         width={800}
         destroyOnClose
       >
-        <div className="mb-4">
-          <label style={{ marginRight: 8 }}>Time Zone:</label>
-          <select 
-            value={selectedTimeZone} 
-            onChange={(e) => setSelectedTimeZone(e.target.value)}
-            className="p-1 border rounded"
-          >
-            {Intl.supportedValuesOf('timeZone').map((tz) => (
-              <option key={tz} value={tz}>{tz}</option>
-            ))}
-          </select>
-        </div>
+        <Cascader
+          options={cascaderOptions}
+          placeholder="Select Time Zone"
+          style={{ width: 300 }}
+          showSearch
+          value={
+            selectedTimeZone && selectedTimeZone.includes("/")
+              ? [selectedTimeZone.split("/")[0], selectedTimeZone]
+              : undefined
+          }
+          onChange={(value) => {
+            const selected = value?.[1]; // full time zone like "America/New_York"
+            if (selected) {
+              setSelectedTimeZone(selected);
+            }
+          }}
+          displayRender={(labels) => labels.join(" / ")} // e.g., America / New York
+        />
+
 
         <Calendar
           fullscreen={false}
@@ -369,25 +393,22 @@ export default function FestivalCalendar({
           </div>
 
           <div className="flex items-center gap-2 mb-3">
-            <Select
+            <Cascader
+              options={EMOJI_OPTIONS}
               placeholder="Select Emoji"
-              style={{ width: 120 }}
-              value={currentFestival.emoji}
-              onChange={(value) => setCurrentFestival(prev => ({ ...prev, emoji: value }))}
+              style={{ width: 200 }}
               showSearch
-              optionLabelProp="label"
-              dropdownMatchSelectWidth={false}
-            >
-              {ALL_EMOJIS.map(group => (
-                <OptGroup key={group.name} label={group.name}>
-                  {group.emojis.map(emoji => (
-                    <Option key={emoji} value={emoji} label={emoji}>
-                      <span style={{ fontSize: 20 }}>{emoji}</span>
-                    </Option>
-                  ))}
-                </OptGroup>
-              ))}
-            </Select>
+              value={currentFestival.emoji ? [findGroup(currentFestival.emoji) ?? "", currentFestival.emoji] : []}
+              onChange={(value) => {
+                const selectedEmoji = value?.[1]; // The actual emoji is the second item
+                if (selectedEmoji) {
+                  setCurrentFestival(prev => ({ ...prev, emoji: selectedEmoji }));
+                }
+              }}
+              displayRender={(labels) => (
+                <span style={{ fontSize: 20 }}>{labels[1] || labels[0]}</span>
+              )}
+            />
             <Input
               placeholder="Festival Name"
               style={{ flex: 1 }}
