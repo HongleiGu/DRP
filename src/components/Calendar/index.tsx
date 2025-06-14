@@ -4,7 +4,6 @@ import {
   Calendar,
   Modal,
   Button,
-  Select,
   message,
   Typography,
   Input,
@@ -25,7 +24,6 @@ import dayjs from 'dayjs';
 import { supabase } from '@/lib/supabase';
 import { getCalendarEntries, insertChatHistory } from '@/utils/api';
 import { CalendarEntry } from '@/types/datatypes';
-const { Option, OptGroup } = Select;
 
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
