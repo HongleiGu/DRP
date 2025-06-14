@@ -265,6 +265,7 @@ export default function Television({
         note: `Video session for ${nickname} with ID ${videoId}`,
         emoji: '📹',
         countdown: Math.floor(timestamp / 1000), // only this is valid, leave the rest aside
+        video_id: videoId
       });
 
       if (error) {
