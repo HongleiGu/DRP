@@ -1,7 +1,7 @@
 // ChatPanel.tsx
 "use client";
 import { supabase } from "@/lib/supabase";
-import { getMessages, insertChatHistory } from "@/utils/api";
+import { getMessages, insertChatHistory, updateChannel } from "@/utils/api";
 import { useUser } from "@clerk/nextjs";
 import {
   message,
@@ -16,7 +16,7 @@ import {
   Typography,
 } from "antd";
 import { Message, PlayerData } from "@/types/datatypes";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import EmojiGrid from "../EmojiGrids";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -55,6 +55,7 @@ export default function ChatPanel({
   const [userId, setUserId] = useState<string>("");
   const [nickname, setNickname] = useState<string>("");
   // const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const pathname = usePathname();
   const [messageApi, contextHolder] = message.useMessage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
@@ -327,7 +328,7 @@ export default function ChatPanel({
   }
 
   // Function to reload the video and jump to a specific time (in seconds)
-  const reloadAndJumpToSeconds = (videoId: string, seconds: number) => {
+  const reloadAndJumpToSeconds = async (videoId: string, seconds: number) => {
     const player = getYtPlayer(); // Get the player instance
 
     if (player) {
@@ -335,6 +336,15 @@ export default function ChatPanel({
       // player.loadVideoById(videoId); // Load the video by ID
       // player.seekTo(seconds, true);   // Jump to the specified second and start from there
       handleSend(`/play ${seconds} ${videoId}`);
+      // console.log(videoId)
+      // await updateChannel({channel: videoId, time: seconds, room_id: chatroomId});
+
+    }
+    setTimeout(
+      () => updateChannel({channel: videoId, time: seconds, room_id: chatroomId}), 0
+    )
+    if (pathname.includes("/lumiroom")) {
+      router.push(pathname.replace("/lumiroom", "/television"))
     }
   };
 

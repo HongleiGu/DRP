@@ -116,7 +116,7 @@ export class MainScene extends Scene {
       if (playerData.user_id === this.userId) {
         this.player.pos = pos;
       } else {
-        console.log(playerData.name)
+        // console.log(playerData.name)
         const other = new OtherPlayer({
           pos,
           z: 15,

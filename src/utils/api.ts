@@ -95,7 +95,7 @@ export async function getChannel(roomId: string): Promise<TVState> {
       .select('*')
       .eq('room_id', roomId)
       .single()
-    console.log("data", data)
+    // console.log("data", data)
     if (error) {
       console.error('Detailed Supabase error:', {
         message: error.message,
@@ -111,7 +111,7 @@ export async function getChannel(roomId: string): Promise<TVState> {
   }
 }
 
-export async function updateChannel(state: TVState): Promise<void> {
+export async function updateChannel(state: Partial<TVState>): Promise<void> {
   console.log("updating channel", state.room_id, state.channel)
   try {
     const {error} = await supabase
@@ -226,7 +226,7 @@ export async function getCalendarEntries(roomId: string): Promise<CalendarEntry[
 }
 
 export async function getPlayers(roomId: string): Promise<PlayerData[]> {
-  console.log(roomId)
+  // console.log(roomId)
   const { data, error } = await supabase
     .from('players')
     .select('*')
@@ -236,7 +236,7 @@ export async function getPlayers(roomId: string): Promise<PlayerData[]> {
     console.error("Failed to fetch players:", error.message);
     throw error
   }
-  console.log("all players", data, roomId)
+  // console.log("all players", data, roomId)
   return data.map(it => it as PlayerData)
 }
 
@@ -309,3 +309,27 @@ export async function updatePlayerPosition(userId: string, position: {
     console.error("Failed to update player position:", error.message);
   }
 }
+
+// export const updateChannelPlayback = async (roomId: string, isPlaying: boolean) => {
+//   return supabase
+//     .from('tv_channel')
+//     .update({ is_playing: isPlaying })
+//     .eq('room_id', roomId);
+// };
+
+// export const updateChannelTime = async (roomId: string, time: number) => {
+//   return supabase
+//     .from('tv_channel')
+//     .update({ time })
+//     .eq('room_id', roomId);
+// };
+
+// export const updateChannelState = async (
+//   roomId: string,
+//   data: Partial<TVState>
+// ) => {
+//   return supabase
+//     .from('tv_channel')
+//     .update(data)
+//     .eq('room_id', roomId);
+// };

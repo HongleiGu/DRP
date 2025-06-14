@@ -102,7 +102,7 @@ export default function FestivalCalendar({
           }
           return entry;
         });
-        console.log("enriched", enriched)
+        // console.log("enriched", enriched)
         setEntries(enriched);
       } catch (error) {
         console.error("Failed to fetch entries:", error);

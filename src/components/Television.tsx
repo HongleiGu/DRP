@@ -32,9 +32,9 @@ import {
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { cascaderOptions, isEmoji } from "@/utils/utils";
-import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId } from "@/utils/ytPlayerManager";
+import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId} from "@/utils/ytPlayerManager";
 
-import { Message, PlayerData } from "@/types/datatypes";
+import { Message, PlayerData, TVState } from "@/types/datatypes";
 import { useUser } from "@clerk/nextjs";
 import { FullscreenOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -45,6 +45,8 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 import { supabase } from "@/lib/supabase";
+import { getChannel, updateChannel } from "@/utils/api";
+// import { updateChannel } from "@/utils/api";
 
 const { Title } = Typography;
 
@@ -82,6 +84,7 @@ export default function Television({
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedTimeZone, setSelectedTimeZone] = useState<string>(dayjs.tz.guess());
   const { user } = useUser();
+  const [tvState, setTVState] = useState<TVState | null>();
   const [sendEmojis, setSendEmojis] = useState<Record<string, RenderedEmoji>>({
     placeholder: {
       avatarId: 0,
@@ -97,6 +100,15 @@ export default function Television({
   const [copied, setCopied] = useState<boolean>(true);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [reservedTimestamp, setReservedTimestamp] = useState<number | null>(null);
+
+  useEffect(() => {
+    const helper = async () => {
+      const c = await getChannel(chatroomId)
+      setTVState(c)
+    }
+    helper()
+  }, [])
+
 
   // Initialize YouTube Player
   useEffect(() => {
@@ -134,7 +146,9 @@ export default function Television({
           rel: 0,
         },
         events: {
-          onReady: () => setPlayerReady(true),
+          onReady: () => {
+            setPlayerReady(true)
+          },
           onStateChange: (event: any) => {
             const state = event.data;
             if (state === 1) setIsPlaying(true);
@@ -178,7 +192,7 @@ export default function Television({
   useEffect(() => {
     const receiver = async (msg: Message) => {
       const messageText: string = msg.chat_message;
-      console.log("check emoji", isEmoji(messageText));
+      // console.log("check emoji", isEmoji(messageText));
 
       const res = await fetch(`/api/room/${msg.chat_room_id}/players`);
       const members = (await res.json() as { players: PlayerData[] }).players
@@ -228,27 +242,43 @@ export default function Television({
   const handleSliderSeek = (seconds: number) => {
     if (Math.abs(seconds - currentTime) > 1) {
       sendMessage(`/seek ${Math.floor(seconds)}`);
+      setTVState({...tvState, time: Math.floor(seconds)} as TVState)
+      setTimeout(() =>
+        updateChannel({room_id: chatroomId, time: Math.floor(seconds) })
+      );
     }
   };
 
   const handlePlay = () => {
-    if (getYtPlayer()) {
-      sendMessage(
-        `/play ${getYtPlayer().getCurrentTime()} ${extractVideoId(
-          getYtPlayer().getVideoUrl()
-        )}`
+    const ytPlayer = getYtPlayer();
+    if (ytPlayer) {
+      const time = Math.floor(ytPlayer.getCurrentTime()) || (tvState?.time ?? 0);
+      const videoId = extractVideoId(ytPlayer.getVideoUrl()) || (tvState?.channel ?? "");
+      setTVState({...tvState, room_id: chatroomId,  is_playing: true, time} as TVState)
+
+      sendMessage(`/play ${time} ${videoId}`);
+      setTimeout(() =>
+        updateChannel({room_id: chatroomId,  is_playing: true, time }), 0
       );
     }
   };
 
   const handlePause = () => {
     sendMessage("/pause");
+
+    setTimeout(() =>
+      updateChannel({room_id: chatroomId,  is_playing: false }), 0
+    );
   };
 
   const handleSeek = () => {
     const seconds = parseFloat(timeInput);
     if (!isNaN(seconds)) {
       sendMessage(`/seek ${seconds}`);
+      setTVState({...tvState, room_id: chatroomId, time: Math.floor(seconds)} as TVState)
+      setTimeout(() =>
+        updateChannel({room_id: chatroomId, time: Math.floor(seconds) }), 0
+      );
     }
   };
 

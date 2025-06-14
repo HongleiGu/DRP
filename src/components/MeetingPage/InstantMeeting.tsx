@@ -58,7 +58,7 @@ const MeetingForm = ({
   const { user } = useUser();
 
   const handleStartMeeting = async (values: { description: string }) => {
-		console.log(client, user)
+		// console.log(client, user)
     if (!client || !user) return;
     
     setLoading(true);

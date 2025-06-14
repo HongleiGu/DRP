@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+// import { TVState } from "@/types/datatypes";
+
 let ytPlayerInstance: any = null;
 
 export const setYtPlayer = (player: any) => {
@@ -28,7 +30,8 @@ export const getCurrentVideoId = (): string => {
 
 export const getCurrentTime = (): number => {
   try {
-    const time = ytPlayerInstance?.getCurrentTime?.();
+    const time = ytPlayerInstance?.getCurrentTime()
+    // console.log(time)
     return typeof time === "number" && !isNaN(time) ? Math.round(time) : 0;
   } catch {
     return 0;

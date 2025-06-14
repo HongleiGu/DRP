@@ -86,7 +86,7 @@ export default function Game({
     };
 
     // Initialize game with callbacks
-    console.log("inited room", chatroomId);
+    // console.log("inited room", chatroomId);
     initializeGame(
       game,
       sceneCallbacks,

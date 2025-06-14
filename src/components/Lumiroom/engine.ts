@@ -11,7 +11,7 @@ import { Calendar } from '@/game/actors/Calendar';
 // load assets
 export const initializeGame = (game: Engine, callbacks: SceneCallbacks, userId: string, username: string, roomId: string, avatarId: string) => {
   // Initialize scenes
-  console.log("init room", roomId)
+  // console.log("init room", roomId)
   const mainScene = new MainScene(callbacks, userId, roomId, username)
 
   

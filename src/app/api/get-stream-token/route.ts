@@ -7,7 +7,7 @@ export async function GET(request: Request) {
     const userId = searchParams.get('userId') || 'anonymous';
     const userName = searchParams.get('userName') || 'Anonymous';
 
-    console.log(process.env.NEXT_PUBLIC_STREAM_API_KEY, process.env.NEXT_PUBLIC_STREAM_SECRET_KEY)
+    // console.log(process.env.NEXT_PUBLIC_STREAM_API_KEY, process.env.NEXT_PUBLIC_STREAM_SECRET_KEY)
     const streamClient = new StreamClient(
       process.env.NEXT_PUBLIC_STREAM_API_KEY!,
       process.env.NEXT_PUBLIC_STREAM_SECRET_KEY!,
