@@ -16,14 +16,19 @@ import {
   DatePicker,
   Select,
   Cascader,
+  Dropdown,
+  MenuProps,
+  Badge,
 } from "antd";
 import { useEffect, useRef, useState } from "react";
 // import { VideoElement } from './PlayList';
 import {
   CaretDownOutlined,
   CaretUpOutlined,
+  ClockCircleOutlined,
   CopyOutlined,
   FastForwardOutlined,
+  FormOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
@@ -32,7 +37,7 @@ import {
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { cascaderOptions, isEmoji } from "@/utils/utils";
-import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId} from "@/utils/ytPlayerManager";
+import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId, getCurrentVideoId } from "@/utils/ytPlayerManager";
 
 import { Message, PlayerData, TVState } from "@/types/datatypes";
 import { useUser } from "@clerk/nextjs";
@@ -77,7 +82,7 @@ export default function Television({
   // const ytPlayer = useRef<any>(null);
   const [timeInput, setTimeInput] = useState<string>("");
   const [videoUrl, setVideoUrl] = useState<string>("");
-  const [videoId, setVideoId] = useState<string>("");
+  const [videoIdRes, setVideoIdRes] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
   const [playerReady, setPlayerReady] = useState<boolean>(false);
   const [nickname, setNickname] = useState<string>("");
@@ -94,6 +99,7 @@ export default function Television({
   const router = useRouter();
   const [userId, setUserId] = useState<string>("");
   const [inputUserId, setInputUserId] = useState<string>("");
+  const [inputUserIdRes, setInputUserIdRes] = useState<string>("");
   const [controlPanelVisible, setControlPanelVisible] = useState<boolean>(true);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
@@ -282,7 +288,8 @@ export default function Television({
     }
   };
 
-  const handleInvite = async (username: string, timestamp: number | null) => {
+  const handleInvite = async (username: string, timestamp?: number | null, videoIdRes?: string | null) => {
+    const videoId = videoIdRes ?? getCurrentVideoId();
     if (timestamp) {
       // Convert timestamp to a Date object
       // const date = dayjs(timestamp).format('YYYY-MM-DD'); // e.g., "2025-06-12"
@@ -337,7 +344,7 @@ export default function Television({
         {copied ? <span className="ml-4 text-green-500">Copied!</span> : null}
       </Space.Compact>
 
-      <p>Video ID</p>
+      {/* <p>Video ID</p>
       <Input
         placeholder="Enter video ID"
         value={videoId}
@@ -350,24 +357,39 @@ export default function Television({
             />
           </Tooltip>
         }
-      />
+      /> */}
 
-      <p>OR enter userId and we will send the invitation directly</p>
+      <p>OR enter nickname and we will send the invitation now</p>
       <Space.Compact className="w-full">
         <Input
-          placeholder="userId"
+          placeholder="Nickname"
           value={inputUserId}
           onChange={(e) => setInputUserId(e.target.value)}
         />
         <Button
           icon={<SendOutlined />}
           iconPosition="end"
-          onClick={() => handleInvite(inputUserId, reservedTimestamp)}
+          onClick={() => handleInvite(inputUserId)}
         />
       </Space.Compact>
 
-      <p>you can also reserve a time</p>
-      <p>Choose Time Zone</p>
+      <p>OR make an reservation</p>
+
+      <Space.Compact className="w-full">
+      <Tooltip title="Use current video URL">
+        <Button
+          icon={<FormOutlined />}
+          onClick={() => setVideoIdRes(getCurrentVideoId())}
+        />
+      </Tooltip>
+      <Input
+        placeholder="Video ID"
+        value={videoIdRes}
+        onChange={(e) => setVideoIdRes(e.target.value)}
+      />
+      </Space.Compact>
+
+      {/* <p>Choose Time Zone</p> */}
       <Cascader
         options={cascaderOptions}
         placeholder="Select Time Zone"
@@ -402,6 +424,23 @@ export default function Television({
           }
         }}
       />
+
+      <Space.Compact className="w-full">
+        <Input
+          placeholder="Nickname"
+          value={inputUserIdRes}
+          onChange={(e) => setInputUserIdRes(e.target.value)}
+        />
+        <Button
+          icon={
+            <Badge count={<ClockCircleOutlined style={{ color: '#1677ff', width: "80%", height: "80%" }} />}>
+              <SendOutlined/>
+            </Badge>
+          }
+          iconPosition="end"
+          onClick={() => handleInvite(inputUserIdRes, reservedTimestamp, videoIdRes)}
+        />
+      </Space.Compact>
 
     </div>
   );

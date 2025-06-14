@@ -14,6 +14,7 @@ import {
   Space,
   Divider,
   Typography,
+  Modal,
 } from "antd";
 import { Message, PlayerData } from "@/types/datatypes";
 import { usePathname, useRouter } from "next/navigation";
@@ -60,8 +61,8 @@ export default function ChatPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const router = useRouter();
-  const [, setIsInviteModalVisible] = useState(false);
-  const [, setInvitationData] = useState<{
+  const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
+  const [invitationData, setInvitationData] = useState<{
     from: string;
     roomId: string;
     videoId: string;
@@ -310,16 +311,16 @@ export default function ChatPanel({
     onMount(handleSend);
   });
 
-  // const handleAcceptInvite = () => {
-  //   setIsInviteModalVisible(false);
-  //   if (invitationData) {
-  //     router.push(`/television/${chatroomId}`);
-  //   }
-  // };
+  const handleAcceptInvite = () => {
+    setIsInviteModalVisible(false);
+    if (invitationData) {
+      router.push(`/television/${chatroomId}`);
+    }
+  };
 
-  // const handleDeclineInvite = () => {
-  //   setIsInviteModalVisible(false);
-  // };
+  const handleDeclineInvite = () => {
+    setIsInviteModalVisible(false);
+  };
 
   function toTimestamp(seconds: number): string {
     const minutes = Math.floor(seconds / 60);
@@ -528,6 +529,31 @@ export default function ChatPanel({
         </InfiniteScroll>
       </div>
       {footer}
+
+      <Modal
+        title="Room Invitation"
+        open={isInviteModalVisible}
+        onOk={handleAcceptInvite}
+        onCancel={handleDeclineInvite}
+        footer={[
+          <Button key="decline" onClick={handleDeclineInvite}>
+            Decline
+          </Button>,
+          <Button key="accept" type="primary" onClick={handleAcceptInvite}>
+            Accept
+          </Button>
+        ]}
+      >
+        {invitationData && (
+          <p>
+            <strong>{invitationData.from}</strong> has invited you to watch video
+            {
+              invitationData.videoId && 
+                <VideoDetails videoId={invitationData.videoId}/>
+            }
+          </p>
+        )}
+      </Modal>
     </Card>
   );
 }
