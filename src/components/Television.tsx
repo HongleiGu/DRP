@@ -38,7 +38,7 @@ import {
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { cascaderOptions, isEmoji, PROJECT_NAME } from "@/utils/utils";
-import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId} from "@/utils/ytPlayerManager";
+import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId, getCurrentVideoId} from "@/utils/ytPlayerManager";
 
 import { Message, PlayerData, TVState } from "@/types/datatypes";
 import { useUser } from "@clerk/nextjs";
