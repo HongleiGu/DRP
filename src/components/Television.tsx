@@ -108,6 +108,8 @@ export default function Television({
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [reservedTimestamp, setReservedTimestamp] = useState<number | null>(null);
 
+  const [isPopoverVisible, setIsPopoverVisible] = useState(false);
+
   useEffect(() => {
     const helper = async () => {
       const c = await getChannel(chatroomId)
@@ -310,9 +312,11 @@ export default function Television({
         console.error('Failed to insert calendar entry:', error.message);
       } else {
         console.log('Calendar entry added!');
+        setIsPopoverVisible(false);
       }
     } else {
       sendMessage(`/invite ${username} ${nickname} ${videoId}`);
+      setIsPopoverVisible(false);
     }
   };
 
@@ -724,6 +728,8 @@ export default function Television({
                   content={popoverContent}
                   title="Invite others to join"
                   trigger="click"
+                  open={isPopoverVisible}
+                  onOpenChange={(visible) => setIsPopoverVisible(visible)}
                 >
                   <Button
                     size="large"
