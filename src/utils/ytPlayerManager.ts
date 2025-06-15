@@ -18,14 +18,7 @@ export const clearYtPlayer = () => {
 };
 
 export const getCurrentVideoId = (): string => {
-  try {
-    const url = ytPlayerInstance?.getVideoUrl?.();
-    if (!url) return "";
-    const parsed = new URL(url);
-    return parsed.searchParams.get("v") || parsed.pathname.split("/").pop() || "";
-  } catch {
-    return "";
-  }
+  return extractVideoId(ytPlayerInstance?.getVideoUrl?.());
 };
 
 export const getCurrentTime = (): number => {

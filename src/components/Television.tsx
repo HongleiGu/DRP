@@ -16,14 +16,20 @@ import {
   DatePicker,
   Select,
   Cascader,
+  Dropdown,
+  MenuProps,
+  Badge,
+  Tabs,
 } from "antd";
 import { useEffect, useRef, useState } from "react";
 // import { VideoElement } from './PlayList';
 import {
   CaretDownOutlined,
   CaretUpOutlined,
+  ClockCircleOutlined,
   CopyOutlined,
   FastForwardOutlined,
+  FormOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
@@ -77,7 +83,7 @@ export default function Television({
   // const ytPlayer = useRef<any>(null);
   const [timeInput, setTimeInput] = useState<string>("");
   const [videoUrl, setVideoUrl] = useState<string>("");
-  const [videoId, setVideoId] = useState<string>("");
+  const [videoIdRes, setVideoIdRes] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
   const [playerReady, setPlayerReady] = useState<boolean>(false);
   const [nickname, setNickname] = useState<string>("");
@@ -94,12 +100,15 @@ export default function Television({
   const router = useRouter();
   const [userId, setUserId] = useState<string>("");
   const [inputUserId, setInputUserId] = useState<string>("");
+  const [inputUserIdRes, setInputUserIdRes] = useState<string>("");
   const [controlPanelVisible, setControlPanelVisible] = useState<boolean>(true);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [copied, setCopied] = useState<boolean>(true);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [reservedTimestamp, setReservedTimestamp] = useState<number | null>(null);
+
+  const [isPopoverVisible, setIsPopoverVisible] = useState(false);
 
   useEffect(() => {
     const helper = async () => {
@@ -282,7 +291,8 @@ export default function Television({
     }
   };
 
-  const handleInvite = async (username: string, timestamp: number | null) => {
+  const handleInvite = async (username: string, timestamp?: number | null, videoIdRes?: string | null) => {
+    const videoId = videoIdRes ?? getCurrentVideoId();
     if (timestamp) {
       // Convert timestamp to a Date object
       // const date = dayjs(timestamp).format('YYYY-MM-DD'); // e.g., "2025-06-12"
@@ -302,9 +312,11 @@ export default function Television({
         console.error('Failed to insert calendar entry:', error.message);
       } else {
         console.log('Calendar entry added!');
+        setIsPopoverVisible(false);
       }
     } else {
       sendMessage(`/invite ${username} ${nickname} ${videoId}`);
+      setIsPopoverVisible(false);
     }
   };
 
@@ -326,83 +338,118 @@ export default function Television({
   };
 
   const popoverContent = (
-    <div className="flex-1 flex flex-col" style={{ gap: "8px" }}>
-      <p>Copy invitation link</p>
-      <Space.Compact className="w-full">
-        <Button
-          icon={<CopyOutlined />}
-          iconPosition="end"
-          onClick={handleCopy}
-        />
-        {copied ? <span className="ml-4 text-green-500">Copied!</span> : null}
-      </Space.Compact>
+    <div className="flex-1 flex flex-col" style={{ gap: "8px", minWidth: "400px" }}>
+      <Tabs
+      defaultActiveKey="1"
+      items={[
+        {
+          label: 'Invite Now',
+          key: '1',
+          children: (
+            <div className="flex-1 flex flex-col" style={{ gap: "8px" }}>
+            <p>Copy invitation link</p>
+            <Space.Compact className="w-full">
+              <Button
+                icon={<CopyOutlined />}
+                iconPosition="end"
+                onClick={handleCopy}
+              />
+              {copied ? <span className="ml-4 text-green-500">Copied!</span> : null}
+            </Space.Compact>
 
-      <p>Video ID</p>
-      <Input
-        placeholder="Enter video ID"
-        value={videoId}
-        onChange={(e) => setVideoId(e.target.value)}
-        addonBefore={
-          <Tooltip title="Reset to extracted video ID">
-            <Button 
-              icon={<ReloadOutlined />} 
-              onClick={() => setVideoId(extractVideoId(videoUrl))}
+            <p>OR enter nickname and we will send the invitation now</p>
+            <Space.Compact className="w-full">
+              <Input
+                placeholder="Nickname"
+                value={inputUserId}
+                onChange={(e) => setInputUserId(e.target.value)}
+              />
+              <Button
+                icon={<SendOutlined />}
+                iconPosition="end"
+                onClick={() => handleInvite(inputUserId)}
+              />
+            </Space.Compact>
+            </div>
+          ),
+        },
+        {
+          label: 'Reserve',
+          key: '2',
+          children: (
+            <div className="flex-1 flex flex-col" style={{ gap: "8px" }}>
+            <p>Make an reservation</p>
+
+            <Space.Compact className="w-full">
+            <Tooltip title="Use current video URL">
+              <Button
+                icon={<FormOutlined />}
+                onClick={() => setVideoIdRes(getCurrentVideoId())}
+              />
+            </Tooltip>
+            <Input
+              placeholder="Video ID"
+              value={videoIdRes}
+              onChange={(e) => setVideoIdRes(e.target.value)}
             />
-          </Tooltip>
-        }
-      />
+            </Space.Compact>
 
-      <p>OR enter userId and we will send the invitation directly</p>
-      <Space.Compact className="w-full">
-        <Input
-          placeholder="userId"
-          value={inputUserId}
-          onChange={(e) => setInputUserId(e.target.value)}
-        />
-        <Button
-          icon={<SendOutlined />}
-          iconPosition="end"
-          onClick={() => handleInvite(inputUserId, reservedTimestamp)}
-        />
-      </Space.Compact>
+            <Cascader
+              options={cascaderOptions}
+              placeholder="Select Time Zone"
+              style={{ width: "100%" }}
+              showSearch
+              value={
+                selectedTimeZone && selectedTimeZone.includes("/")
+                  ? [selectedTimeZone.split("/")[0], selectedTimeZone]
+                  : undefined
+              }
+              onChange={(value) => {
+                const selected = value?.[1]; // full time zone like "America/New_York"
+                if (selected) {
+                  setSelectedTimeZone(selected);
+                }
+              }}
+              displayRender={(labels) => labels.join(" / ")} // e.g., America / New York
+            />
 
-      <p>you can also reserve a time</p>
-      <p>Choose Time Zone</p>
-      <Cascader
-        options={cascaderOptions}
-        placeholder="Select Time Zone"
-        style={{ width: "100%" }}
-        showSearch
-        value={
-          selectedTimeZone && selectedTimeZone.includes("/")
-            ? [selectedTimeZone.split("/")[0], selectedTimeZone]
-            : undefined
-        }
-        onChange={(value) => {
-          const selected = value?.[1]; // full time zone like "America/New_York"
-          if (selected) {
-            setSelectedTimeZone(selected);
-          }
-        }}
-        displayRender={(labels) => labels.join(" / ")} // e.g., America / New York
-      />
+            <DatePicker
+              allowClear
+              showTime={{ format: 'HH:mm' }}
+              format="YYYY-MM-DD HH:mm"
+              className="w-full"
+              onChange={(value) => {
+                if (value) {
+                  const zoned = dayjs.tz(value, selectedTimeZone);
+                  const timestamp = zoned.valueOf(); // milliseconds in UTC
+                  setReservedTimestamp(timestamp);
+                } else {
+                  setReservedTimestamp(null);
+                }
+              }}
+            />
 
-      <DatePicker
-        allowClear
-        showTime={{ format: 'HH:mm' }}
-        format="YYYY-MM-DD HH:mm"
-        className="w-full"
-        onChange={(value) => {
-          if (value) {
-            const zoned = dayjs.tz(value, selectedTimeZone);
-            const timestamp = zoned.valueOf(); // milliseconds in UTC
-            setReservedTimestamp(timestamp);
-          } else {
-            setReservedTimestamp(null);
-          }
-        }}
-      />
-
+            <Space.Compact className="w-full">
+              <Input
+                placeholder="Nickname"
+                value={inputUserIdRes}
+                onChange={(e) => setInputUserIdRes(e.target.value)}
+              />
+              <Button
+                icon={
+                  <Badge count={<ClockCircleOutlined style={{ color: '#1677ff', width: "80%", height: "80%" }} />}>
+                    <SendOutlined/>
+                  </Badge>
+                }
+                iconPosition="end"
+                onClick={() => handleInvite(inputUserIdRes, reservedTimestamp, videoIdRes)}
+              />
+            </Space.Compact>
+            </div>
+          )
+        },
+      ]}
+    />
     </div>
   );
 
@@ -681,6 +728,8 @@ export default function Television({
                   content={popoverContent}
                   title="Invite others to join"
                   trigger="click"
+                  open={isPopoverVisible}
+                  onOpenChange={(visible) => setIsPopoverVisible(visible)}
                 >
                   <Button
                     size="large"

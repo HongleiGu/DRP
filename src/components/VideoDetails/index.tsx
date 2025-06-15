@@ -9,7 +9,7 @@ interface VideoDetailsProps {
 
 // Category mapping (simplified)
 const getCategoryName = (id: string): string => {
-  return YOUTUBE_CATEGORIES[id] || `Category ${id}`;
+  return YOUTUBE_CATEGORIES[id] || `${id}`;
 };
 
 export default function VideoDetails({ videoId, onError }: VideoDetailsProps) {
