@@ -138,3 +138,7 @@ export const cascaderOptions = Object.entries(cascaderTimeZones).map(([region, c
   label: region,
   children: cities.sort((a, b) => a.label.localeCompare(b.label)),
 }));
+
+
+export const PROJECT_NAME = "togethere"
+export const PROJECT_NAME_CAPITALIZED = "Togethere"

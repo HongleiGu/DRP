@@ -31,7 +31,7 @@ import {
   ShareAltOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { cascaderOptions, isEmoji } from "@/utils/utils";
+import { cascaderOptions, isEmoji, PROJECT_NAME } from "@/utils/utils";
 import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId} from "@/utils/ytPlayerManager";
 
 import { Message, PlayerData, TVState } from "@/types/datatypes";
@@ -418,11 +418,11 @@ export default function Television({
     >
       {contextHolder}
       <Title level={3} style={{ flex: 0, margin: "10px" }}>
-        Lumiroom Cinema
+        Togethere Cinema
       </Title>
       <Button
         type="primary"
-        onClick={() => (window.location.pathname = `/lumiroom/${chatroomId}`)}
+        onClick={() => (window.location.pathname = `/${PROJECT_NAME}/${chatroomId}`)}
         style={{
           position: "absolute",
           top: 16,

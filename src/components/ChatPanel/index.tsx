@@ -32,6 +32,7 @@ import VideoDetails from "../VideoDetails";
 // import VideoDetails from "../VideoDetails";
 
 import React from "react";
+import { PROJECT_NAME } from "@/utils/utils";
 
 // const { Text, Title } = Typography;
 
@@ -343,8 +344,8 @@ export default function ChatPanel({
     setTimeout(
       () => updateChannel({channel: videoId, time: seconds, room_id: chatroomId}), 0
     )
-    if (pathname.includes("/lumiroom")) {
-      router.push(pathname.replace("/lumiroom", "/television"))
+    if (pathname.includes(`/${PROJECT_NAME}`)) {
+      router.push(pathname.replace(`/${PROJECT_NAME}`, "/television"))
     }
   };
 

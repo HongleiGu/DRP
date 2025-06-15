@@ -6,6 +6,7 @@ import { LoadingSpinner } from "@/components/Lumiroom/LoadingSpinner";
 import { Layout, Card, Avatar, Typography, Space, Button, Flex } from "antd";
 import { UserOutlined, MailOutlined, IdcardOutlined, SmileOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
+import { PROJECT_NAME_CAPITALIZED } from "@/utils/utils";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -61,7 +62,7 @@ export default function ProtectedContent() {
                 <Text><IdcardOutlined /> <strong>Avatar ID:</strong> {user.publicMetadata?.avatarId as string ?? "None"}</Text>
               </Space>
               <Flex gap="small" style={{ marginTop: "16px" }}>
-                <Button onClick={() => router.push("/lobby")}>Lumiroom Lobby</Button>
+                <Button onClick={() => router.push("/lobby")}>{PROJECT_NAME_CAPITALIZED} Lobby</Button>
               </Flex>
             </Flex>
           </Flex>

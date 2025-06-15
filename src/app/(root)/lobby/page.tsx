@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { Button, Input, Typography, Card, Layout, Space, Divider, message } from 'antd';
 import { createRoom, getRoom } from '@/utils/api';
+import { PROJECT_NAME, PROJECT_NAME_CAPITALIZED } from '@/utils/utils';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -47,7 +48,7 @@ export default function LumiroomPage() {
     try {
       const chatroom = await getRoom(value);
       if (chatroom) {
-        router.push(`/lumiroom/${value}`);
+        router.push(`/${PROJECT_NAME}/${value}`);
       } else {
         message.error('Chatroom does not exist');
       }
@@ -63,7 +64,7 @@ export default function LumiroomPage() {
     try {
       const chatroomId = await createRoom();
       if (chatroomId) {
-        router.push(`/lumiroom/${chatroomId}`);
+        router.push(`/${PROJECT_NAME}/${chatroomId}`);
       }
     } catch {
       message.error('Failed to create lumiroom');
@@ -82,7 +83,7 @@ export default function LumiroomPage() {
           padding: '0 24px',
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ Lumiroom Lobby</Text>
+        <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ {PROJECT_NAME_CAPITALIZED} Lobby</Text>
       </Header>
 
       <Content

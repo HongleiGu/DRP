@@ -8,6 +8,7 @@ import GateLoadingCSS from '@/components/GateLoading';
 import { Message } from '@/types/datatypes';
 import { getRoom } from '@/utils/api';
 import { getUserId } from '@/utils/user';
+import { PROJECT_NAME } from '@/utils/utils';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -40,7 +41,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         setRoom(roomData);
       } catch (error) {
         console.error('Error loading room:', error);
-        redirect(`/lumiroom/${DEFAULT_ROOM}`);
+        redirect(`/${PROJECT_NAME}/${DEFAULT_ROOM}`);
       } finally {
         setIsLoading(false);
       }
@@ -54,7 +55,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   }
 
   if (!room) {
-    redirect(`/lumiroom/${DEFAULT_ROOM}`);
+    redirect(`/${PROJECT_NAME}/${DEFAULT_ROOM}`);
   }
 
   return (
