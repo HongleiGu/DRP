@@ -381,7 +381,7 @@ export default function Television({
             <p>Make an reservation</p>
 
             <Space.Compact className="w-full">
-            <Tooltip title="Use current video URL">
+            <Tooltip title="Use current video">
               <Button
                 icon={<FormOutlined />}
                 onClick={() => setVideoIdRes(getCurrentVideoId())}
