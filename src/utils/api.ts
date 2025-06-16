@@ -112,7 +112,7 @@ export async function getChannel(roomId: string): Promise<TVState> {
 }
 
 export async function updateChannel(state: Partial<TVState>): Promise<void> {
-  console.log("updating channel", state.room_id, state.channel)
+  // console.log("updating channel", state.room_id, state.channel)
   try {
     const {error} = await supabase
       .from('tv_channel')
