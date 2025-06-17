@@ -316,11 +316,11 @@ export default function Television({
     });
   };
 
-
   const handleSliderSeek = (seconds: number) => {
     if (Math.abs(seconds - currentTime) > 1) {
       // sendMessage(`/seek ${Math.floor(seconds)}`);
       getYtPlayer()?.seekTo(seconds);
+      broadcastTVAction("seek", seconds);
       setTVState({...tvState, time: Math.floor(seconds)} as TVState)
       setTimeout(() =>
         updateChannel({room_id: chatroomId, time: Math.floor(seconds) })

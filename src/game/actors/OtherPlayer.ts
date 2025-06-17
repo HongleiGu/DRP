@@ -13,7 +13,7 @@ export class OtherPlayer extends ex.Actor {
   private currentState: "idle" | "walk" = "idle";
   private targetPos: ex.Vector;
   private moveSpeed = 300;
-  private smoothFactor = 0.1; // Interpolation factor for smoothing
+  private smoothFactor = 0.1;
 
   constructor(args: ex.ActorArgs & { userId: string; roomId: string; name: string; avatarId: string }) {
     super({ ...args, collisionType: ex.CollisionType.PreventCollision });
@@ -59,32 +59,39 @@ export class OtherPlayer extends ex.Actor {
   }
 
   public walkTo(position: ex.Vector) {
-    // Set the target position but apply smoothing in the next update
     this.targetPos = position.clone();
   }
-
+  
   onPreUpdate(_engine: ex.Engine, delta: number) {
     const deltaSec = delta / 1000;
     const toTarget = this.targetPos.sub(this.pos);
     const dist = toTarget.magnitude;
 
-    // Smooth interpolation between current and target position
     const step = toTarget.normalize().scale(this.moveSpeed * deltaSec * this.smoothFactor);
-    if (dist > 0.5) {
-      // Apply smoother movement using lerp
+
+    const moving = dist > 0.5;
+
+    if (moving) {
       this.pos = this.pos.add(step);
+
+      // Only update direction if distance is large enough to be reliable
+      if (dist > 2) {
+        const dir = Math.abs(toTarget.x) > Math.abs(toTarget.y)
+          ? (toTarget.x > 0 ? "right" : "left")
+          : (toTarget.y > 0 ? "down" : "up");
+
+        this.setDirection(dir, "walk");
+      } else {
+        // Close to target: stop updating direction to avoid flicker
+        this.setDirection(this.currentDirection, "walk");
+      }
+
     } else {
-      this.pos = this.targetPos.clone(); // Snap to target when very close
+      this.pos = this.targetPos.clone();
+      this.setDirection(this.currentDirection, "idle");
     }
-
-    // Interpolate the direction
-    const dir = Math.abs(toTarget.x) > Math.abs(toTarget.y)
-      ? (toTarget.x > 0 ? "right" : "left")
-      : (toTarget.y > 0 ? "down" : "up");
-
-    // Smooth transition between walking and idle
-    this.setDirection(dir, dist > 0.5 ? "walk" : "idle");
   }
+
 
   private setDirection(dir: "up" | "down" | "left" | "right", state: "idle" | "walk") {
     if (dir !== this.currentDirection || state !== this.currentState) {
