@@ -52,7 +52,6 @@ dayjs.extend(timezone);
 
 import { supabase } from "@/lib/supabase";
 import { getChannel, updateChannel } from "@/utils/api";
-import { RealtimeChannel } from "@supabase/supabase-js";
 // import { updateChannel } from "@/utils/api";
 
 const { Title } = Typography;
@@ -98,7 +97,6 @@ export default function Television({
       emoji: "",
     },
   });
-  const [tvChannel, setTVChannel] = useState<RealtimeChannel | null>(null);
   const router = useRouter();
   const [userId, setUserId] = useState<string>("");
   const [inputUserId, setInputUserId] = useState<string>("");
@@ -182,63 +180,6 @@ export default function Television({
 
   }, [user, router]);
 
-  // subscribe to realtime broadcast for more synchronised update
-  useEffect(() => {
-    const channel = supabase.channel(`tv-room-${chatroomId}`);
-
-    channel
-      .on("broadcast", { event: "tv-action" }, (payload) => {
-        const data = payload.payload as {
-          type: "play" | "pause" | "seek" | "load";
-          value?: {
-            videoId?: string;
-            time?: number;
-          };
-        };
-
-        const ytPlayer = getYtPlayer();
-        if (!ytPlayer) return;
-
-        switch (data.type) {
-          case "play": {
-            const currentVideoId = extractVideoId(ytPlayer.getVideoUrl());
-            const { videoId, time } = data.value || {};
-
-            // Load video if different
-            if (videoId && videoId !== currentVideoId) {
-              ytPlayer.loadVideoById(videoId, time ?? 0);
-            } else if (time !== undefined) {
-              ytPlayer.seekTo(time);
-            }
-
-            ytPlayer.playVideo();
-            setIsPlaying(true);
-            break;
-          }
-
-          case "pause":
-            ytPlayer.pauseVideo();
-            setIsPlaying(false);
-            break;
-
-          case "seek":
-            ytPlayer.seekTo(data.value);
-            break;
-
-          case "load":
-            ytPlayer.loadVideoById(data.value);
-            break;
-        }
-      })
-      .subscribe();
-
-    setTVChannel(channel);
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [chatroomId]);
-
   // Update video time
   useEffect(() => {
     if (!playerReady) return;
@@ -256,7 +197,6 @@ export default function Television({
     return () => clearInterval(intervalId);
   }, [playerReady]);
 
-  // I guess I'll keep this, but make the panel stop sending messages, since the realtime can take upto 10sec in testing
   // Setup message receiver
   useEffect(() => {
     const receiver = async (msg: Message) => {
@@ -308,19 +248,9 @@ export default function Television({
       .padStart(2, "0")}`;
   };
 
-  const broadcastTVAction = (type: "play" | "pause" | "seek" | "load", value?: any) => {
-    tvChannel?.send({
-      type: "broadcast",
-      event: "tv-action",
-      payload: { type, value },
-    });
-  };
-
-
   const handleSliderSeek = (seconds: number) => {
     if (Math.abs(seconds - currentTime) > 1) {
-      // sendMessage(`/seek ${Math.floor(seconds)}`);
-      getYtPlayer()?.seekTo(seconds);
+      sendMessage(`/seek ${Math.floor(seconds)}`);
       setTVState({...tvState, time: Math.floor(seconds)} as TVState)
       setTimeout(() =>
         updateChannel({room_id: chatroomId, time: Math.floor(seconds) })
@@ -328,66 +258,23 @@ export default function Television({
     }
   };
 
-  // const handlePlay = () => {
-  //   const ytPlayer = getYtPlayer();
-  //   if (ytPlayer) {
-  //     const time = Math.floor(ytPlayer.getCurrentTime()) || (tvState?.time ?? 0);
-  //     const videoId = extractVideoId(ytPlayer.getVideoUrl()) || (tvState?.channel ?? "");
-  //     setTVState({...tvState, room_id: chatroomId,  is_playing: true, time} as TVState)
-
-  //     // sendMessage(`/play ${time} ${videoId}`);
-  //     setTimeout(() =>
-  //       updateChannel({room_id: chatroomId,  is_playing: true, time }), 0
-  //     );
-  //   }
-  // };
   const handlePlay = () => {
     const ytPlayer = getYtPlayer();
-
     if (ytPlayer) {
-      const currentUrlId = extractVideoId(ytPlayer.getVideoUrl());
-      const currentTime = Math.floor(ytPlayer.getCurrentTime());
-      const stateTime = tvState?.time ?? 0;
-      const stateVideoId = tvState?.channel ?? "";
+      const time = Math.floor(ytPlayer.getCurrentTime()) || (tvState?.time ?? 0);
+      const videoId = extractVideoId(ytPlayer.getVideoUrl()) || (tvState?.channel ?? "");
+      setTVState({...tvState, room_id: chatroomId,  is_playing: true, time} as TVState)
 
-      const videoId = currentUrlId || stateVideoId;
-      const time = currentTime || stateTime;
-
-      setTVState({
-        ...tvState,
-        room_id: chatroomId,
-        is_playing: true,
-        time,
-      } as TVState);
-
-      // sendMessage(`/play ${time} ${videoId}`);
-      broadcastTVAction("play", {
-        videoId,
-        time,
-      })
-
-      if (stateVideoId !== currentUrlId) {
-        getYtPlayer()?.loadVideoById(stateVideoId, stateTime);
-      } else {
-        getYtPlayer()?.seekTo(stateTime);
-        getYtPlayer()?.pauseVideo();
-      }
-      getYtPlayer()?.playVideo();
-
-      updateChannel({
-        room_id: chatroomId,
-        is_playing: true,
-        time,
-      });
+      sendMessage(`/play ${time} ${videoId}`);
+      setTimeout(() =>
+        updateChannel({room_id: chatroomId,  is_playing: true, time }), 0
+      );
     }
   };
 
-
-
   const handlePause = () => {
-    // sendMessage("/pause");
-    broadcastTVAction("pause");
-    getYtPlayer()?.pauseVideo();
+    sendMessage("/pause");
+
     setTimeout(() =>
       updateChannel({room_id: chatroomId,  is_playing: false }), 0
     );
@@ -396,9 +283,7 @@ export default function Television({
   const handleSeek = () => {
     const seconds = parseFloat(timeInput);
     if (!isNaN(seconds)) {
-      // sendMessage(`/seek ${seconds}`);
-      broadcastTVAction("seek", seconds);
-      getYtPlayer()?.seekTo(seconds);
+      sendMessage(`/seek ${seconds}`);
       setTVState({...tvState, room_id: chatroomId, time: Math.floor(seconds)} as TVState)
       setTimeout(() =>
         updateChannel({room_id: chatroomId, time: Math.floor(seconds) }), 0
@@ -430,7 +315,6 @@ export default function Television({
         setIsPopoverVisible(false);
       }
     } else {
-      // well, invite is not so time-demanding, keep this
       sendMessage(`/invite ${username} ${nickname} ${videoId}`);
       setIsPopoverVisible(false);
     }
@@ -439,8 +323,7 @@ export default function Television({
   const handleLoadVideo = () => {
     const videoId = extractVideoId(videoUrl);
     if (videoId) {
-      // sendMessage(`/load ${videoId}`);
-      broadcastTVAction("load", videoId);
+      sendMessage(`/load ${videoId}`);
     } else {
       messageApi.warning("Invalid YouTube URL");
     }
@@ -927,3 +810,4 @@ export default function Television({
     </div>
   );
 }
+
