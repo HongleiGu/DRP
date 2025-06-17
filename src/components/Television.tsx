@@ -419,7 +419,7 @@ export default function Television({
         content: `Video session reserved by ${nickname}`,
         note: `Video session for ${nickname} with ID ${videoId}`,
         emoji: '📹',
-        reserved_time: dayjs(timestamp).format('YYYY-MM-DD HH:mm'), // only this is valid, leave the rest aside
+        reserved_time: dayjs(timestamp).format(), // only this is valid, leave the rest aside
         timezone: selectedTimeZone.current,
         video_id: videoId
       } as Partial<CalendarEntry>);
@@ -564,7 +564,13 @@ export default function Television({
                   </Badge>
                 }
                 iconPosition="end"
-                onClick={() => {reservedTimestamp.current ? handleInvite(inputUserIdRes, reservedTimestamp.current, videoIdRes) : messageApi.error("the timestamp you choose is invalid")}}
+                onClick={() => {
+                  if (reservedTimestamp.current) {
+                    handleInvite(inputUserIdRes, reservedTimestamp.current, videoIdRes);
+                  } else {
+                    messageApi.error("the timestamp you choose is invalid");
+                  }
+                }}
               />
             </Space.Compact>
             </div>
