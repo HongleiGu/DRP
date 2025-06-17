@@ -44,8 +44,9 @@ export interface CalendarEntry {
   note?: string | null;
   created_at?: string;
   updated_at?: string;
-  countdown?: number;
+  reserved_time?: string;
   video_id?: string;
+  timezone?: string;
 }
 
 

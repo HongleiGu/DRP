@@ -40,7 +40,7 @@ import { useRouter } from "next/navigation";
 import { cascaderOptions, isEmoji, PROJECT_NAME } from "@/utils/utils";
 import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId, getCurrentVideoId} from "@/utils/ytPlayerManager";
 
-import { Message, PlayerData, TVState } from "@/types/datatypes";
+import { CalendarEntry, Message, PlayerData, TVState } from "@/types/datatypes";
 import { useUser } from "@clerk/nextjs";
 import { FullscreenOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -89,7 +89,7 @@ export default function Television({
   const [playerReady, setPlayerReady] = useState<boolean>(false);
   const [nickname, setNickname] = useState<string>("");
   const [messageApi, contextHolder] = message.useMessage();
-  const [selectedTimeZone, setSelectedTimeZone] = useState<string>(dayjs.tz.guess());
+  const selectedTimeZone= useRef<string>(dayjs.tz.guess());
   const { user } = useUser();
   const [tvState, setTVState] = useState<TVState | null>();
   const [sendEmojis, setSendEmojis] = useState<Record<string, RenderedEmoji>>({
@@ -108,7 +108,7 @@ export default function Television({
   const [duration, setDuration] = useState<number>(0);
   const [copied, setCopied] = useState<boolean>(true);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
-  const [reservedTimestamp, setReservedTimestamp] = useState<number | null>(null);
+  const reservedTimestamp = useRef<number | null>(null);
 
   const [isPopoverVisible, setIsPopoverVisible] = useState(false);
 
@@ -411,17 +411,18 @@ export default function Television({
     if (timestamp) {
       // Convert timestamp to a Date object
       // const date = dayjs(timestamp).format('YYYY-MM-DD'); // e.g., "2025-06-12"
+      console.log(selectedTimeZone.current)
       
       const { error } = await supabase.from('calendar_entries').insert({
         room_id: chatroomId,
         user_id: username,
-        date: null,
-        content: `Video session for ${nickname} with ID ${videoId}`,
+        content: `Video session reserved by ${nickname}`,
         note: `Video session for ${nickname} with ID ${videoId}`,
         emoji: '📹',
-        countdown: Math.floor(timestamp / 1000), // only this is valid, leave the rest aside
+        reserved_time: dayjs(timestamp).format('YYYY-MM-DD HH:mm'), // only this is valid, leave the rest aside
+        timezone: selectedTimeZone.current,
         video_id: videoId
-      });
+      } as Partial<CalendarEntry>);
 
       if (error) {
         console.error('Failed to insert calendar entry:', error.message);
@@ -517,14 +518,16 @@ export default function Television({
               style={{ width: "100%" }}
               showSearch
               value={
-                selectedTimeZone && selectedTimeZone.includes("/")
-                  ? [selectedTimeZone.split("/")[0], selectedTimeZone]
+                selectedTimeZone.current && selectedTimeZone.current.includes("/")
+                  ? [selectedTimeZone.current.split("/")[0], selectedTimeZone.current]
                   : undefined
               }
               onChange={(value) => {
                 const selected = value?.[1]; // full time zone like "America/New_York"
+                // console.log(selected, value)
                 if (selected) {
-                  setSelectedTimeZone(selected);
+                  // setSelectedTimeZone(selected);
+                  selectedTimeZone.current = selected
                 }
               }}
               displayRender={(labels) => labels.join(" / ")} // e.g., America / New York
@@ -537,11 +540,13 @@ export default function Television({
               className="w-full"
               onChange={(value) => {
                 if (value) {
-                  const zoned = dayjs.tz(value, selectedTimeZone);
+                  const zoned = dayjs.tz(value, selectedTimeZone.current);
                   const timestamp = zoned.valueOf(); // milliseconds in UTC
-                  setReservedTimestamp(timestamp);
+                  // setReservedTimestamp(timestamp);
+                  reservedTimestamp.current = timestamp
                 } else {
-                  setReservedTimestamp(null);
+                  // setReservedTimestamp(null);
+                  reservedTimestamp.current = null
                 }
               }}
             />
@@ -559,7 +564,7 @@ export default function Television({
                   </Badge>
                 }
                 iconPosition="end"
-                onClick={() => handleInvite(inputUserIdRes, reservedTimestamp, videoIdRes)}
+                onClick={() => {reservedTimestamp.current ? handleInvite(inputUserIdRes, reservedTimestamp.current, videoIdRes) : messageApi.error("the timestamp you choose is invalid")}}
               />
             </Space.Compact>
             </div>

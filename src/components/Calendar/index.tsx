@@ -91,8 +91,9 @@ export default function FestivalCalendar({
       try {
         const data = await getCalendarEntries(roomId);
         const enriched = data.flat().map((entry) => {
-          if (entry.countdown) {
-            const futureDate = dayjs.unix(entry.countdown).tz(selectedTimeZone);
+          if (entry.reserved_time) {
+            // console.log(entry, dayjs(entry.countdown*1000, entry.timezone), dayjs.tz(entry.countdown*1000, entry.timezone).tz(selectedTimeZone))
+            const futureDate = dayjs.tz(entry.reserved_time, 'YYYY-MM-DD HH:mm', entry.timezone).tz(selectedTimeZone)
             return {
               ...entry,
               content: futureDate.format('HH:mm'),
@@ -129,8 +130,8 @@ export default function FestivalCalendar({
         async () => {
           const data = await getCalendarEntries(roomId);
           const enriched = data.flat().map((entry) => {
-            if (entry.countdown) {
-              const futureDate = dayjs.unix(entry.countdown).tz(selectedTimeZone);
+            if (entry.reserved_time) {
+              const futureDate = dayjs.tz(entry.reserved_time, entry.timezone).tz(selectedTimeZone);
               return {
                 ...entry,
                 content: futureDate.format('HH:mm'),
