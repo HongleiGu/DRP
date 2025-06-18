@@ -35,11 +35,11 @@ export const extractVideoId = (videoUrl: string): string => {
   if (!videoUrl) return "";
   try {
     const url = new URL(videoUrl);
-    if (
-      url.hostname.includes("youtube.com") ||
-      url.hostname.includes("youtu.be")
-    ) {
-      return url.searchParams.get("v") || url.pathname.split("/").pop() || "";
+    if (url.hostname === "youtube.com" || url.hostname === "youtu.be") {
+      if (url.hostname === "youtube.com" && url.pathname === "/watch") {
+        return url.searchParams.get("v") || "";
+      }
+      return url.pathname.split("/").pop() || "";
     }
     return "";
   } catch (e) {

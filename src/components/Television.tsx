@@ -40,7 +40,7 @@ import { useRouter } from "next/navigation";
 import { cascaderOptions, isEmoji, PROJECT_NAME } from "@/utils/utils";
 import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId, getCurrentVideoId} from "@/utils/ytPlayerManager";
 
-import { CalendarEntry, Message, PlayerData, TVState } from "@/types/datatypes";
+import { Message, PlayerData, TVState } from "@/types/datatypes";
 import { useUser } from "@clerk/nextjs";
 import { FullscreenOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -89,7 +89,7 @@ export default function Television({
   const [playerReady, setPlayerReady] = useState<boolean>(false);
   const [nickname, setNickname] = useState<string>("");
   const [messageApi, contextHolder] = message.useMessage();
-  const selectedTimeZone= useRef<string>(dayjs.tz.guess());
+  const [selectedTimeZone, setSelectedTimeZone] = useState<string>(dayjs.tz.guess());
   const { user } = useUser();
   const [tvState, setTVState] = useState<TVState | null>();
   const [sendEmojis, setSendEmojis] = useState<Record<string, RenderedEmoji>>({
@@ -108,8 +108,8 @@ export default function Television({
   const [duration, setDuration] = useState<number>(0);
   const [copied, setCopied] = useState<boolean>(true);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
-  const reservedTimestamp = useRef<number | null>(null);
-
+  const [reservedTimestamp, setReservedTimestamp] = useState<number | null>(null);
+  const [syncing, setSyncing] = useState<boolean>(false); // Add syncing state
   const [isPopoverVisible, setIsPopoverVisible] = useState(false);
 
   useEffect(() => {
@@ -119,7 +119,6 @@ export default function Television({
     }
     helper()
   }, [])
-
 
   // Initialize YouTube Player
   useEffect(() => {
@@ -189,13 +188,15 @@ export default function Television({
     channel
       .on("broadcast", { event: "tv-action" }, (payload) => {
         const data = payload.payload as {
-          type: "play" | "pause" | "seek" | "load";
+          type: "play" | "pause" | "seek" | "load" | "sync";
           value?: {
             videoId?: string;
             time?: number;
+            isPlaying?: boolean;
           };
         };
 
+        console.log("payload", data)
         const ytPlayer = getYtPlayer();
         if (!ytPlayer) return;
 
@@ -222,12 +223,35 @@ export default function Television({
             break;
 
           case "seek":
-            ytPlayer.seekTo(data.value);
+            ytPlayer.seekTo(data.value?.time);
             break;
 
           case "load":
-            ytPlayer.loadVideoById(data.value);
+            ytPlayer.loadVideoById(data.value?.videoId);
             break;
+            
+          // Add sync handler
+          case "sync": {
+            const { videoId, time, isPlaying } = data.value || {};
+            const currentVideoId = extractVideoId(ytPlayer.getVideoUrl());
+            
+            // Only sync if values are provided and different
+            if (videoId && videoId !== currentVideoId) {
+              ytPlayer.loadVideoById(videoId, time ?? 0);
+            } else if (time !== undefined && Math.abs(time - ytPlayer.getCurrentTime()) > 1) {
+              ytPlayer.seekTo(time);
+            }
+            
+            if (isPlaying !== undefined) {
+              if (isPlaying && ytPlayer.getPlayerState() !== 1) {
+                ytPlayer.playVideo();
+              } else if (!isPlaying && ytPlayer.getPlayerState() !== 2) {
+                ytPlayer.pauseVideo();
+              }
+              setIsPlaying(isPlaying);
+            }
+            break;
+          }
         }
       })
       .subscribe();
@@ -308,7 +332,7 @@ export default function Television({
       .padStart(2, "0")}`;
   };
 
-  const broadcastTVAction = (type: "play" | "pause" | "seek" | "load", value?: any) => {
+  const broadcastTVAction = (type: "play" | "pause" | "seek" | "load" | "sync", value?: any) => {
     tvChannel?.send({
       type: "broadcast",
       event: "tv-action",
@@ -316,11 +340,42 @@ export default function Television({
     });
   };
 
+  // Add manual sync function
+  const handleManualSync = () => {
+    setSyncing(true);
+    
+    const ytPlayer = getYtPlayer();
+    if (ytPlayer) {
+      const currentTime = Math.floor(ytPlayer.getCurrentTime());
+      const videoId = extractVideoId(ytPlayer.getVideoUrl());
+      const isPlaying = ytPlayer.getPlayerState() === 1;
+      
+      // Broadcast sync action to all clients
+      broadcastTVAction("sync", {
+        videoId,
+        time: currentTime,
+        isPlaying
+      });
+      
+      // Update database state
+      updateChannel({
+        room_id: chatroomId,
+        channel: videoId,
+        time: currentTime,
+        is_playing: isPlaying
+      });
+      
+      messageApi.info("TV state synchronized");
+    }
+    
+    setTimeout(() => setSyncing(false), 1000);
+  };
+
   const handleSliderSeek = (seconds: number) => {
     if (Math.abs(seconds - currentTime) > 1) {
       // sendMessage(`/seek ${Math.floor(seconds)}`);
       getYtPlayer()?.seekTo(seconds);
-      broadcastTVAction("seek", seconds);
+      broadcastTVAction("seek", {time: seconds});
       setTVState({...tvState, time: Math.floor(seconds)} as TVState)
       setTimeout(() =>
         updateChannel({room_id: chatroomId, time: Math.floor(seconds) })
@@ -328,19 +383,6 @@ export default function Television({
     }
   };
 
-  // const handlePlay = () => {
-  //   const ytPlayer = getYtPlayer();
-  //   if (ytPlayer) {
-  //     const time = Math.floor(ytPlayer.getCurrentTime()) || (tvState?.time ?? 0);
-  //     const videoId = extractVideoId(ytPlayer.getVideoUrl()) || (tvState?.channel ?? "");
-  //     setTVState({...tvState, room_id: chatroomId,  is_playing: true, time} as TVState)
-
-  //     // sendMessage(`/play ${time} ${videoId}`);
-  //     setTimeout(() =>
-  //       updateChannel({room_id: chatroomId,  is_playing: true, time }), 0
-  //     );
-  //   }
-  // };
   const handlePlay = () => {
     const ytPlayer = getYtPlayer();
 
@@ -382,8 +424,6 @@ export default function Television({
     }
   };
 
-
-
   const handlePause = () => {
     // sendMessage("/pause");
     broadcastTVAction("pause");
@@ -397,7 +437,7 @@ export default function Television({
     const seconds = parseFloat(timeInput);
     if (!isNaN(seconds)) {
       // sendMessage(`/seek ${seconds}`);
-      broadcastTVAction("seek", seconds);
+      broadcastTVAction("seek", {time: seconds});
       getYtPlayer()?.seekTo(seconds);
       setTVState({...tvState, room_id: chatroomId, time: Math.floor(seconds)} as TVState)
       setTimeout(() =>
@@ -411,18 +451,17 @@ export default function Television({
     if (timestamp) {
       // Convert timestamp to a Date object
       // const date = dayjs(timestamp).format('YYYY-MM-DD'); // e.g., "2025-06-12"
-      console.log(selectedTimeZone.current)
       
       const { error } = await supabase.from('calendar_entries').insert({
         room_id: chatroomId,
         user_id: username,
-        content: `Video session reserved by ${nickname}`,
+        date: null,
+        content: `Video session for ${nickname} with ID ${videoId}`,
         note: `Video session for ${nickname} with ID ${videoId}`,
         emoji: '📹',
-        reserved_time: dayjs(timestamp).format(), // only this is valid, leave the rest aside
-        timezone: selectedTimeZone.current,
+        countdown: Math.floor(timestamp / 1000), // only this is valid, leave the rest aside
         video_id: videoId
-      } as Partial<CalendarEntry>);
+      });
 
       if (error) {
         console.error('Failed to insert calendar entry:', error.message);
@@ -518,16 +557,14 @@ export default function Television({
               style={{ width: "100%" }}
               showSearch
               value={
-                selectedTimeZone.current && selectedTimeZone.current.includes("/")
-                  ? [selectedTimeZone.current.split("/")[0], selectedTimeZone.current]
+                selectedTimeZone && selectedTimeZone.includes("/")
+                  ? [selectedTimeZone.split("/")[0], selectedTimeZone]
                   : undefined
               }
               onChange={(value) => {
                 const selected = value?.[1]; // full time zone like "America/New_York"
-                // console.log(selected, value)
                 if (selected) {
-                  // setSelectedTimeZone(selected);
-                  selectedTimeZone.current = selected
+                  setSelectedTimeZone(selected);
                 }
               }}
               displayRender={(labels) => labels.join(" / ")} // e.g., America / New York
@@ -540,13 +577,11 @@ export default function Television({
               className="w-full"
               onChange={(value) => {
                 if (value) {
-                  const zoned = dayjs.tz(value, selectedTimeZone.current);
+                  const zoned = dayjs.tz(value, selectedTimeZone);
                   const timestamp = zoned.valueOf(); // milliseconds in UTC
-                  // setReservedTimestamp(timestamp);
-                  reservedTimestamp.current = timestamp
+                  setReservedTimestamp(timestamp);
                 } else {
-                  // setReservedTimestamp(null);
-                  reservedTimestamp.current = null
+                  setReservedTimestamp(null);
                 }
               }}
             />
@@ -564,13 +599,7 @@ export default function Television({
                   </Badge>
                 }
                 iconPosition="end"
-                onClick={() => {
-                  if (reservedTimestamp.current) {
-                    handleInvite(inputUserIdRes, reservedTimestamp.current, videoIdRes);
-                  } else {
-                    messageApi.error("the timestamp you choose is invalid");
-                  }
-                }}
+                onClick={() => handleInvite(inputUserIdRes, reservedTimestamp, videoIdRes)}
               />
             </Space.Compact>
             </div>
@@ -850,6 +879,17 @@ export default function Television({
                   block
                 >
                   Fullscreen
+                </Button>
+
+                {/* Add Sync Button */}
+                <Button
+                  size="large"
+                  icon={<ReloadOutlined />}
+                  onClick={handleManualSync}
+                  loading={syncing}
+                  block
+                >
+                  Sync
                 </Button>
 
                 <Popover
