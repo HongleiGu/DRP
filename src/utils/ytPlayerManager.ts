@@ -32,17 +32,6 @@ export const getCurrentTime = (): number => {
 };
 
 export const extractVideoId = (videoUrl: string): string => {
-  if (!videoUrl) return "";
-  try {
-    const url = new URL(videoUrl);
-    if (
-      url.hostname.includes("youtube.com") ||
-      url.hostname.includes("youtu.be")
-    ) {
-      return url.searchParams.get("v") || url.pathname.split("/").pop() || "";
-    }
-    return "";
-  } catch (e) {
-    return "";
-  }
+  return videoUrl.replace("https://www.youtube.com/watch?v=", "")
 };
+
