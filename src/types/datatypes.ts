@@ -100,3 +100,11 @@ export interface VideoInfo {
   channelTitle: string;
 }
 
+export interface SupabaseUser {
+  id?: string;
+  username: string;
+  nickname: string;
+  onboarding_complete: boolean;
+  avatar_id: number;
+  created_at?: string;
+}

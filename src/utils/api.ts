@@ -1,7 +1,7 @@
 "use server"
 
 
-import { CalendarEntry, Direction, Message, PlayerData, TVState } from '@/types/datatypes';
+import { CalendarEntry, Direction, Message, PlayerData, SupabaseUser, TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
 import { currentUser, User } from '@clerk/nextjs/server';
 import { VideoElement } from '@/components/PlayList';
@@ -84,8 +84,18 @@ export async function createTVRoom(roomId: string): Promise<void> {
   }
 }
 
-export async function registerUser(userId: string, user: User, formData: CustomJwtSessionClaims) {
-  console.log(userId, user, formData)
+export async function registerUser(user: SupabaseUser) {
+  const { error } = await supabase
+    .from('users')
+    .insert(user)
+  if (error) {
+    console.error('Error registering user', {
+      message: error.message,
+      code: error.code,
+      details: error.details
+    });
+    throw error;
+  }
 }
 
 export async function getChannel(roomId: string): Promise<TVState> {

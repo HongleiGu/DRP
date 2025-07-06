@@ -4,7 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import '@ant-design/v5-patch-for-react-19';
 import "@/app/globals.css"
 import { AntdRegistry } from '@ant-design/nextjs-registry'
-import { StreamVideoProvider } from '@/providers/StreamProvider';
+// import { StreamVideoProvider } from '@/providers/StreamProvider';
 import { Pixelify_Sans } from 'next/font/google';
 import { ConfigProvider, App } from 'antd'; // ✅ Import App
 
@@ -39,7 +39,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} style={{ margin: 0 }}>
-          <StreamVideoProvider>
+          {/* <StreamVideoProvider> */}
             <AntdRegistry>
               <ConfigProvider
                 theme={{
@@ -56,7 +56,7 @@ export default function RootLayout({
                 </App>
               </ConfigProvider>
             </AntdRegistry>
-          </StreamVideoProvider>
+          {/* </StreamVideoProvider> */}
         </body>
       </html>
     </ClerkProvider>

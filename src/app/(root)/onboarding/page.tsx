@@ -7,6 +7,8 @@ import { completeOnboarding } from '@/actions/onboarding'
 import { Form, Input, Button, Typography, Row, Col, Image } from 'antd'
 import { z } from 'zod'
 import { paths } from '@/game/config/resources'
+import { SupabaseUser } from '@/types/datatypes'
+import { registerUser } from '@/utils/api'
 const { Title } = Typography
 
 // Zod schema matching your custom JWT claims
@@ -55,6 +57,15 @@ export default function OnboardingComponent() {
       if (res?.error) {
         setError(res.error)
       }
+      // push the entry into the supabase database
+      console.log(user)
+      await registerUser({
+        id: user?.id,
+        username: user?.username ?? "",
+        nickname: values.nickname,
+        avatar_id: parseInt(values.avatarId),
+        onboarding_complete: true,
+      } as SupabaseUser)
     } catch (err) {
       if (err instanceof z.ZodError) {
         // Handle Zod validation errors
