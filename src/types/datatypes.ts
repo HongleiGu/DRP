@@ -10,12 +10,12 @@ export interface Message {
   video_time?: number;
 }
 
-export interface Room {
-  id: string;
-  name?: string;
-  created_at: string;
-  creator_id: string;
-}
+// export interface Room {
+//   id: string;
+//   name?: string;
+//   created_at: string;
+//   creator_id: string;
+// }
 
 // not necessarily data types, but useful
 
@@ -108,4 +108,22 @@ export interface SupabaseUser {
   onboarding_complete: boolean;
   avatar_id: number;
   created_at?: string;
+}
+
+export interface RoomEntry {
+  id: string;
+  created_at: string;
+  name: string;
+  creator_id: string;
+  member_id: string;
+  last_read_at: string;
+  room_id: string;
+}
+
+export interface Room {
+  id: string;
+  name: string;
+  last_message: string;
+  unread: number;
+  created_at: string;
 }

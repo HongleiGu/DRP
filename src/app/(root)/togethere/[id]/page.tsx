@@ -2,7 +2,7 @@
 
 // import ChatPanel from '@/components/ChatPanel/index';
 import ChatRoom from '@/components/ChatRoom';
-import { Message } from '@/types/datatypes';
+import { RoomEntry } from '@/types/datatypes';
 import { getRoom } from '@/utils/api';
 import { getUserId } from '@/utils/user';
 import { PROJECT_NAME } from '@/utils/utils';
@@ -13,7 +13,7 @@ const DEFAULT_ROOM = '00000000-0000-0000-0000-000000000001' as const;
 
 export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
   const [param, setParam] = useState<string>("");
-  const [room, setRoom] = useState<Message[] | null>(null);
+  const [room, setRoom] = useState<RoomEntry[]>(null!);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

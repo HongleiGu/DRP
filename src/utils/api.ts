@@ -1,15 +1,15 @@
 "use server"
 
 
-import { CalendarEntry, Direction, Message, PlayerData, SupabaseUser, TVState } from '@/types/datatypes';
+import { CalendarEntry, Direction, Message, PlayerData, Room, RoomEntry, SupabaseUser, TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
 import { currentUser, User } from '@clerk/nextjs/server';
 import { VideoElement } from '@/components/PlayList';
+import { v4 as uuidv4 } from 'uuid';
 
 const DEFAULT_VIDEO = "loWA5o1RdTY"
 
 export const insertChatHistory = async (message: Message) => {
-  console.log("insertChatHistory")
   const { data, error } = await supabase
     .from('chat_history')
     .insert(message)
@@ -18,49 +18,62 @@ export const insertChatHistory = async (message: Message) => {
   return data;
 };
 
-export const getRoom = async (roomId: string) => {
+export const getRoom = async (roomId: string): Promise<RoomEntry[]> => {
   const { data, error } = await supabase
     .from('rooms')
     .select('*')
-    .eq('id', roomId)
+    .eq('room_id', roomId)
 
   if (error) throw error;
   return data;
 };
 
-export async function createRoom(): Promise<string> {
-  const roomId = await createChatRoom()
+export async function createRoom(
+  users: string[],
+  creator_id: string,
+  roomName: string = 'groupchat'
+): Promise<string> {
+  const roomId = await createChatRoom(users, creator_id, roomName)
   await createTVRoom(roomId)
   return roomId;
 }
 
-export const createChatRoom = async (roomName?: string): Promise<string> => {
-  // Get Clerk user instead of Supabase session
+export const createChatRoom = async (
+  users: string[],
+  creator_id: string,
+  roomName: string = 'groupchat'
+): Promise<string> => {
   const user = await currentUser();
-  
   if (!user) {
     throw new Error('You must be signed in to create a room');
   }
 
-  const { data, error } = await supabase
+  // Generate a UUID for the room ID; all inserts will use this
+  const room_id = uuidv4();
+
+  // Build rows for all members
+  const rows = users.map((memberId) => ({
+    name: roomName,
+    creator_id,
+    member_id: memberId,
+    last_read_at: new Date().toISOString(), // same timestamp for all rows
+    room_id
+  }));
+
+  const { error } = await supabase
     .from('rooms')
-    .insert({
-      creator_id: user.id  // Track who created the room
-    })
-    .select('*')
-    .single();
+    .insert(rows);
 
   if (error) {
     console.error('Detailed Supabase error:', {
       message: error.message,
       code: error.code,
-      details: error.details
+      details: error.details,
     });
     throw error;
   }
 
-  // we need psql to generate room_id without conflict
-  return data.id as string;
+  return room_id; // return the shared room id
 };
 
 export async function createTVRoom(roomId: string): Promise<void> {
@@ -376,4 +389,22 @@ export const getContacts = async (user_id: string): Promise<SupabaseUser[]> => {
   if (usersError) throw usersError;
 
   return users.map(it => it as SupabaseUser);
+}
+
+export const getGroups = async (userId: string) => {
+  const {data: groups, error } = await supabase
+    .from("rooms")
+    .select("*")
+    .eq("member_id", userId)
+  if (error) {
+    throw new Error (`Error fetching groups ${error.message}`)
+  }
+  
+  return groups.map(it => it as RoomEntry).map(it => ({
+    id: it.room_id,
+    name: it.name,
+    last_message: "testing last message",
+    unread: 1,
+    created_at: it.created_at
+  } as Room))
 }

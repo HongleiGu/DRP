@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Layout, Typography, Card, Input, Button, List, Checkbox, Space, Divider } from 'antd';
-import { getContacts } from '@/utils/api';
+import { Layout, Typography, Card, Input, Button, List, Checkbox, Space, Divider, message, Spin } from 'antd';
+import { createRoom, getContacts } from '@/utils/api';
 import { useUser } from '@clerk/nextjs';
-// import { User } from '@clerk/nextjs/server';
 import { SupabaseUser } from '@/types/datatypes';
+import { useRouter } from 'next/navigation';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -14,6 +14,9 @@ export default function CreateRoomPage() {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [groupName, setGroupName] = useState('');
   const [contactsList, setContactList] = useState<SupabaseUser[]>([]);
+  const [contactsLoading, setContactsLoading] = useState<boolean>(true);
+  const [creatingLoading, setCreatingLoading] = useState<boolean>(false);
+  const router = useRouter();
   const { user } = useUser();
 
   const handleCheckboxChange = (userId: string, checked: boolean) => {
@@ -24,55 +27,72 @@ export default function CreateRoomPage() {
 
   useEffect(() => {
     if (!user?.id) {
-      return
+      return;
     }
-    const helper = async () => {
-      const c = await getContacts(user?.id)
-      setContactList(c)
-    }
-    helper()
-  },[])
+    const fetchContacts = async () => {
+      setContactsLoading(true);
+      try {
+        const c = await getContacts(user.id);
+        setContactList(c);
+      } catch (err) {
+        message.error('Failed to load contacts');
+        console.error(err);
+      } finally {
+        setContactsLoading(false);
+      }
+    };
+    fetchContacts();
+  }, [user?.id]);
 
-  const handleCreateRoom = () => {
-    console.log('Create room with:', { selectedUserIds, groupName });
-    // Your create logic goes here
+  const handleCreateRoom = async () => {
+    setCreatingLoading(true);
+    try {
+      const roomId = await createRoom([user?.id ?? "", ...selectedUserIds], user?.id ?? "", groupName);
+      router.push(`/togethere/${roomId}`);
+    } catch (err) {
+      message.error('Failed to create room');
+      console.error(err);
+    } finally {
+      setCreatingLoading(false);
+    }
   };
 
-  if (!user?.id) return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Header
-        style={{
-          background: '#001529',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 24px',
-        }}
-      >
-        <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ Create a New Group</Text>
-      </Header>
-
-      <Content
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: '48px 16px',
-          backgroundColor: '#f0f2f5',
-        }}
-      >
-        <Card
-          title={<Title level={3} style={{ marginBottom: 0 }}>Please Login First</Title>}
+  if (!user?.id) {
+    return (
+      <Layout style={{ minHeight: '100vh' }}>
+        <Header
           style={{
-            width: '100%',
-            maxWidth: 500,
-            borderRadius: 16,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+            background: '#001529',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 24px',
           }}
-          styles={{ header: { textAlign: 'center' } }}
-        />
-      </Content>
-    </Layout>
-  )
+        >
+          <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ Create a New Group</Text>
+        </Header>
+        <Content
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '48px 16px',
+            backgroundColor: '#f0f2f5',
+          }}
+        >
+          <Card
+            title={<Title level={3} style={{ marginBottom: 0 }}>Please Login First</Title>}
+            style={{
+              width: '100%',
+              maxWidth: 500,
+              borderRadius: 16,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+            }}
+            styles={{ header: { textAlign: 'center' } }}
+          />
+        </Content>
+      </Layout>
+    );
+  }
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -86,7 +106,6 @@ export default function CreateRoomPage() {
       >
         <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ Create a New Group</Text>
       </Header>
-
       <Content
         style={{
           display: 'flex',
@@ -109,27 +128,32 @@ export default function CreateRoomPage() {
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div>
               <Text strong>Select members to add:</Text>
-              <List
-                bordered
-                dataSource={contactsList}
-                style={{
-                  height: 240,            // Fixed height
-                  overflow: 'auto',       // Enable scroll if content exceeds height
-                  marginTop: 8,
-                  borderRadius: 8,
-                }}
-                renderItem={(user) => (
-                  <List.Item style={{ padding: '8px 12px' }}>
-                    <Checkbox
-                      checked={selectedUserIds.includes(user.id)}
-                      onChange={(e) => handleCheckboxChange(user.id, e.target.checked)}
-                    >
-                      {user.nickname as string}
-                    </Checkbox>
-                  </List.Item>
-                )}
-              />
-
+              {contactsLoading ? (
+                <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                  <Spin />
+                </div>
+              ) : (
+                <List
+                  bordered
+                  dataSource={contactsList}
+                  style={{
+                    height: 240,
+                    overflow: 'auto',
+                    marginTop: 8,
+                    borderRadius: 8,
+                  }}
+                  renderItem={(contact) => (
+                    <List.Item style={{ padding: '8px 12px' }}>
+                      <Checkbox
+                        checked={selectedUserIds.includes(contact.id)}
+                        onChange={(e) => handleCheckboxChange(contact.id, e.target.checked)}
+                      >
+                        {contact.nickname as string}
+                      </Checkbox>
+                    </List.Item>
+                  )}
+                />
+              )}
             </div>
 
             <Divider />
@@ -150,6 +174,7 @@ export default function CreateRoomPage() {
               block
               size="large"
               style={{ borderRadius: 8 }}
+              loading={creatingLoading}
               disabled={selectedUserIds.length === 0 || groupName.trim() === ''}
               onClick={handleCreateRoom}
             >
