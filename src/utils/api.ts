@@ -45,8 +45,7 @@ export const createChatRoom = async (roomName?: string): Promise<string> => {
   const { data, error } = await supabase
     .from('rooms')
     .insert({
-      name: roomName || null,
-      created_by: user.id  // Track who created the room
+      creator_id: user.id  // Track who created the room
     })
     .select('*')
     .single();
@@ -343,3 +342,38 @@ export async function updatePlayerPosition(userId: string, position: {
 //     .update(data)
 //     .eq('room_id', roomId);
 // };
+
+export const getContacts = async (user_id: string): Promise<SupabaseUser[]> => {
+  // Query where user is in other_user_id
+  const { data: contacts1, error: error1 } = await supabase
+    .from('contacts')
+    .select('user_id')
+    .eq('other_user_id', user_id);
+
+  if (error1) throw new Error(`Error getting contacts: ${error1.message}`);
+
+  // Query where user is in user_id
+  const { data: contacts2, error: error2 } = await supabase
+    .from('contacts')
+    .select('other_user_id')
+    .eq('user_id', user_id);
+
+  if (error2) throw new Error(`Error getting contacts: ${error2.message}`);
+
+
+  // Extract IDs and merge results
+  const connectedUserIds = [
+    ...(contacts1?.map(c => c.user_id) || []),
+    ...(contacts2?.map(c => c.other_user_id) || []),
+  ];
+
+  // Step 2: Query users table for info on connectedUserIds
+  const { data: users, error: usersError } = await supabase
+    .from('users')
+    .select('*') // Adjust fields you want here
+    .in('id', connectedUserIds);
+
+  if (usersError) throw usersError;
+
+  return users.map(it => it as SupabaseUser);
+}

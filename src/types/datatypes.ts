@@ -14,6 +14,7 @@ export interface Room {
   id: string;
   name?: string;
   created_at: string;
+  creator_id: string;
 }
 
 // not necessarily data types, but useful
@@ -101,7 +102,7 @@ export interface VideoInfo {
 }
 
 export interface SupabaseUser {
-  id?: string;
+  id: string;
   username: string;
   nickname: string;
   onboarding_complete: boolean;

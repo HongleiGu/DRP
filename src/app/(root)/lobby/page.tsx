@@ -1,79 +1,44 @@
-// so the design is, when the user logins enter and confirms entering the app, this is the page they should join
-// room id == chat id ==(in the furture)== call id
-
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { z } from 'zod';
-import { Button, Input, Typography, Card, Layout, Space, Divider, message } from 'antd';
-import { createRoom, getRoom } from '@/utils/api';
-import { PROJECT_NAME, PROJECT_NAME_CAPITALIZED } from '@/utils/utils';
+import { useEffect, useState } from 'react';
+import { Layout, Typography, Card, Input, Button, List, Checkbox, Space, Divider } from 'antd';
+import { getContacts } from '@/utils/api';
+import { useUser } from '@clerk/nextjs';
+// import { User } from '@clerk/nextjs/server';
+import { SupabaseUser } from '@/types/datatypes';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 
-const uuidSchema = z.string().uuid({ message: 'Invalid format' });
+export default function CreateRoomPage() {
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [groupName, setGroupName] = useState('');
+  const [contactsList, setContactList] = useState<SupabaseUser[]>([]);
+  const { user } = useUser();
 
-export default function LumiroomPage() {
-  const router = useRouter();
-  const [value, setValue] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [joinLoading, setJoinLoading] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
+  const handleCheckboxChange = (userId: string, checked: boolean) => {
+    setSelectedUserIds((prev) =>
+      checked ? [...prev, userId] : prev.filter((id) => id !== userId)
+    );
+  };
 
-  const validateUUID = (input: string): boolean => {
-    try {
-      uuidSchema.parse(input);
-      setError(null);
-      return true;
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        setError(err.errors[0].message);
-      }
-      return false;
+  useEffect(() => {
+    if (!user?.id) {
+      return
     }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value;
-    setValue(input);
-    validateUUID(input);
-  };
-
-  const handleJoinChatRoom = async () => {
-    if (!validateUUID(value)) return;
-
-    setJoinLoading(true);
-    try {
-      const chatroom = await getRoom(value);
-      if (chatroom) {
-        router.push(`/${PROJECT_NAME}/${value}`);
-      } else {
-        message.error('Chatroom does not exist');
-      }
-    } catch {
-      message.error('Failed to fetch lumiroom');
-    } finally {
-      setJoinLoading(false);
+    const helper = async () => {
+      const c = await getContacts(user?.id)
+      setContactList(c)
     }
+    helper()
+  },[])
+
+  const handleCreateRoom = () => {
+    console.log('Create room with:', { selectedUserIds, groupName });
+    // Your create logic goes here
   };
 
-  const handleCreateChatRoom = async () => {
-    setCreateLoading(true);
-    try {
-      const chatroomId = await createRoom();
-      if (chatroomId) {
-        router.push(`/${PROJECT_NAME}/${chatroomId}`);
-      }
-    } catch {
-      message.error('Failed to create lumiroom');
-    } finally {
-      setCreateLoading(false);
-    }
-  };
-
-  return (
+  if (!user?.id) return (
     <Layout style={{ minHeight: '100vh' }}>
       <Header
         style={{
@@ -83,7 +48,7 @@ export default function LumiroomPage() {
           padding: '0 24px',
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ {PROJECT_NAME_CAPITALIZED} Lobby</Text>
+        <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ Create a New Group</Text>
       </Header>
 
       <Content
@@ -96,54 +61,99 @@ export default function LumiroomPage() {
         }}
       >
         <Card
-          title={
-            <Title level={3} style={{ marginBottom: 0 }}>Enter or Create a Lumiroom</Title>
-          }
+          title={<Title level={3} style={{ marginBottom: 0 }}>Please Login First</Title>}
           style={{
             width: '100%',
-            maxWidth: 480,
+            maxWidth: 500,
             borderRadius: 16,
             boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
           }}
-          // Update styles to use the new syntax
-          styles={{
-            header: { textAlign: 'center' },
+          styles={{ header: { textAlign: 'center' } }}
+        />
+      </Content>
+    </Layout>
+  )
+
+  return (
+    <Layout style={{ minHeight: '100vh' }}>
+      <Header
+        style={{
+          background: '#001529',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 24px',
+        }}
+      >
+        <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ Create a New Group</Text>
+      </Header>
+
+      <Content
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '48px 16px',
+          backgroundColor: '#f0f2f5',
+        }}
+      >
+        <Card
+          title={<Title level={3} style={{ marginBottom: 0 }}>Create Your Chat Group</Title>}
+          style={{
+            width: '100%',
+            maxWidth: 500,
+            borderRadius: 16,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
           }}
+          styles={{ header: { textAlign: 'center' } }}
         >
-          <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div>
-              <Input
-                placeholder="🔑 Enter Lumiroom ID"
-                value={value}
-                onChange={handleInputChange}
-                size="large"
-                style={{ borderRadius: 8 }}
+              <Text strong>Select members to add:</Text>
+              <List
+                bordered
+                dataSource={contactsList}
+                style={{
+                  height: 240,            // Fixed height
+                  overflow: 'auto',       // Enable scroll if content exceeds height
+                  marginTop: 8,
+                  borderRadius: 8,
+                }}
+                renderItem={(user) => (
+                  <List.Item style={{ padding: '8px 12px' }}>
+                    <Checkbox
+                      checked={selectedUserIds.includes(user.id)}
+                      onChange={(e) => handleCheckboxChange(user.id, e.target.checked)}
+                    >
+                      {user.nickname as string}
+                    </Checkbox>
+                  </List.Item>
+                )}
               />
-              {error && <Text type="danger">{error}</Text>}
-              <Button
-                type="primary"
-                block
-                style={{ marginTop: 12, borderRadius: 8 }}
-                onClick={handleJoinChatRoom}
-                loading={joinLoading}
-                disabled={!!error || value.length === 0}
-                size="large"
-              >
-                🚪 Join Lumiroom
-              </Button>
+
             </div>
 
-            <Divider plain>OR</Divider>
+            <Divider />
+
+            <div>
+              <Text strong>Group Name:</Text>
+              <Input
+                placeholder="Enter a name for your group"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                size="large"
+                style={{ borderRadius: 8, marginTop: 8 }}
+              />
+            </div>
 
             <Button
-              type="default"
+              type="primary"
               block
-              onClick={handleCreateChatRoom}
-              loading={createLoading}
               size="large"
               style={{ borderRadius: 8 }}
+              disabled={selectedUserIds.length === 0 || groupName.trim() === ''}
+              onClick={handleCreateRoom}
             >
-              ✨ Create New Lumiroom
+              🚀 Create Room
             </Button>
           </Space>
         </Card>
