@@ -1,14 +1,14 @@
 export interface Message {
-  id?: string;
-  speaker: string;
-  speaker_name: string;
-  chat_message: string;
-  created_at: string;
-  // is_optimistic?: boolean;
-  chat_room_id: string;
-  video_url?: string;
-  video_time?: number;
+  id?: string;  // UUID for unique message ID
+  speaker: string;  // ID of the speaker
+  speaker_name: string;  // Name of the speaker
+  chat_message: string;  // The actual chat message
+  created_at: string;  // Timestamp when the message was created
+  chat_room_id: string;  // Unique ID for the chatroom
+  video_url?: string;  // URL of video (if any)
+  video_time?: number;  // Timestamp of video time (if any)
 }
+
 
 // export interface Room {
 //   id: string;

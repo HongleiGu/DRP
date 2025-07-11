@@ -1,41 +1,22 @@
-// ChatPanel.tsx
 "use client";
-import { supabase } from "@/lib/supabase";
-import { getMessages, insertChatHistory, updateChannel } from "@/utils/api";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useUser } from "@clerk/nextjs";
-import {
-  message,
-  Badge,
-  List,
-  Input,
-  Button,
-  Popover,
-  Card,
-  Space,
-  Divider,
-  Typography,
-  Modal,
-} from "antd";
-import { Message, PlayerData } from "@/types/datatypes";
-import { usePathname, useRouter } from "next/navigation";
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import EmojiGrid from "../EmojiGrids";
-import InfiniteScroll from "react-infinite-scroll-component";
-// import { createPortal } from "react-dom";
-// import VideoDetails from "../VideoDetails";
+import { useRouter, usePathname } from "next/navigation";
+import { Badge, Button, Input, List, Popover, Modal, Space, Typography, message, Divider, Card } from "antd";
 import { BookOutlined } from "@ant-design/icons";
-import {
-  getCurrentTime,
-  getCurrentVideoId,
-  getYtPlayer,
-} from "@/utils/ytPlayerManager";
+import EmojiGrid from "../EmojiGrids";
+import { Message, PlayerData } from "@/types/datatypes";
+import { insertChatHistory, updateChannel } from "@/utils/api";
+import { getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
+import { addMessage, deleteMessage, getMessages } from "@/utils/messages";
+// import { getMessagesFromQueue, sendMessageToQueue } from "@/lib/messages"; // Adjusted to interact with Redis
 import VideoDetails from "../VideoDetails";
-// import VideoDetails from "../VideoDetails";
-
-import React from "react";
 import { PROJECT_NAME } from "@/utils/utils";
-
-// const { Text, Title } = Typography;
+// import { redis } from '@/lib/redis';
+import InfiniteScroll from "react-infinite-scroll-component";
+import { supabase } from "@/lib/supabase";
+import { RealtimeChannel } from "@supabase/supabase-js";
+import { v4 as uuidv4 } from 'uuid';
 
 interface ChatPanelProps {
   isTV?: boolean;
@@ -56,30 +37,232 @@ export default function ChatPanel({
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [userId, setUserId] = useState<string>("");
   const [nickname, setNickname] = useState<string>("");
-  // const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
+  const [invitationData, setInvitationData] = useState<{ from: string; roomId: string; videoId: string } | null>(null);
+  const [emojiPopoverOpen, setEmojiPopoverOpen] = useState(false);
+  const [members, setMembers] = useState<PlayerData[]>([]);
   const pathname = usePathname();
-  const [messageApi, contextHolder] = message.useMessage();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const router = useRouter();
-  const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
-  const [invitationData, setInvitationData] = useState<{
-    from: string;
-    roomId: string;
-    videoId: string;
-  } | null>(null);
-  const [emojiPopoverOpen, setEmojiPopoverOpen] = useState(false);
-
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [messageApi, contextHolder] = message.useMessage();
+  const [msgChannel, setMsgChannel] = useState<RealtimeChannel>(null!);
+  
+  
   const memoizedMessages = useMemo(() => messages, [messages]);
 
-  const [members, setMembers] = useState<PlayerData[]>([]);
+  const loadMessages = async () => {
+    const messages = await getMessages(chatroomId)
+    // const messages = messageData.map((msg) => JSON.parse(msg));
+    // setMessages(messages);
+    setMessages((prev) => [...prev, ...messages]);
 
-  const updateMembers = async () => {
-    const res = await fetch(`/api/room/${chatroomId}/players`);
-    const members = ((await res.json()) as { players: PlayerData[] }).players;
-    setMembers(members);
+
+    // Delete the messages after they are loaded
+    for (const msg of messages) {
+      if (msg.id) await deleteMessage(chatroomId, msg.id)
+      // await redis.lRem(chatroomId, 0, JSON.stringify(msg));
+    }
   };
 
+  useEffect(() => {
+    if (!user?.id) {
+      message.error("User invalid");
+      router.push("/");
+      return;
+    }
+
+    setUserId(user.id);
+
+    if (user.publicMetadata?.nickname) {
+      setNickname(user.publicMetadata.nickname as string);
+    } else {
+      message.warning("Nickname not set");
+      router.push("/onboarding");
+    }
+  }, [user, router]);
+
+  // Load messages from the Redis queue
+  useEffect(() => {
+    if (userId) {
+      loadMessages();
+    }
+  }, [chatroomId, userId]);
+
+  // Subscribe to the Supabase real-time channel for messages
+  useEffect(() => {
+    const subscribeToMessages = async () => {
+      const channel = supabase.channel(`messages:${chatroomId}`);
+      setMsgChannel(channel);
+
+      // Subscribe to the 'new-message' event
+      channel.on('broadcast', { event: 'new-message' }, (payload) => {
+        if ((payload.message as Message).speaker !== userId) {
+          console.log("Received broadcast message:", payload.message);
+          // loadMessages();  // Ensure loadMessages is called to fetch updated data
+          // setMessages((prev) => [...prev, payload.message]);
+          loadMessages();
+        }
+      });
+
+      // Subscribe to the channel
+      channel.subscribe();
+
+      // Cleanup on unmount
+      return () => {
+        channel.unsubscribe();
+      };
+    };
+
+    subscribeToMessages();
+  }, [chatroomId, userId]);
+
+
+  const broadcastMessage = async (chatroomId: string, message: Message) => {
+    console.log("Broadcasting message", message);
+    if (msgChannel) {
+      await msgChannel.send({
+        type: 'broadcast',
+        event: 'new-message',
+        payload: { message },  // Ensure payload is being sent with the message
+      });
+    }
+  };
+
+
+  const send = useCallback(
+    async (theMessage: Message) => {
+      console.log(theMessage)
+      if (!message || isSending || !userId || !nickname) return;
+      setIsSending(true);
+      try {
+        setMessages((prev) => [...prev, theMessage]);
+        setNewMessage("");
+        broadcastMessage(chatroomId, theMessage)
+
+        // Publish the message to the Redis Pub/Sub channel
+        await addMessage(theMessage);
+      } catch {
+        message.error("Failed to send message");
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [isSending, userId, nickname, chatroomId]
+  )
+
+  const handleSend = useCallback(
+    async (theMessage: string) => {
+      if (!theMessage.trim() || isSending || !userId || !nickname) return;
+
+      const messageObj: Message = {
+        id: uuidv4(),
+        speaker: userId,
+        speaker_name: nickname,
+        chat_message: theMessage,
+        created_at: new Date().toISOString(),
+        chat_room_id: chatroomId,
+      };
+      await send(messageObj)
+    },
+    [isSending, userId, nickname, chatroomId]
+  );
+
+  // I doubt whether we should keep television, it was all wheelhouse
+  const handleTVSpecialSend = useCallback(
+    async (theMessage: string) => {
+      if (!theMessage.trim() || isSending || !userId || !nickname) return;
+      if (!getYtPlayer()) return;
+      const messageObj = {
+        id: uuidv4(),
+        speaker: userId,
+        speaker_name: nickname,
+        chat_message: theMessage,
+        created_at: new Date().toISOString(),
+        chat_room_id: chatroomId,
+        video_url: getCurrentVideoId(),
+        video_time: getCurrentTime(),
+      };
+
+      await send(messageObj)
+    },
+    [isSending, userId, nickname, chatroomId]
+  );
+
+  const handleEmojiSelect = useCallback(
+    (emoji: string) => {
+      handleSend(emoji);
+      setEmojiPopoverOpen(false);
+    },
+    [handleSend]
+  );
+
+  useEffect(() => {
+    onMount(handleSend);
+  }, [onMount, handleSend]);
+
+  const handleAcceptInvite = () => {
+    setIsInviteModalVisible(false);
+    if (invitationData) {
+      router.push(`/television/${chatroomId}`);
+    }
+  };
+
+  const handleDeclineInvite = () => {
+    setIsInviteModalVisible(false);
+  };
+
+  function toTimestamp(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  }
+
+  const reloadAndJumpToSeconds = async (videoId: string, seconds: number) => {
+    const player = getYtPlayer();
+    if (player) {
+      handleSend(`/play ${seconds} ${videoId}`);
+      setTimeout(() => updateChannel({ channel: videoId, time: seconds, room_id: chatroomId }), 0);
+    }
+    if (pathname.includes(`/${PROJECT_NAME}`)) {
+      router.push(pathname.replace(`/${PROJECT_NAME}`, "/television"));
+    }
+  };
+
+  const starPopover = (
+    name: string,
+    videoId: string | undefined,
+    videoTime: number | undefined
+  ) => {
+    if (videoId && videoTime) {
+      return (
+        <div style={{ width: 220 }}>
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <Typography.Title level={5} style={{ margin: 0 }}>
+              {name} watching
+            </Typography.Title>
+            <VideoDetails videoId={videoId} />
+            <Divider style={{ margin: "8px 0" }} />
+            <Typography.Text strong>Timestamp: {toTimestamp(videoTime)}</Typography.Text>
+            <Button
+              type="primary"
+              block
+              style={{ marginTop: 8 }}
+              onClick={() => reloadAndJumpToSeconds(videoId, videoTime)}
+            >
+              Jump to Highlight
+            </Button>
+          </Space>
+        </div>
+      );
+    } else {
+      return (
+        <div style={{ width: 220 }}>
+          <span>No movie data available</span>
+        </div>
+      );
+    }
+  };
   function LumiAvatar(param: { avatarId: string }) {
     const avatarId = Number.parseInt(param.avatarId);
     return (
@@ -111,281 +294,6 @@ export default function ChatPanel({
     );
   }
 
-  useEffect(() => {
-    if (!user?.id) {
-      message.error("User invalid");
-      router.push("/");
-      return;
-    }
-
-    setUserId(user.id);
-
-    if (user.publicMetadata?.nickname) {
-      setNickname(user.publicMetadata.nickname as string);
-    } else {
-      message.warning("Nickname not set");
-      router.push("/onboarding");
-    }
-  }, [user, router]);
-
-  useEffect(() => {
-    const loadMessages = async () => {
-      const messageData = await getMessages(chatroomId);
-      setMessages(messageData);
-    };
-
-    if (userId) {
-      loadMessages();
-    }
-  }, [chatroomId, userId]);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    const presenceTrack = supabase
-      .channel(`room:${chatroomId}`, {
-        config: { presence: { key: userId } },
-      })
-      .on("presence", { event: "sync" }, () => {
-        const state = presenceTrack.presenceState();
-        setOnlineUsers(Object.keys(state));
-        updateMembers();
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await presenceTrack.track({
-            user_id: userId,
-            online_at: new Date().toISOString(),
-          });
-          updateMembers();
-        }
-      });
-
-    const messageSub = supabase
-      .channel(`messages:${chatroomId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "chat_history",
-          filter: `chat_room_id=eq.${chatroomId}`,
-        },
-        async (payload) => {
-          if (payload.new.speaker !== userId) {
-            if (payload.new.chat_message.startsWith("/alert")) {
-              const a = payload.new.chat_message.split(" ")[1];
-              messageApi.info(
-                `${a} has made a change in the calendar, please check`
-              );
-              // alert(`${a} has made a change in the calendar, please check`);
-            }
-            if (payload.new.chat_message.startsWith("/invite")) {
-              const msgUserNickName = payload.new.chat_message.split(" ")[1];
-              const senderUserNickName = payload.new.chat_message.split(" ")[2];
-              const videoId = payload.new.chat_message.split(" ")[3];
-              if (msgUserNickName === nickname) {
-                setInvitationData({
-                  from: senderUserNickName,
-                  roomId: chatroomId,
-                  videoId: videoId,
-                });
-                setIsInviteModalVisible(true);
-              }
-            }
-            if (!payload.new.chat_message.startsWith("/")) {
-              const newMsg = payload.new as Message;
-              setMessages((prev) => [...prev, newMsg]);
-            }
-          }
-          updateMembers();
-          receiveMessage(payload.new as Message);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      presenceTrack.unsubscribe();
-      messageSub.unsubscribe();
-    };
-  }, [chatroomId, userId]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [memoizedMessages]);
-
-  const handleSend = useCallback(
-    async (theMessage: string) => {
-      if (!theMessage.trim() || isSending || !userId || !nickname) return;
-      let messageObj: Message;
-      if (theMessage.startsWith("/invite")) {
-        messageObj = {
-          speaker: userId,
-          speaker_name: nickname,
-          chat_message: theMessage,
-          created_at: new Date().toISOString(),
-          chat_room_id: chatroomId,
-        };
-      } else {
-        messageObj = {
-          speaker: userId,
-          speaker_name: nickname,
-          chat_message: theMessage,
-          created_at: new Date().toISOString(),
-          chat_room_id: chatroomId,
-        };
-      }
-
-      setIsSending(true);
-
-      try {
-        if (!theMessage.startsWith("/")) {
-          setMessages((prev) => [...prev, messageObj]);
-        }
-        setNewMessage("");
-
-        await insertChatHistory(messageObj);
-      } catch {
-        message.error("Failed to send message");
-      } finally {
-        setIsSending(false);
-      }
-    },
-    [isSending, userId, nickname, chatroomId]
-  );
-
-  const handleTVSpecialSend = useCallback(
-    async (theMessage: string) => {
-      if (!theMessage.trim() || isSending || !userId || !nickname) return;
-      if (!getYtPlayer()) return;
-      let messageObj: Message;
-      // const channel = await getChannel(chatroomId)
-      if (theMessage.startsWith("/invite")) {
-        messageObj = {
-          speaker: userId,
-          speaker_name: nickname,
-          chat_message: theMessage,
-          created_at: new Date().toISOString(),
-          chat_room_id: chatroomId,
-          video_url: getCurrentVideoId(),
-          video_time: getCurrentTime(),
-        };
-      } else {
-        messageObj = {
-          speaker: userId,
-          speaker_name: nickname,
-          chat_message: theMessage,
-          created_at: new Date().toISOString(),
-          chat_room_id: chatroomId,
-          video_url: getCurrentVideoId(),
-          video_time: getCurrentTime(),
-        };
-      }
-
-      setIsSending(true);
-
-      try {
-        if (!theMessage.startsWith("/")) {
-          setMessages((prev) => [...prev, messageObj]);
-        }
-        setNewMessage("");
-
-        await insertChatHistory(messageObj);
-      } catch {
-        message.error("Failed to send message");
-      } finally {
-        setIsSending(false);
-      }
-    },
-    [isSending, userId, nickname, chatroomId]
-  );
-
-  const handleEmojiSelect = useCallback(
-    (emoji: string) => {
-      handleSend(emoji);
-      setEmojiPopoverOpen(false);
-    },
-    [handleSend]
-  );
-
-  useEffect(() => {
-    onMount(handleSend);
-  });
-
-  const handleAcceptInvite = () => {
-    setIsInviteModalVisible(false);
-    if (invitationData) {
-      router.push(`/television/${chatroomId}`);
-    }
-  };
-
-  const handleDeclineInvite = () => {
-    setIsInviteModalVisible(false);
-  };
-
-  function toTimestamp(seconds: number): string {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  }
-
-  // Function to reload the video and jump to a specific time (in seconds)
-  const reloadAndJumpToSeconds = async (videoId: string, seconds: number) => {
-    const player = getYtPlayer(); // Get the player instance
-
-    if (player) {
-      // Reload the video and set the time to 'seconds'
-      // player.loadVideoById(videoId); // Load the video by ID
-      // player.seekTo(seconds, true);   // Jump to the specified second and start from there
-      handleSend(`/play ${seconds} ${videoId}`);
-      // console.log(videoId)
-      // await updateChannel({channel: videoId, time: seconds, room_id: chatroomId});
-
-    }
-    setTimeout(
-      () => updateChannel({channel: videoId, time: seconds, room_id: chatroomId}), 0
-    )
-    if (pathname.includes(`/${PROJECT_NAME}`)) {
-      router.push(pathname.replace(`/${PROJECT_NAME}`, "/television"))
-    }
-  };
-
-  const starPopover = (
-    name: string,
-    videoId: string | undefined,
-    videoTime: number | undefined
-  ) => {
-    if (videoId && videoTime) {
-      return (
-        <div style={{ width: 220 }}>
-          <Space direction="vertical" style={{ width: "100%" }}>
-            <Typography.Title level={5} style={{ margin: 0 }}>
-              {name} watching
-            </Typography.Title>
-            <VideoDetails videoId={videoId} />
-            <Divider style={{ margin: "8px 0" }} />
-            <Typography.Text strong>
-              Timestamp: {toTimestamp(videoTime)}
-            </Typography.Text>
-            <Button
-              type="primary"
-              block
-              style={{ marginTop: 8 }}
-              onClick={() => reloadAndJumpToSeconds(videoId, videoTime)}
-            >
-              Jump to Highlight
-            </Button>
-          </Space>
-        </div>
-      );
-    } else {
-      return (
-        <div style={{ width: 220 }}>
-          <span>no movie data available</span>
-        </div>
-      );
-    }
-  };
 
   const footer = (
     <div className="bg-white pl-2 flex">
@@ -484,7 +392,6 @@ export default function ChatPanel({
                   actions={
                     isMomentMsg
                       ? [
-                          // eslint-disable-next-line react/jsx-key
                           <Popover
                             content="Click to see the movie highlights :)"
                             trigger="hover"

@@ -153,3 +153,5 @@ export const formatDate = (): string => {
 
     return `${year}-${month}-${day} ${hours}:${minutes}`;
 };
+
+export const placeholderId = '00000000-0000-0000-0000-000000000000';  // Static UUID for placeholder

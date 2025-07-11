@@ -1,11 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-
 import { Suspense,  useRef,  useState } from "react";
-// import { VideoElement } from "../PlayList";
 import { Button} from "antd";
-// import { Content } from "antd/es/layout/layout";
-// import Television from "../Television";
 import ChatPanel from "../ChatPanel";
 import { GameStateProvider } from "@/game/state/GameState";
 import dynamic from "next/dynamic";

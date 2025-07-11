@@ -1,5 +1,6 @@
 'use server'
 
+import { SupabaseUser } from '@/types/datatypes'
 // this needs fix, but later, right now we will use a dummy function
 import { registerUser } from '@/utils/api'
 import { auth, clerkClient, User } from '@clerk/nextjs/server'
@@ -15,7 +16,9 @@ export const completeOnboarding = async (formData: CustomJwtSessionClaims) => {
 
   try {
     const user = await client.users.getUser(userId)
-    await registerUser(userId, user, formData)
+    await registerUser({
+
+    } as SupabaseUser)
     const res = await client.users.updateUser(userId, {
       publicMetadata: {
         onboardingComplete: formData.metadata.onboardingComplete,
