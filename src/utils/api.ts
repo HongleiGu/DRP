@@ -3,7 +3,7 @@
 
 import { CalendarEntry, Direction, Message, PlayerData, Room, RoomEntry, SupabaseUser, TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
-import { currentUser, User } from '@clerk/nextjs/server';
+import { currentUser } from '@clerk/nextjs/server';
 import { VideoElement } from '@/components/PlayList';
 import { v4 as uuidv4 } from 'uuid';
 

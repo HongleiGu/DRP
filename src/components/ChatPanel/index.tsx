@@ -6,7 +6,7 @@ import { Badge, Button, Input, List, Popover, Modal, Space, Typography, message,
 import { BookOutlined } from "@ant-design/icons";
 import EmojiGrid from "../EmojiGrids";
 import { Message, PlayerData } from "@/types/datatypes";
-import { insertChatHistory, updateChannel } from "@/utils/api";
+import { updateChannel } from "@/utils/api";
 import { getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
 import { addMessage, deleteMessage, getMessages } from "@/utils/messages";
 // import { getMessagesFromQueue, sendMessageToQueue } from "@/lib/messages"; // Adjusted to interact with Redis
@@ -17,6 +17,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { supabase } from "@/lib/supabase";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { v4 as uuidv4 } from 'uuid';
+import { LumiAvatar } from "../LumiAvatar";
 
 interface ChatPanelProps {
   isTV?: boolean;
@@ -29,23 +30,23 @@ export default function ChatPanel({
   isTV,
   chatroomId,
   onMount,
-  receiveMessage,
+  // receiveMessage,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const [onlineUsers] = useState<string[]>([]);
   const [userId, setUserId] = useState<string>("");
   const [nickname, setNickname] = useState<string>("");
   const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
-  const [invitationData, setInvitationData] = useState<{ from: string; roomId: string; videoId: string } | null>(null);
+  const [invitationData] = useState<{ from: string; roomId: string; videoId: string } | null>(null);
   const [emojiPopoverOpen, setEmojiPopoverOpen] = useState(false);
-  const [members, setMembers] = useState<PlayerData[]>([]);
+  const [members] = useState<PlayerData[]>([]);
   const pathname = usePathname();
   const { user } = useUser();
   const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [messageApi, contextHolder] = message.useMessage();
+  const [, contextHolder] = message.useMessage();
   const [msgChannel, setMsgChannel] = useState<RealtimeChannel>(null!);
   
   
@@ -97,7 +98,8 @@ export default function ChatPanel({
 
       // Subscribe to the 'new-message' event
       channel.on('broadcast', { event: 'new-message' }, (payload) => {
-        if ((payload.message as Message).speaker !== userId) {
+        console.log(payload.payload.message, userId)
+        if (((payload.payload.message) as Message).speaker !== userId) {
           console.log("Received broadcast message:", payload.message);
           // loadMessages();  // Ensure loadMessages is called to fetch updated data
           // setMessages((prev) => [...prev, payload.message]);
@@ -124,7 +126,7 @@ export default function ChatPanel({
       await msgChannel.send({
         type: 'broadcast',
         event: 'new-message',
-        payload: { message },  // Ensure payload is being sent with the message
+        payload: { message: message },  // Ensure payload is being sent with the message
       });
     }
   };
@@ -263,36 +265,6 @@ export default function ChatPanel({
       );
     }
   };
-  function LumiAvatar(param: { avatarId: string }) {
-    const avatarId = Number.parseInt(param.avatarId);
-    return (
-      <div
-        style={{
-          width: 48, // 16 * 2
-          height: 60, // 20 * 2
-          overflow: "hidden",
-          display: "inline-block",
-          paddingTop: "4px",
-        }}
-      >
-        <img
-          src={`/game/assets/character-pack-full_version/sprite_split/character_${
-            avatarId + 1
-          }/character_${avatarId + 1}_frame16x20.png`}
-          alt="sprite-frame"
-          draggable={false}
-          style={{
-            display: "block",
-            objectFit: "none",
-            objectPosition: "-16px 6px",
-            transform: "scale(3)",
-            transformOrigin: "top left",
-            imageRendering: "pixelated",
-          }}
-        />
-      </div>
-    );
-  }
 
 
   const footer = (
@@ -396,6 +368,7 @@ export default function ChatPanel({
                             content="Click to see the movie highlights :)"
                             trigger="hover"
                             placement="top"
+                            key={msg.id}
                           >
                             <Popover
                               key={msg.id}

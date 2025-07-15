@@ -15,7 +15,7 @@ export const completeOnboarding = async (formData: CustomJwtSessionClaims) => {
   const client = await clerkClient()
 
   try {
-    const user = await client.users.getUser(userId)
+    // const user = await client.users.getUser(userId)
     await registerUser({
 
     } as SupabaseUser)

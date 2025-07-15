@@ -3,7 +3,8 @@
 import React from "react"
 import { useUser } from "@clerk/nextjs"
 import { Typography, Spin } from "antd"
-import { paths } from "@/game/config/resources"
+import { LumiAvatar } from "../LumiAvatar"
+// import { paths } from "@/game/config/resources"
 
 const { Title, Text } = Typography
 
@@ -26,28 +27,14 @@ export default function ProfileInfo() {
     )
   }
 
-  const nickname = user.publicMetadata?.nickname as string | undefined
-  const avatarId = user.publicMetadata?.avatarId as string | undefined
-  const avatarSrc =
-    avatarId && !isNaN(parseInt(avatarId))
-      ? paths.Sprites.CharacterSpritePaths(parseInt(avatarId))
-      : undefined
+  const nickname = user.publicMetadata?.nickname as string ?? "Mr. unknown"
+  const avatarId = user.publicMetadata?.avatarId as string ?? "0"
 
   return (
     <div className="max-w-md mx-auto mt-10 px-4 md:px-6">
       <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center text-center">
         <div className="w-36 h-36 rounded-full overflow-hidden border-4 border-gray-200 mb-6">
-          {avatarSrc ? (
-            <img
-              src={avatarSrc}
-              alt={`Avatar ${avatarId}`}
-              className="w-full h-full object-cover image-pixelated"
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-300 flex items-center justify-center text-white text-4xl">
-              ?
-            </div>
-          )}
+          <LumiAvatar avatarId={avatarId}/>
         </div>
 
         <Title level={3} className="!mb-6">My Profile</Title>

@@ -4,11 +4,12 @@ import React, { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { completeOnboarding } from '@/actions/onboarding'
-import { Form, Input, Button, Typography, Row, Col, Image } from 'antd'
+import { Form, Input, Button, Typography, Row, Col } from 'antd'
 import { z } from 'zod'
-import { paths } from '@/game/config/resources'
+// import { paths } from '@/game/config/resources'
 import { SupabaseUser } from '@/types/datatypes'
 import { registerUser } from '@/utils/api'
+import { LumiAvatar } from '@/components/LumiAvatar'
 const { Title } = Typography
 
 // Zod schema matching your custom JWT claims
@@ -29,8 +30,7 @@ export default function OnboardingComponent() {
 
   // Generate avatar images array
   const avatarImages = Array.from({ length: 32 }, (_, i) => ({
-    id: (i + 1).toString(),
-    image: paths.Sprites.CharacterSpritePaths(i + 1)
+    id: (i + 1).toString()
   }))
 
   useEffect(() => {
@@ -128,7 +128,7 @@ export default function OnboardingComponent() {
               <Button onClick={() => handleAvatarNavigation('prev')}>Previous</Button>
             </Col>
             <Col>
-              <Image
+              {/* <Image
                 src={currentAvatar.image}
                 alt={`Avatar ${currentAvatar.id}`}
                 width={100}
@@ -139,7 +139,8 @@ export default function OnboardingComponent() {
                   objectFit: 'cover',
                   imageRendering: 'pixelated'
                 }}
-              />
+              /> */}
+              <LumiAvatar avatarId={currentAvatar.id}/>
             </Col>
             <Col>
               <Button onClick={() => handleAvatarNavigation('next')}>Next</Button>

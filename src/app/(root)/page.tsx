@@ -2,7 +2,7 @@
 import { UserButton, useUser } from "@clerk/nextjs";
 import { RedirectToSignIn } from "@clerk/nextjs";
 import { LoadingSpinner } from "@/components/Lumiroom/LoadingSpinner";
-import { Layout, Menu, Typography } from "antd";
+import { Layout, Typography } from "antd";
 import { useState } from "react";
 import {
   WechatOutlined,
