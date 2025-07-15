@@ -5,5 +5,6 @@ contextBridge.exposeInMainWorld('electronApi', {
   readFile: (filePath) => ipcRenderer.invoke('read-json', filePath),
   createFile: (filePath) => ipcRenderer.invoke('create-file', filePath),
   deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath),
-  getFiles: (directory) => ipcRenderer.invoke('get-files', directory)
+  getFiles: (directory) => ipcRenderer.invoke('get-files', directory),
+  existsFile: (filePath) => ipcRenderer.invoke('exists-file', filePath),
 });

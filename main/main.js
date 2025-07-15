@@ -76,3 +76,16 @@ ipcMain.handle('get-files', async (event, directory) => {
     return { success: false, error: error.message }; // Return error response
   }
 });
+
+ipcMain.handle('exists-file', async (event, filePath) => {
+  try {
+    await fs.access(filePath);
+    return { success: true }; // File exists
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return { success: false, error: 'File does not exist' }; // File does not exist
+    }
+    console.error('Error checking file existence:', error);
+    return { success: false, error: error.message }; // Other errors
+  }
+});

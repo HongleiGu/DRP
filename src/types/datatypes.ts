@@ -131,5 +131,17 @@ export interface Room {
 export interface ElectronResponse {
   success: boolean;
   error?: string;  // Optional error message if the operation failed
-  data?: unknown;  // Optional data returned from the operation
+  // since all operations return a string, we can use data to store the content
+  data?: string;  // Optional data returned from the operation
+}
+
+// this should match the api exposed in preload.js
+// and the functions in main/functions.ts
+export interface ElectronApi {
+  writeFile(filePath: string, content: string): Promise<ElectronResponse>;
+  readFile(filePath: string): Promise<ElectronResponse>;
+  createFile(filePath: string): Promise<ElectronResponse>;
+  deleteFile(filePath: string): Promise<ElectronResponse>;
+  getFiles(directory: string): Promise<ElectronResponse>;
+  existsFile(filePath: string): Promise<ElectronResponse>;
 }

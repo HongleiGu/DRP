@@ -18,6 +18,8 @@ const nextConfig: NextConfig = {
     ],
     path: "/",
   },
+  output: "export",
+  distDir: "out"
 };
 
 export default nextConfig;

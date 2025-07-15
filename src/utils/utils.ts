@@ -155,3 +155,5 @@ export const formatDate = (): string => {
 };
 
 export const placeholderId = '00000000-0000-0000-0000-000000000000';  // Static UUID for placeholder
+
+export const STORAGE_PATH = process.env.STORAGE_PATH || "D:/Desktop/study/projects/DRP/storage";

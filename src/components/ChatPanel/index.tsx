@@ -11,13 +11,16 @@ import { getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayer
 import { addMessage, deleteMessage, getMessages } from "@/utils/messages";
 // import { getMessagesFromQueue, sendMessageToQueue } from "@/lib/messages"; // Adjusted to interact with Redis
 import VideoDetails from "../VideoDetails";
-import { PROJECT_NAME } from "@/utils/utils";
+import { PROJECT_NAME, STORAGE_PATH } from "@/utils/utils";
 // import { redis } from '@/lib/redis';
 import InfiniteScroll from "react-infinite-scroll-component";
 import { supabase } from "@/lib/supabase";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { v4 as uuidv4 } from 'uuid';
 import { LumiAvatar } from "../LumiAvatar";
+import { createFile, existsFile } from "@/utils/electronApi";
+import path from "path"
+import { appendJsonl } from "@/utils/json";
 
 interface ChatPanelProps {
   isTV?: boolean;
@@ -52,7 +55,7 @@ export default function ChatPanel({
   
   const memoizedMessages = useMemo(() => messages, [messages]);
 
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     const messages = await getMessages(chatroomId)
     // const messages = messageData.map((msg) => JSON.parse(msg));
     // setMessages(messages);
@@ -64,7 +67,7 @@ export default function ChatPanel({
       if (msg.id) await deleteMessage(chatroomId, msg.id)
       // await redis.lRem(chatroomId, 0, JSON.stringify(msg));
     }
-  };
+  }, [chatroomId]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -88,7 +91,7 @@ export default function ChatPanel({
     if (userId) {
       loadMessages();
     }
-  }, [chatroomId, userId]);
+  }, [chatroomId, loadMessages, userId]);
 
   // Subscribe to the Supabase real-time channel for messages
   useEffect(() => {
@@ -117,7 +120,7 @@ export default function ChatPanel({
     };
 
     subscribeToMessages();
-  }, [chatroomId, userId]);
+  }, [chatroomId, loadMessages, userId]);
 
 
   const broadcastMessage = async (chatroomId: string, message: Message) => {
@@ -141,6 +144,14 @@ export default function ChatPanel({
         setMessages((prev) => [...prev, theMessage]);
         setNewMessage("");
         broadcastMessage(chatroomId, theMessage)
+        // write to local files
+        // If the storagePath/{roomId}.jsonl file does not exist, create it
+        const filePath = path.join(STORAGE_PATH, userId, chatroomId, ".jsonl");
+        if (!existsFile(filePath)) {
+          createFile(filePath)
+        }
+        // Append the message to the file
+        appendJsonl(filePath, theMessage)
 
         // Publish the message to the Redis Pub/Sub channel
         await addMessage(theMessage);
@@ -150,7 +161,7 @@ export default function ChatPanel({
         setIsSending(false);
       }
     },
-    [isSending, userId, nickname, chatroomId]
+    [isSending, userId, nickname, broadcastMessage, chatroomId]
   )
 
   const handleSend = useCallback(
@@ -165,9 +176,10 @@ export default function ChatPanel({
         created_at: new Date().toISOString(),
         chat_room_id: chatroomId,
       };
+      
       await send(messageObj)
     },
-    [isSending, userId, nickname, chatroomId]
+    [isSending, userId, nickname, chatroomId, send]
   );
 
   // I doubt whether we should keep television, it was all wheelhouse
@@ -188,7 +200,7 @@ export default function ChatPanel({
 
       await send(messageObj)
     },
-    [isSending, userId, nickname, chatroomId]
+    [isSending, userId, nickname, chatroomId, send]
   );
 
   const handleEmojiSelect = useCallback(

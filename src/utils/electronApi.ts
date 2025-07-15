@@ -81,3 +81,19 @@ export function getFiles(directory: string): Promise<ElectronResponse> {
       });
   });
 }
+
+export function existsFile(filePath: string): Promise<ElectronResponse> {
+  return new Promise((resolve, reject) => {
+    window.electronApi.existsFile(filePath)
+      .then((response: ElectronResponse) => {
+        if (response.success) {
+          resolve(response);
+        } else {
+          reject(new Error(response.error || 'Failed to check file existence'));
+        }
+      })
+      .catch((error: Error) => {
+        reject(error);
+      });
+  });
+}
