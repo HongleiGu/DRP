@@ -127,3 +127,9 @@ export interface Room {
   unread: number;
   created_at: string;
 }
+
+export interface ElectronResponse {
+  success: boolean;
+  error?: string;  // Optional error message if the operation failed
+  data?: unknown;  // Optional data returned from the operation
+}
