@@ -59,7 +59,10 @@ export function ChatsPage() {
         renderItem={(chat) => (
           <List.Item
             className="cursor-pointer hover:bg-gray-50 px-4 py-3 border-b"
-            onClick={() => router.push(`/togethere/${chat.id}`)}
+            onClick={() => {
+              useGlobalStore.setState({ roomId: chat.id });
+              router.push(`/togethere/`)
+            }}
           >
             <List.Item.Meta
               avatar={
