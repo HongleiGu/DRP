@@ -41,7 +41,6 @@ import { cascaderOptions, isEmoji, PROJECT_NAME } from "@/utils/utils";
 import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId, getCurrentVideoId} from "@/utils/ytPlayerManager";
 
 import { Message, PlayerData, TVState } from "@/types/datatypes";
-import { useUser } from "@clerk/nextjs";
 import { FullscreenOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -51,8 +50,9 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 import { supabase } from "@/lib/supabase";
-import { getChannel, updateChannel } from "@/utils/api";
+import { getChannel, getPlayers, updateChannel } from "@/utils/api";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import { useGlobalStore } from "@/store";
 // import { updateChannel } from "@/utils/api";
 
 const { Title } = Typography;
@@ -87,10 +87,10 @@ export default function Television({
   const [videoIdRes, setVideoIdRes] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
   const [playerReady, setPlayerReady] = useState<boolean>(false);
-  const [nickname, setNickname] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedTimeZone, setSelectedTimeZone] = useState<string>(dayjs.tz.guess());
-  const { user } = useUser();
+  const { user } = useGlobalStore.getState();
   const [tvState, setTVState] = useState<TVState | null>();
   const [sendEmojis, setSendEmojis] = useState<Record<string, RenderedEmoji>>({
     placeholder: {
@@ -134,11 +134,11 @@ export default function Television({
     document.addEventListener("fullscreenchange", handler);
 
     setUserId(user.id);
-    setNickname((user.publicMetadata?.nickname ?? "") as string);
+    setUsername(user.username);
     setSendEmojis((prev) => ({
-      [(user.publicMetadata?.nickname as string) ?? "Mr.Unknown"]: {
+      [user.username]: {
         emoji: "",
-        avatarId: Number.parseInt(user.publicMetadata?.avatarId as string ?? "0"),
+        avatarId: user.avatar_id
       },
     }));
 
@@ -287,8 +287,7 @@ export default function Television({
       const messageText: string = msg.chat_message;
       // console.log("check emoji", isEmoji(messageText));
 
-      const res = await fetch(`/api/room/${msg.chat_room_id}/players`);
-      const members = (await res.json() as { players: PlayerData[] }).players
+      const members = await getPlayers(chatroomId)
       const player = members.find((member) => member.user_id == msg.speaker)
 
       if (isEmoji(messageText)) {
@@ -456,8 +455,8 @@ export default function Television({
         room_id: chatroomId,
         user_id: username,
         date: null,
-        content: `Video session for ${nickname} with ID ${videoId}`,
-        note: `Video session for ${nickname} with ID ${videoId}`,
+        content: `Video session for ${username} with ID ${videoId}`,
+        note: `Video session for ${username} with ID ${videoId}`,
         emoji: '📹',
         countdown: Math.floor(timestamp / 1000), // only this is valid, leave the rest aside
         video_id: videoId
@@ -471,7 +470,7 @@ export default function Television({
       }
     } else {
       // well, invite is not so time-demanding, keep this
-      sendMessage(`/invite ${username} ${nickname} ${videoId}`);
+      sendMessage(`/invite ${username} ${username} ${videoId}`);
       setIsPopoverVisible(false);
     }
   };
@@ -514,10 +513,10 @@ export default function Television({
               {copied ? <span className="ml-4 text-green-500">Copied!</span> : null}
             </Space.Compact>
 
-            <p>OR enter nickname and we will send the invitation now</p>
+            <p>OR enter username and we will send the invitation now</p>
             <Space.Compact className="w-full">
               <Input
-                placeholder="Nickname"
+                placeholder="Username"
                 value={inputUserId}
                 onChange={(e) => setInputUserId(e.target.value)}
               />
@@ -588,7 +587,7 @@ export default function Television({
 
             <Space.Compact className="w-full">
               <Input
-                placeholder="Nickname"
+                placeholder="Username"
                 value={inputUserIdRes}
                 onChange={(e) => setInputUserIdRes(e.target.value)}
               />

@@ -1,5 +1,6 @@
 import { VideoInfo } from '@/types/datatypes';
 import { YOUTUBE_CATEGORIES } from '@/utils/utils';
+import { getYouTubeVideoInfo } from '@/utils/video';
 import { useState, useEffect } from 'react';
 
 interface VideoDetailsProps {
@@ -25,8 +26,7 @@ export default function VideoDetails({ videoId, onError }: VideoDetailsProps) {
 
       setLoading(true);
       try {
-        const response = await fetch(`/api/video/getInfo?id=${videoId}`);
-        const data: VideoInfo = await response.json();
+        const data = await getYouTubeVideoInfo(videoId)
         // console.log("youtube data", data)
 
         if (!data) {

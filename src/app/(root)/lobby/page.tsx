@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { Layout, Typography, Card, Input, Button, List, Checkbox, Space, Divider, message, Spin } from 'antd';
 import { createRoom, getContacts } from '@/utils/api';
-import { useUser } from '@clerk/nextjs';
 import { SupabaseUser } from '@/types/datatypes';
 import { useRouter } from 'next/navigation';
+import { useGlobalStore } from '@/store';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -17,7 +17,7 @@ export default function CreateRoomPage() {
   const [contactsLoading, setContactsLoading] = useState<boolean>(true);
   const [creatingLoading, setCreatingLoading] = useState<boolean>(false);
   const router = useRouter();
-  const { user } = useUser();
+  const [user, setUser] = useState<SupabaseUser>(null!);
 
   const handleCheckboxChange = (userId: string, checked: boolean) => {
     setSelectedUserIds((prev) =>
@@ -26,9 +26,13 @@ export default function CreateRoomPage() {
   };
 
   useEffect(() => {
-    if (!user?.id) {
+    const u = useGlobalStore.getState().user;
+    if (!u) {
+      message.error('Please log in to create a room');
+      router.push('/');
       return;
     }
+    setUser(u);
     const fetchContacts = async () => {
       setContactsLoading(true);
       try {
@@ -42,7 +46,7 @@ export default function CreateRoomPage() {
       }
     };
     fetchContacts();
-  }, [user?.id]);
+  }, [useGlobalStore.getState().user]);
 
   const handleCreateRoom = async () => {
     setCreatingLoading(true);
@@ -148,7 +152,7 @@ export default function CreateRoomPage() {
                         checked={selectedUserIds.includes(contact.id)}
                         onChange={(e) => handleCheckboxChange(contact.id, e.target.checked)}
                       >
-                        {contact.nickname as string}
+                        {contact.username as string}
                       </Checkbox>
                     </List.Item>
                   )}

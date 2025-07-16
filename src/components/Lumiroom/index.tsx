@@ -11,8 +11,8 @@ import { Alert, Button, Card } from "antd";
 import { CalendarOutlined, YoutubeOutlined } from "@ant-design/icons";
 import { useParams, useRouter } from "next/navigation";
 import MarkdownCalendar from "../Calendar";
-import { useUser } from "@clerk/nextjs";
 import { resetPlayerToDefault } from "@/utils/api";
+import { useGlobalStore } from "@/store";
 
 export default function Game({
   sendMessage,
@@ -28,7 +28,7 @@ export default function Game({
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
   const gameRef = useRef<Engine | null>(null);
   // const params = useParams<{ id: string }>()
-  const { user } = useUser();
+  const { user } = useGlobalStore.getState();
   const isInCalendarAreaRef = useRef(false);
   const hasPromptedCalendarRef = useRef(false);
   const isInTVAreaRef = useRef(false);
@@ -91,9 +91,9 @@ export default function Game({
       game,
       sceneCallbacks,
       user?.id ?? "unknown",
-      (user?.publicMetadata.nickname as string) ?? "Player",
+      user?.username ?? "Player",
       chatroomId,
-      user?.publicMetadata.avatarId as string
+      user?.avatar_id?.toString() ?? "0",
     );
 
     const loader = new Loader();
@@ -135,16 +135,16 @@ export default function Game({
         router.push("/");
         return;
       }
-      if (!user?.publicMetadata.nickname) {
+      if (!user?.username) {
         alert("you are not onboard yet");
         router.push("/onboarding");
         return;
       }
       await resetPlayerToDefault(
         user?.id,
-        user?.publicMetadata.nickname as string,
+        user?.username as string,
         chatroomId,
-        user?.publicMetadata.avatarId as string
+        user?.avatar_id.toString() ?? "0"
       );
     };
     helper();

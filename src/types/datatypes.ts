@@ -104,10 +104,10 @@ export interface VideoInfo {
 export interface SupabaseUser {
   id: string;
   username: string;
-  nickname: string;
   onboarding_complete: boolean;
   avatar_id: number;
   created_at?: string;
+  email: string; // since supabase only supports email/password auth, this is required
 }
 
 export interface RoomEntry {
@@ -144,4 +144,10 @@ export interface ElectronApi {
   deleteFile(filePath: string): Promise<ElectronResponse>;
   getFiles(directory: string): Promise<ElectronResponse>;
   existsFile(filePath: string): Promise<ElectronResponse>;
+}
+
+export interface SignInArgs {
+  email?: string
+  password: string
+  username?: string
 }

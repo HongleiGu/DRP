@@ -3,9 +3,9 @@
 
 import { CalendarEntry, Direction, Message, PlayerData, Room, RoomEntry, SupabaseUser, TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
-import { currentUser } from '@clerk/nextjs/server';
 import { VideoElement } from '@/components/PlayList';
 import { v4 as uuidv4 } from 'uuid';
+import { useGlobalStore } from '@/store';
 
 const DEFAULT_VIDEO = "loWA5o1RdTY"
 
@@ -38,12 +38,14 @@ export async function createRoom(
   return roomId;
 }
 
+// create a chat room with multiple users
+// we assume the user is already authenticated
 export const createChatRoom = async (
   users: string[],
   creator_id: string,
   roomName: string = 'groupchat'
 ): Promise<string> => {
-  const user = await currentUser();
+  const user = useGlobalStore.getState().user
   if (!user) {
     throw new Error('You must be signed in to create a room');
   }

@@ -1,33 +1,69 @@
 "use client";
-import { UserButton, useUser } from "@clerk/nextjs";
-import { RedirectToSignIn } from "@clerk/nextjs";
-import { LoadingSpinner } from "@/components/Lumiroom/LoadingSpinner";
-import { Layout, Typography } from "antd";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Layout, Typography, Popover, Button, Avatar } from "antd";
 import {
   WechatOutlined,
   ContactsOutlined,
   UserOutlined,
+  LogoutOutlined,
+  LoginOutlined,
 } from "@ant-design/icons";
+
 import { ChatsPage } from "@/components/HomePage/ChatsPage";
 import { ContactsPage } from "@/components/HomePage/ContactsPage";
 import { ProfilePage } from "@/components/HomePage/ProfilePage";
+import { useGlobalStore } from "@/store";
+import { signOut } from "@/utils/user";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
 export default function HomePage() {
-  const { isLoaded, user } = useUser();
+  const { user } = useGlobalStore.getState();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"chats" | "contacts" | "profile">(
     "chats"
   );
 
-  if (!isLoaded) return <LoadingSpinner />;
-  if (!user) return <RedirectToSignIn />;
+  useEffect(() => {
+    console.log("Current user:", user);
+    if (!user) {
+      router.push("/auth");
+    }
+  }, [user, router]);
+
+  // if (isLoading) return <LoadingSpinner />;
+  // if (!user) return <LoadingSpinner />; // or null while redirecting
+
+  const popoverContent = (
+    <div className="flex flex-col gap-2">
+      {user ?
+        <Button
+          type="text"
+          icon={<LogoutOutlined />}
+          onClick={() => {
+            signOut();
+            router.push("/auth");
+          }}
+        >
+          Sign out
+        </Button>
+      :
+        <Button
+          type="text"
+          icon={<LoginOutlined />}
+          onClick={() => router.push("/auth")}
+        >
+          Sign in
+        </Button>
+      }
+    </div>
+  );
 
   return (
     <Layout className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
       <Header className="bg-white flex justify-between items-center px-4 py-3 shadow-sm">
         <div className="flex items-center">
           <WechatOutlined className="text-blue-500 text-2xl mr-3" />
@@ -35,24 +71,30 @@ export default function HomePage() {
             Chat App
           </Title>
         </div>
-        <UserButton
-          afterSignOutUrl="/"
-          appearance={{
-            elements: {
-              userButtonAvatarBox: "w-9 h-9 border-2 border-white shadow-md",
-            },
-          }}
-        />
+
+        <Popover
+          content={popoverContent}
+          trigger="click"
+          placement="bottomRight"
+          arrow={false}
+        >
+          <Button
+            type="text"
+            className="w-9 h-9 border-2 border-white shadow-md rounded-full flex items-center justify-center p-0"
+          >
+            <Avatar style={{ backgroundColor: "#1890ff" }}>
+              {user?.username?.[0].toUpperCase() || "U"}
+            </Avatar>
+          </Button>
+        </Popover>
       </Header>
 
-      {/* Content */}
       <Content className="flex-1 overflow-auto bg-white">
         {activeTab === "chats" && <ChatsPage />}
         {activeTab === "contacts" && <ContactsPage />}
         {activeTab === "profile" && <ProfilePage />}
       </Content>
 
-      {/* Bottom Menu */}
       <div className="fixed bottom-0 w-full bg-white shadow-inner z-50">
         <div className="flex justify-around items-center">
           <button
@@ -84,7 +126,6 @@ export default function HomePage() {
           </button>
         </div>
       </div>
-
     </Layout>
   );
 }

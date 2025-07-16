@@ -1,15 +1,15 @@
 "use client";
 
+import { useGlobalStore } from "@/store";
 import { SupabaseUser } from "@/types/datatypes";
 import { getContacts } from "@/utils/api";
-import { useUser } from "@clerk/nextjs";
 import { Avatar, Card, Empty, List, Spin, Typography } from "antd";
 import { useEffect, useMemo, useState } from "react";
 
 const { Title, Text } = Typography;
 
 export function ContactsPage() {
-  const { user } = useUser();
+  const { user } = useGlobalStore.getState();
   const [contactsList, setContactList] = useState<SupabaseUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -76,17 +76,12 @@ export function ContactsPage() {
                     backgroundColor: "#1677ff",
                   }}
                 >
-                  {contact.nickname?.charAt(0)?.toUpperCase() ?? "?"}
+                  {contact.username?.charAt(0)?.toUpperCase() ?? "?"}
                 </Avatar>
               }
               title={
                 <Text strong style={{ fontSize: 16 }}>
-                  {contact.nickname ?? "Unknown User"}
-                </Text>
-              }
-              description={
-                <Text type="secondary">
-                  {contact.username ?? contact.id}
+                  {contact.username}
                 </Text>
               }
             />
@@ -105,7 +100,7 @@ export function ContactsPage() {
           borderRadius: 16,
           boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
         }}
-        bodyStyle={{ padding: 24 }}
+        styles={{body: { padding: 24 }}}
       >
         <Title level={3} style={{ textAlign: "center", marginBottom: 24 }}>
           Your Contacts

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { ClerkProvider } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
 import '@ant-design/v5-patch-for-react-19';
 import "@/app/globals.css"
@@ -36,29 +35,25 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} style={{ margin: 0 }}>
-          {/* <StreamVideoProvider> */}
-            <AntdRegistry>
-              <ConfigProvider
-                theme={{
-                  components: {
-                    Slider: {
-                      railBg: "rgba(233, 233, 233, 1)",
-                      railHoverBg: "rgba(227, 227, 227, 1)"
-                    },
-                  },
-                }}
-              >
-                <App>
-                  {children}
-                </App>
-              </ConfigProvider>
-            </AntdRegistry>
-          {/* </StreamVideoProvider> */}
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} style={{ margin: 0 }}>
+        <AntdRegistry>
+          <ConfigProvider
+            theme={{
+              components: {
+                Slider: {
+                  railBg: "rgba(233, 233, 233, 1)",
+                  railHoverBg: "rgba(227, 227, 227, 1)"
+                },
+              },
+            }}
+          >
+            <App>
+              {children}
+            </App>
+          </ConfigProvider>
+        </AntdRegistry>
+      </body>
+    </html>
   )
 }

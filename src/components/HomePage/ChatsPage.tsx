@@ -4,14 +4,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
 import { Room } from "@/types/datatypes";
-import { useUser } from "@clerk/nextjs";
 import { getGroups } from "@/utils/api";
+import { useGlobalStore } from "@/store";
 
 const { Text } = Typography;
 
 export function ChatsPage() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user } = useGlobalStore.getState();
   const [searchText, setSearchText] = useState("");
   const [groupChats, setGroupChats] = useState<Room[]>([]);
   const [loading, setLoading] = useState(false);

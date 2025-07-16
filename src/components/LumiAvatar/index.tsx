@@ -1,5 +1,5 @@
-export function LumiAvatar(param: { avatarId: string }) {
-    const avatarId = Number.parseInt(param.avatarId);
+export function LumiAvatar(param: { avatarId: string | number }) {
+    const avatarId = (typeof param.avatarId === "number") ? param.avatarId : Number.parseInt(param.avatarId)
     return (
       <div
         style={{

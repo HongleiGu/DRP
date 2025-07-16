@@ -18,7 +18,6 @@ import {
   DeleteOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
-import { useUser } from '@clerk/nextjs';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { supabase } from '@/lib/supabase';
@@ -29,6 +28,7 @@ import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { ALL_EMOJIS, cascaderOptions } from '@/utils/utils';
 import VideoDetails from '../VideoDetails';
+import { useGlobalStore } from '@/store';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -70,7 +70,7 @@ export default function FestivalCalendar({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const { user } = useUser();
+  const { user } = useGlobalStore.getState();
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
   const [selectedTimeZone, setSelectedTimeZone] = useState(dayjs.tz.guess());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -257,8 +257,8 @@ export default function FestivalCalendar({
       if (user) {
         const messageObj = {
           speaker: user.id,
-          speaker_name: (user.publicMetadata.nickname as string) ?? "Mr. unknown",
-          chat_message: `/alert ${(user.publicMetadata.nickname as string) ?? "Mr. unknown"}`,
+          speaker_name: user.username,
+          chat_message: `/alert ${user.username}`,
           created_at: new Date().toISOString(),
           chat_room_id: roomId
         }

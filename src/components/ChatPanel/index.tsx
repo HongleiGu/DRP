@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useUser } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import { Badge, Button, Input, List, Popover, Modal, Space, Typography, message, Divider, Card } from "antd";
 import { BookOutlined } from "@ant-design/icons";
@@ -21,6 +20,7 @@ import { LumiAvatar } from "../LumiAvatar";
 import { createFile, existsFile } from "@/utils/electronApi";
 import path from "path"
 import { appendJsonl } from "@/utils/json";
+import { useGlobalStore } from "@/store";
 
 interface ChatPanelProps {
   isTV?: boolean;
@@ -40,13 +40,13 @@ export default function ChatPanel({
   const [isSending, setIsSending] = useState(false);
   const [onlineUsers] = useState<string[]>([]);
   const [userId, setUserId] = useState<string>("");
-  const [nickname, setNickname] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
   const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
   const [invitationData] = useState<{ from: string; roomId: string; videoId: string } | null>(null);
   const [emojiPopoverOpen, setEmojiPopoverOpen] = useState(false);
   const [members] = useState<PlayerData[]>([]);
   const pathname = usePathname();
-  const { user } = useUser();
+  const { user } = useGlobalStore.getState()
   const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [, contextHolder] = message.useMessage();
@@ -78,10 +78,10 @@ export default function ChatPanel({
 
     setUserId(user.id);
 
-    if (user.publicMetadata?.nickname) {
-      setNickname(user.publicMetadata.nickname as string);
+    if (user.username) {
+      setUsername(user.username);
     } else {
-      message.warning("Nickname not set");
+      message.warning("Username not set");
       router.push("/onboarding");
     }
   }, [user, router]);
@@ -138,7 +138,7 @@ export default function ChatPanel({
   const send = useCallback(
     async (theMessage: Message) => {
       console.log(theMessage)
-      if (!message || isSending || !userId || !nickname) return;
+      if (!message || isSending || !userId || !username) return;
       setIsSending(true);
       try {
         setMessages((prev) => [...prev, theMessage]);
@@ -161,17 +161,17 @@ export default function ChatPanel({
         setIsSending(false);
       }
     },
-    [isSending, userId, nickname, broadcastMessage, chatroomId]
+    [isSending, userId, username, broadcastMessage, chatroomId]
   )
 
   const handleSend = useCallback(
     async (theMessage: string) => {
-      if (!theMessage.trim() || isSending || !userId || !nickname) return;
+      if (!theMessage.trim() || isSending || !userId || !username) return;
 
       const messageObj: Message = {
         id: uuidv4(),
         speaker: userId,
-        speaker_name: nickname,
+        speaker_name: username,
         chat_message: theMessage,
         created_at: new Date().toISOString(),
         chat_room_id: chatroomId,
@@ -179,18 +179,18 @@ export default function ChatPanel({
       
       await send(messageObj)
     },
-    [isSending, userId, nickname, chatroomId, send]
+    [isSending, userId, username, chatroomId, send]
   );
 
   // I doubt whether we should keep television, it was all wheelhouse
   const handleTVSpecialSend = useCallback(
     async (theMessage: string) => {
-      if (!theMessage.trim() || isSending || !userId || !nickname) return;
+      if (!theMessage.trim() || isSending || !userId || !username) return;
       if (!getYtPlayer()) return;
       const messageObj = {
         id: uuidv4(),
         speaker: userId,
-        speaker_name: nickname,
+        speaker_name: username,
         chat_message: theMessage,
         created_at: new Date().toISOString(),
         chat_room_id: chatroomId,
@@ -200,7 +200,7 @@ export default function ChatPanel({
 
       await send(messageObj)
     },
-    [isSending, userId, nickname, chatroomId, send]
+    [isSending, userId, username, chatroomId, send]
   );
 
   const handleEmojiSelect = useCallback(
