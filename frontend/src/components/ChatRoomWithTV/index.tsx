@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 "use client"
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef, useState } from "react";
 // import { VideoElement } from "../PlayList";
 // import { getPlaylist } from "@/utils/api";
@@ -12,7 +12,7 @@ import ChatPanel from "../ChatPanel";
 
 // const { Content } = Layout;
 
-export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
+export default function ChatRoomWithTV({ chatroomId }: { chatroomId: string }) {
   const sendMessage = useRef<((msg: any) => void) | null>(null);
   const receiveMessage = useRef<((msg: any) => void) | null>(null);
   // const [playlistVisible, setPlaylistVisible] = useState<boolean>(false);

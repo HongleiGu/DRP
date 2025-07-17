@@ -6,11 +6,10 @@ import { useGlobalStore } from '@/store';
 // import { PlayList } from '@/components/PlayList';
 import { RoomEntry } from '@/types/datatypes';
 import { getRoom } from '@/utils/api';
-import { redirect } from 'next/navigation';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
+export default function RoomPage() {
   const roomId = useGlobalStore.getState().roomId;
   const [room, setRoom] = useState<RoomEntry[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,14 +39,14 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     };
 
     loadData();
-  }, [params, router, user]);
+  }, [router, user]);
 
   if (isLoading) {
     return <GateLoadingCSS/>
   }
 
   if (!room) {
-    redirect(`/`);
+    router.push(`/`);
   }
 
   return (

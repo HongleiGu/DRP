@@ -1,7 +1,8 @@
+"use client"
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-
-"use client";
+// this should be client-only
 import "@/app/globals.css";
 import {
   Button,

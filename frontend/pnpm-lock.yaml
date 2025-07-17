@@ -29,9 +29,6 @@ importers:
       '@neondatabase/serverless':
         specifier: ^1.0.0
         version: 1.0.0
-      '@redis/client':
-        specifier: ^5.6.0
-        version: 5.6.0
       '@stream-io/node-sdk':
         specifier: ^0.4.24
         version: 0.4.24
@@ -86,9 +83,6 @@ importers:
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.1.6)(react@19.1.0)
-      redis:
-        specifier: ^5.1.1
-        version: 5.1.1
       rehype-raw:
         specifier: ^7.0.0
         version: 7.0.0
@@ -659,38 +653,6 @@ packages:
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
-
-  '@redis/bloom@5.1.1':
-    resolution: {integrity: sha512-PnMcvpL7O2DHtnSL5JtyNmraNrdHuJXi3u2isGTUuPgkbAuWQKfZdknq471ySILL+qKtLfVJqzgDFMjYmZzK6Q==, tarball: https://registry.npmmirror.com/@redis/bloom/-/bloom-5.1.1.tgz}
-    engines: {node: '>= 18'}
-    peerDependencies:
-      '@redis/client': ^5.1.1
-
-  '@redis/client@5.1.1':
-    resolution: {integrity: sha512-vojbBqUdbkD+ylCy3+ZDXLzSmgiYH9pLrv87kF+nDgsRaHKrVVxPV9B4u6EfWRx7XGvQGZqsXVkKFhsEOsG3LA==, tarball: https://registry.npmmirror.com/@redis/client/-/client-5.1.1.tgz}
-    engines: {node: '>= 18'}
-
-  '@redis/client@5.6.0':
-    resolution: {integrity: sha512-wmP9kCFElCSr4MM4+1E4VckDuN4wLtiXSM/J0rKVQppajxQhowci89RGZr2OdLualowb8SRJ/R6OjsXrn9ZNFA==, tarball: https://registry.npmmirror.com/@redis/client/-/client-5.6.0.tgz}
-    engines: {node: '>= 18'}
-
-  '@redis/json@5.1.1':
-    resolution: {integrity: sha512-A5M0dcgxGKq+oE6spIPBcGLDBiwoSPTs2wesVb4x30rXfG6rPtqt1Z7fCMtvTL2kHUNRKgZ78zhD+0+MENZt7g==, tarball: https://registry.npmmirror.com/@redis/json/-/json-5.1.1.tgz}
-    engines: {node: '>= 18'}
-    peerDependencies:
-      '@redis/client': ^5.1.1
-
-  '@redis/search@5.1.1':
-    resolution: {integrity: sha512-bChudQmcqfYUxEGMeXMkljXtwse4hzqcqRwbZDwRyYe+EEeW/lXVl3w/mS2tHnAb2yqGnfDghid8iHEtVNqjww==, tarball: https://registry.npmmirror.com/@redis/search/-/search-5.1.1.tgz}
-    engines: {node: '>= 18'}
-    peerDependencies:
-      '@redis/client': ^5.1.1
-
-  '@redis/time-series@5.1.1':
-    resolution: {integrity: sha512-HPjZLfcZxh5mBLqRgx7KCZG6JXxGnb7yJqo9qZ/KMTWK/k3SWyH47DHJbYbRNzKOEkbK/l/5kikDTm79uJuCbg==, tarball: https://registry.npmmirror.com/@redis/time-series/-/time-series-5.1.1.tgz}
-    engines: {node: '>= 18'}
-    peerDependencies:
-      '@redis/client': ^5.1.1
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==, tarball: https://registry.npmmirror.com/@rtsao/scc/-/scc-1.1.0.tgz}
@@ -1289,10 +1251,6 @@ packages:
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==, tarball: https://registry.npmmirror.com/clsx/-/clsx-2.1.1.tgz}
     engines: {node: '>=6'}
-
-  cluster-key-slot@1.1.2:
-    resolution: {integrity: sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==, tarball: https://registry.npmmirror.com/cluster-key-slot/-/cluster-key-slot-1.1.2.tgz}
-    engines: {node: '>=0.10.0'}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==, tarball: https://registry.npmmirror.com/color-convert/-/color-convert-2.0.1.tgz}
@@ -2984,10 +2942,6 @@ packages:
     resolution: {integrity: sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==, tarball: https://registry.npmmirror.com/react/-/react-19.1.0.tgz}
     engines: {node: '>=0.10.0'}
 
-  redis@5.1.1:
-    resolution: {integrity: sha512-4t6n2Q9aFqpQnqBR/g84zsXW+U0hdSzYymqoGGZk44p+kuzzHbgukjOAca+PlQ563TbXcgv1njerllYWjAWw4g==, tarball: https://registry.npmmirror.com/redis/-/redis-5.1.1.tgz}
-    engines: {node: '>= 18'}
-
   reflect.getprototypeof@1.0.10:
     resolution: {integrity: sha512-00o4I+DVrefhv+nX0ulyi3biSHCPDe+yLv5o/p6d/UVlirijB8E16FtfwSAi4g3tcqrQ4lRAqQSoFEZJehYEcw==, tarball: https://registry.npmmirror.com/reflect.getprototypeof/-/reflect.getprototypeof-1.0.10.tgz}
     engines: {node: '>= 0.4'}
@@ -4069,30 +4023,6 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
       react-is: 18.3.1
 
-  '@redis/bloom@5.1.1(@redis/client@5.1.1)':
-    dependencies:
-      '@redis/client': 5.1.1
-
-  '@redis/client@5.1.1':
-    dependencies:
-      cluster-key-slot: 1.1.2
-
-  '@redis/client@5.6.0':
-    dependencies:
-      cluster-key-slot: 1.1.2
-
-  '@redis/json@5.1.1(@redis/client@5.1.1)':
-    dependencies:
-      '@redis/client': 5.1.1
-
-  '@redis/search@5.1.1(@redis/client@5.1.1)':
-    dependencies:
-      '@redis/client': 5.1.1
-
-  '@redis/time-series@5.1.1(@redis/client@5.1.1)':
-    dependencies:
-      '@redis/client': 5.1.1
-
   '@rtsao/scc@1.1.0': {}
 
   '@rushstack/eslint-patch@1.11.0': {}
@@ -4795,8 +4725,6 @@ snapshots:
       mimic-response: 1.0.1
 
   clsx@2.1.1: {}
-
-  cluster-key-slot@1.1.2: {}
 
   color-convert@2.0.1:
     dependencies:
@@ -6982,14 +6910,6 @@ snapshots:
       - supports-color
 
   react@19.1.0: {}
-
-  redis@5.1.1:
-    dependencies:
-      '@redis/bloom': 5.1.1(@redis/client@5.1.1)
-      '@redis/client': 5.1.1
-      '@redis/json': 5.1.1(@redis/client@5.1.1)
-      '@redis/search': 5.1.1(@redis/client@5.1.1)
-      '@redis/time-series': 5.1.1(@redis/client@5.1.1)
 
   reflect.getprototypeof@1.0.10:
     dependencies:
