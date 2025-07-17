@@ -1,3 +1,5 @@
+"use client"
+
 export interface Message {
   id?: string;  // UUID for unique message ID
   speaker: string;  // ID of the speaker

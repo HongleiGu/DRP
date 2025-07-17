@@ -10,36 +10,45 @@ import {
   LogoutOutlined,
   LoginOutlined,
 } from "@ant-design/icons";
+import "@/app/globals.css";
+import "@/app/antd.css";
 
 import { ChatsPage } from "@/components/HomePage/ChatsPage";
 import { ContactsPage } from "@/components/HomePage/ContactsPage";
 import { ProfilePage } from "@/components/HomePage/ProfilePage";
 import { useGlobalStore } from "@/store";
 import { signOut } from "@/utils/user";
+import { LoadingSpinner } from "@/components/Lumiroom/LoadingSpinner";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
+
 export default function HomePage() {
-  const { user } = useGlobalStore.getState();
+  const [isClient, setIsClient] = useState(false);
+  const { user } = useGlobalStore();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"chats" | "contacts" | "profile">(
     "chats"
   );
 
   useEffect(() => {
-    console.log("Current user:", user);
-    if (!user) {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && !user) {
       router.push("/auth");
     }
-  }, [user, router]);
+  }, [isClient, user, router]);
 
-  // if (isLoading) return <LoadingSpinner />;
-  // if (!user) return <LoadingSpinner />; // or null while redirecting
+  if (!isClient) {
+    return <LoadingSpinner />;
+  }
 
   const popoverContent = (
     <div className="flex flex-col gap-2">
-      {user ?
+      {user ? (
         <Button
           type="text"
           icon={<LogoutOutlined />}
@@ -50,7 +59,7 @@ export default function HomePage() {
         >
           Sign out
         </Button>
-      :
+      ) : (
         <Button
           type="text"
           icon={<LoginOutlined />}
@@ -58,7 +67,7 @@ export default function HomePage() {
         >
           Sign in
         </Button>
-      }
+      )}
     </div>
   );
 

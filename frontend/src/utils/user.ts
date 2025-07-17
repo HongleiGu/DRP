@@ -1,3 +1,5 @@
+"use client"
+
 import { supabase } from '@/lib/supabase'
 import { useGlobalStore } from '@/store'
 import { SignInArgs, SupabaseUser } from '@/types/datatypes'

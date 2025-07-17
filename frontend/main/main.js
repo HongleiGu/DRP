@@ -4,14 +4,32 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import * as fs from 'node:fs/promises';
 
+// since this is a ES module, we need to use import.meta.url to get the current directory
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.disableHardwareAcceleration(); // Disable hardware acceleration
 
 function createWindow() {
+  // Disable Autofill, Password saving, and form filling
+  app.commandLine.appendSwitch('disable-features', 'AutofillServerCommunication,PasswordGeneration,PasswordManager,AutofillProfileServer');
   const win = new BrowserWindow({
-    width: 1000,
-    height: 800,
+    width: 1600,
+    height: 1200,
+    webPreferences: {
+      webSecurity: false,
+      // devTools: false, // Disable dev tools, electron wont fix https://github.com/electron/electron/issues/41614
+      nodeIntegration: true, // Enable Node.js integration
+    }
+
   });
-  win.loadURL('http://localhost:3000');
+  win.loadFile(path.join(__dirname, '..', 'out', 'index.html')); // Load the main HTML file
+  win.webContents.openDevTools(); // Open DevTools for debugging
+  // if not exported
+  // win.loadURL('http://localhost:3000');
 }
 
 app.whenReady().then(createWindow);

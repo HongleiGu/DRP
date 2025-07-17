@@ -37,7 +37,7 @@ import {
   SendOutlined,
   ShareAltOutlined,
 } from "@ant-design/icons";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { cascaderOptions, isEmoji, PROJECT_NAME } from "@/utils/utils";
 import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId, getCurrentVideoId} from "@/utils/ytPlayerManager";
 

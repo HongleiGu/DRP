@@ -1,3 +1,5 @@
+"use client"
+
 export function LumiAvatar(param: { avatarId: string | number }) {
     const avatarId = (typeof param.avatarId === "number") ? param.avatarId : Number.parseInt(param.avatarId)
     return (

@@ -35,7 +35,7 @@
     "main/main.js",
     "next-env.d.ts",
     "out/types/**/*.ts"
-  ],
+, "extract-static-style.js"  ],
   "exclude": [
     "node_modules"
   ]

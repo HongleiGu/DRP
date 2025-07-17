@@ -1,41 +1,80 @@
 "use client";
 import { Input, Avatar, Typography, List, Button, Popover } from "antd";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
 import { Room } from "@/types/datatypes";
 import { getGroups } from "@/utils/api";
 import { useGlobalStore } from "@/store";
+import '@/app/antd.css';
 
 const { Text } = Typography;
 
 export function ChatsPage() {
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
-  const { user } = useGlobalStore.getState();
+  const user = useGlobalStore(state => state.user);
   const [searchText, setSearchText] = useState("");
   const [groupChats, setGroupChats] = useState<Room[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user?.id) {
-      return;
-    }
-    const helper = async () => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted || !user?.id) return;
+    
+    const fetchGroups = async () => {
       setLoading(true);
-      const g = await getGroups(user?.id);
-      setGroupChats(g);
-      setLoading(false);
+      try {
+        const groups = await getGroups(user.id);
+        setGroupChats(groups);
+      } catch (error) {
+        console.error("Failed to fetch groups:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-    helper();
-  }, [user?.id]);
+
+    fetchGroups();
+  }, [user?.id, isMounted]);
 
   const filteredChats = groupChats.filter((chat) =>
     chat.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  const jumpToRoomCreation = () => {
-    router.push("/lobby");
-  };
+  const jumpToRoomCreation = useCallback(() => {
+    if (isMounted) {
+      router.push("/lobby");
+    }
+  }, [isMounted, router]);
+
+  const handleRoomClick = useCallback((chat: Room) => {
+    if (isMounted) {
+      useGlobalStore.setState({ roomId: chat.id });
+      router.push(`/togethere/`);
+    }
+  }, [isMounted, router]);
+
+  if (!isMounted) {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="px-4 py-3 border-b flex flex-row gap-4">
+          <Input
+            placeholder="Search chats"
+            prefix={<SearchOutlined className="text-gray-400" />}
+            className="rounded-lg bg-gray-100 border-0 hover:bg-gray-200 focus:bg-white"
+            disabled
+          />
+          <Button icon={<PlusOutlined />} disabled />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <p>Loading chats...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -59,10 +98,7 @@ export function ChatsPage() {
         renderItem={(chat) => (
           <List.Item
             className="cursor-pointer hover:bg-gray-50 px-4 py-3 border-b"
-            onClick={() => {
-              useGlobalStore.setState({ roomId: chat.id });
-              router.push(`/togethere/`)
-            }}
+            onClick={() => handleRoomClick(chat)}
           >
             <List.Item.Meta
               avatar={

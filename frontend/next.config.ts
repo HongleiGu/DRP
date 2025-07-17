@@ -19,7 +19,9 @@ const nextConfig: NextConfig = {
     path: "/",
   },
   output: "export",
-  distDir: "out"
+  transpilePackages: ['@ant-design', 'react', 'react-dom', 'antd'],
+  basePath: "",
+  assetPrefix: "./",  // Empty assetPrefix to generate relative paths
 };
 
 export default nextConfig;

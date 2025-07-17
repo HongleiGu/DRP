@@ -1,28 +1,9 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
 import '@ant-design/v5-patch-for-react-19';
 import "@/app/globals.css"
 import { AntdRegistry } from '@ant-design/nextjs-registry'
-// import { StreamVideoProvider } from '@/providers/StreamProvider';
-import { Pixelify_Sans } from 'next/font/google';
-import { ConfigProvider, App } from 'antd'; // ✅ Import App
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
-
-export const gameFont = Pixelify_Sans({
-  subsets: ['latin'],
-  weight: '400',
-  display: 'swap',
-  variable: '--game-font'
-});
+import { ConfigProvider, App } from 'antd'; // Import App
+import "./antd.css"
 
 export const metadata: Metadata = {
   title: 'Clerk Next.js Quickstart',
@@ -36,7 +17,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} style={{ margin: 0 }}>
+      <head>
+        <link rel="stylesheet" href="./styles.css" />
+      </head>
+      <body className={`antialiased`} style={{ margin: 0 }}>
         <AntdRegistry>
           <ConfigProvider
             theme={{

@@ -5,7 +5,7 @@ import { Button} from "antd";
 import ChatPanel from "../ChatPanel";
 import { GameStateProvider } from "@/game/state/GameState";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 
 const HUD = dynamic(() => import('@/components/Lumiroom/UI/Overlay/HUD'), { ssr: false });
 const Game = dynamic(() => import('@/components/Lumiroom'), {
