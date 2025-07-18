@@ -1,26 +1,38 @@
 "use client";
 import { Input, Avatar, Typography, List, Button, Popover } from "antd";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
-import { Room } from "@/types/datatypes";
+import { Room, SupabaseUser } from "@/types/datatypes";
 import { getGroups } from "@/utils/api";
-import { useGlobalStore } from "@/store";
 import '@/app/antd.css';
+import { PROJECT_NAME } from "@/utils/utils";
+import globalStore from "@/store";
 
 const { Text } = Typography;
 
 export function ChatsPage() {
-  const [isMounted, setIsMounted] = useState(false);
-  const router = useRouter();
-  const user = useGlobalStore(state => state.user);
-  const [searchText, setSearchText] = useState("");
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+  // const router = useRouter();
+  const [searchText, setSearchText] = useState<string>("");
   const [groupChats, setGroupChats] = useState<Room[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [user, setUser] = useState<SupabaseUser>(null!)
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    const helper = async () => {
+      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+      setUser(u)
+      if (!u || !u.id) {
+        window.location.href = "/auth"
+      }
+    }
+    helper()
+  }, [isMounted])
 
   useEffect(() => {
     if (!isMounted || !user?.id) return;
@@ -38,7 +50,7 @@ export function ChatsPage() {
     };
 
     fetchGroups();
-  }, [user?.id, isMounted]);
+  }, [user, isMounted]);
 
   const filteredChats = groupChats.filter((chat) =>
     chat.name.toLowerCase().includes(searchText.toLowerCase())
@@ -46,16 +58,19 @@ export function ChatsPage() {
 
   const jumpToRoomCreation = useCallback(() => {
     if (isMounted) {
-      router.push("/lobby");
+      // router.push("/lobby");
+      window.location.href = "/lobby"
     }
-  }, [isMounted, router]);
+  }, [isMounted]);
 
   const handleRoomClick = useCallback((chat: Room) => {
     if (isMounted) {
-      useGlobalStore.setState({ roomId: chat.id });
-      router.push(`/togethere/`);
+      // useGlobalStore.setState({ roomId: chat.id });
+      globalStore.setItem('lumiroom-room', chat.id)
+      // router.push(`/togethere/`);
+      window.location.href = `${PROJECT_NAME}`
     }
-  }, [isMounted, router]);
+  }, [isMounted]);
 
   if (!isMounted) {
     return (

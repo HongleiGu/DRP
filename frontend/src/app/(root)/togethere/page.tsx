@@ -2,51 +2,62 @@
 
 import ChatRoom from '@/components/ChatRoom';
 import GateLoadingCSS from '@/components/GateLoading';
-import { useGlobalStore } from '@/store';
+import globalStore from '@/store';
+// import { useGlobalStore } from '@/store';
 // import { PlayList } from '@/components/PlayList';
-import { RoomEntry } from '@/types/datatypes';
+import { RoomEntry, SupabaseUser } from '@/types/datatypes';
 import { getRoom } from '@/utils/api';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function RoomPage() {
-  const roomId = useGlobalStore.getState().roomId;
   const [room, setRoom] = useState<RoomEntry[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
-  const { user } = useGlobalStore.getState();
+  // const router = useRouter();
+  const [user, setUser] = useState<SupabaseUser>(null!)
+  const [roomId, setRoomId] = useState<string>("")
 
   useEffect(() => {
     const loadData = async () => {
       try {
+        const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+        const roomId = await globalStore.getItem('lumiroom-room')
         setIsLoading(true);
 
-        if (!user || !user.id) {
-          router.push("/");
+        if (!u || !u.id) {
+          window.location.href = "/"
+          // router.push("/");
+          return
         }
         if (!roomId) {
-          router.push(`/`);
+          window.location.href = "/"
+          // router.push(`/`);
+          return
         }
+        setUser(u)
+        setRoomId(roomId)
         
         const roomData = await getRoom(roomId!);
         setRoom(roomData);
       } catch (error) {
         console.error('Error loading room:', error);
-        router.push(`/`);
+        // router.push(`/`);
+        window.location.href = "/"
       } finally {
         setIsLoading(false);
       }
     };
 
     loadData();
-  }, [router, user]);
+  }, [user]);
 
   if (isLoading) {
     return <GateLoadingCSS/>
   }
 
   if (!room) {
-    router.push(`/`);
+    // router.push(`/`);
+    window.location.href = "/"
   }
 
   return (

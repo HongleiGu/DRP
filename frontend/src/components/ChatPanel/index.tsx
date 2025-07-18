@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useRouter, usePathname } from "next/navigation";
+// import { useRouter, usePathname } from "next/navigation";
 import { Badge, Button, Input, List, Popover, Modal, Space, Typography, message, Divider, Card } from "antd";
 import { BookOutlined } from "@ant-design/icons";
 import EmojiGrid from "../EmojiGrids";
-import { Message, PlayerData } from "@/types/datatypes";
+import { Message, PlayerData, SupabaseUser } from "@/types/datatypes";
 import { updateChannel } from "@/utils/api";
 import { getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
 import { addMessage, deleteMessage, getMessages } from "@/utils/messages";
@@ -20,7 +20,7 @@ import { LumiAvatar } from "../LumiAvatar";
 import { createFile, existsFile } from "@/utils/electronApi";
 import path from "path"
 import { appendJsonl } from "@/utils/json";
-import { useGlobalStore } from "@/store";
+import globalStore from "@/store";
 
 interface ChatPanelProps {
   isTV?: boolean;
@@ -45,9 +45,10 @@ export default function ChatPanel({
   const [invitationData] = useState<{ from: string; roomId: string; videoId: string } | null>(null);
   const [emojiPopoverOpen, setEmojiPopoverOpen] = useState(false);
   const [members] = useState<PlayerData[]>([]);
-  const pathname = usePathname();
-  const { user } = useGlobalStore.getState()
-  const router = useRouter();
+  // const pathname = usePathname();
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+  const [user, setUser] = useState<SupabaseUser>(null!)
+  // const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [, contextHolder] = message.useMessage();
   const [msgChannel, setMsgChannel] = useState<RealtimeChannel>(null!);
@@ -70,28 +71,36 @@ export default function ChatPanel({
   }, [chatroomId]);
 
   useEffect(() => {
-    if (!user?.id) {
-      message.error("User invalid");
-      router.push("/");
-      return;
-    }
+    const helper = async () => {
+      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+  
+      if (!u?.id) {
+        message.error("User invalid");
+        // router.push("/");
+        window.location.href = "/"
+        return;
+      }
 
-    setUserId(user.id);
+      setUserId(u.id);
 
-    if (user.username) {
-      setUsername(user.username);
-    } else {
-      message.warning("Username not set");
-      router.push("/onboarding");
+      if (u.username) {
+        setUsername(u.username);
+      } else {
+        message.warning("Username not set");
+        // router.push("/onboarding");
+        window.location.href = "/onboarding"
+      }
+      setUser(u)
     }
-  }, [user, router]);
+    helper()
+  }, []);
 
   // Load messages from the Redis queue
   useEffect(() => {
     if (userId) {
       loadMessages();
     }
-  }, [chatroomId, loadMessages, userId]);
+  }, [chatroomId, loadMessages, user]);
 
   // Subscribe to the Supabase real-time channel for messages
   useEffect(() => {
@@ -218,7 +227,10 @@ export default function ChatPanel({
   const handleAcceptInvite = () => {
     setIsInviteModalVisible(false);
     if (invitationData) {
-      router.push(`/television/${chatroomId}`);
+      // router.push(`/television/${chatroomId}`);
+      // useGlobalStore.setState({roomId: chatroomId})
+      globalStore.setItem('lumiroom-room', chatroomId)
+      window.location.href = "/television"
     }
   };
 
@@ -239,7 +251,9 @@ export default function ChatPanel({
       setTimeout(() => updateChannel({ channel: videoId, time: seconds, room_id: chatroomId }), 0);
     }
     if (pathname.includes(`/${PROJECT_NAME}`)) {
-      router.push(pathname.replace(`/${PROJECT_NAME}`, "/television"));
+      // router.push(pathname.replace(`/${PROJECT_NAME}`, "/television"));
+      window.location.href = pathname.replace(`/${PROJECT_NAME}`, "/television")
+
     }
   };
 

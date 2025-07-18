@@ -5,7 +5,7 @@ import { Button} from "antd";
 import ChatPanel from "../ChatPanel";
 import { GameStateProvider } from "@/game/state/GameState";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/router";
+// import { useRouter } from "next/navigation";
 
 const HUD = dynamic(() => import('@/components/Lumiroom/UI/Overlay/HUD'), { ssr: false });
 const Game = dynamic(() => import('@/components/Lumiroom'), {
@@ -16,7 +16,7 @@ const Game = dynamic(() => import('@/components/Lumiroom'), {
 // const { Content } = Layout;
 
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
-  const router = useRouter();
+  // const router = useRouter();
   const sendMessage = useRef<((msg: any) => void) | null>(null);
   const receiveMessage = useRef<((msg: any) => void) | null>(null);
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
@@ -74,7 +74,11 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       {/* Chat Panel Toggle Button */}
       <Button
         type="primary"
-        onClick={() => router.push(`/lobby`)}
+        onClick={() => {
+            window.location.href = "/lobby"
+            // router.push(`/lobby`)
+          }
+        }
         style={{
           position: "absolute",
           top: 16,

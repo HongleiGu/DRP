@@ -22,13 +22,14 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { supabase } from '@/lib/supabase';
 import { getCalendarEntries, insertChatHistory } from '@/utils/api';
-import { CalendarEntry } from '@/types/datatypes';
+import { CalendarEntry, SupabaseUser } from '@/types/datatypes';
 
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { ALL_EMOJIS, cascaderOptions } from '@/utils/utils';
 import VideoDetails from '../VideoDetails';
-import { useGlobalStore } from '@/store';
+import globalStore from '@/store';
+
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -70,7 +71,7 @@ export default function FestivalCalendar({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const { user } = useGlobalStore.getState();
+  const [user, setUser] = useState<SupabaseUser>(null!)
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
   const [selectedTimeZone, setSelectedTimeZone] = useState(dayjs.tz.guess());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -82,6 +83,19 @@ export default function FestivalCalendar({
   const [note, setNote] = useState<string>('');
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
+
+  useEffect(() => {
+    const helper = async () => {
+      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+      if (!u) {
+        messageApi.error("you have not logged in yet")
+        window.location.href = "/"
+        return
+      }
+      setUser(u)
+    }
+    helper()
+  }, [])
 
   // Fetch entries when modal opens or timezone changes
   useEffect(() => {

@@ -5,7 +5,8 @@ import { CalendarEntry, Direction, Message, PlayerData, Room, RoomEntry, Supabas
 import { supabase } from '@/lib/supabase';
 import { VideoElement } from '@/components/PlayList';
 import { v4 as uuidv4 } from 'uuid';
-import { useGlobalStore } from '@/store';
+import globalStore from '@/store';
+// import { useGlobalStore } from '@/store';
 
 const DEFAULT_VIDEO = "loWA5o1RdTY"
 
@@ -45,7 +46,8 @@ export const createChatRoom = async (
   creator_id: string,
   roomName: string = 'groupchat'
 ): Promise<string> => {
-  const user = useGlobalStore.getState().user
+  // const user = useGlobalStore.getState().user
+  const user = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
   if (!user) {
     throw new Error('You must be signed in to create a room');
   }

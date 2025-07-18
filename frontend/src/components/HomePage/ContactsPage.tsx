@@ -1,6 +1,7 @@
 "use client";
 
-import { useGlobalStore } from "@/store";
+import globalStore from "@/store";
+// import { useGlobalStore } from "@/store";
 import { SupabaseUser } from "@/types/datatypes";
 import { getContacts } from "@/utils/api";
 import { Avatar, Card, Empty, List, Spin, Typography } from "antd";
@@ -9,19 +10,23 @@ import { useEffect, useMemo, useState } from "react";
 const { Title, Text } = Typography;
 
 export function ContactsPage() {
-  const { user } = useGlobalStore.getState();
+  // const { user } = useGlobalStore.getState();
+  const [user, setUser] = useState<SupabaseUser>(null!)
   const [contactsList, setContactList] = useState<SupabaseUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.id) return;
+
     const fetchContacts = async () => {
+      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+      setUser(u)
+      if (!user?.id) return;
       const c = await getContacts(user.id);
       setContactList(c);
       setLoading(false);
     };
     fetchContacts();
-  }, [user?.id]);
+  }, [user]);
 
   const renderedContacts = useMemo(() => {
     if (loading) {

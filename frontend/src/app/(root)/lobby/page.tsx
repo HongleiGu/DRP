@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { Layout, Typography, Card, Input, Button, List, Checkbox, Space, Divider, message, Spin } from 'antd';
 import { createRoom, getContacts } from '@/utils/api';
 import { SupabaseUser } from '@/types/datatypes';
-import { useRouter } from 'next/navigation';
-import { useGlobalStore } from '@/store';
+import globalStore from '@/store';
+import { PROJECT_NAME } from '@/utils/utils';
+// import { useRouter } from 'next/navigation';
+// import { useGlobalStore } from '@/store';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -16,7 +18,7 @@ export default function CreateRoomPage() {
   const [contactsList, setContactList] = useState<SupabaseUser[]>([]);
   const [contactsLoading, setContactsLoading] = useState<boolean>(true);
   const [creatingLoading, setCreatingLoading] = useState<boolean>(false);
-  const router = useRouter();
+  // const router = useRouter();
   const [user, setUser] = useState<SupabaseUser>(null!);
 
   const handleCheckboxChange = (userId: string, checked: boolean) => {
@@ -26,14 +28,15 @@ export default function CreateRoomPage() {
   };
 
   useEffect(() => {
-    const u = useGlobalStore.getState().user;
-    if (!u) {
-      message.error('Please log in to create a room');
-      router.push('/');
-      return;
-    }
-    setUser(u);
     const fetchContacts = async () => {
+      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+      if (!u) {
+        message.error('Please log in to create a room');
+        window.location.href = "/"
+        // router.push('/');
+        return;
+      }
+      setUser(u);
       setContactsLoading(true);
       try {
         const c = await getContacts(user.id);
@@ -46,13 +49,15 @@ export default function CreateRoomPage() {
       }
     };
     fetchContacts();
-  }, [useGlobalStore.getState().user]);
+  }, []);
 
   const handleCreateRoom = async () => {
     setCreatingLoading(true);
     try {
       const roomId = await createRoom([user?.id ?? "", ...selectedUserIds], user?.id ?? "", groupName);
-      router.push(`/togethere/${roomId}`);
+      await globalStore.setItem('lumiroom-room', roomId)
+      // router.push(`/togethere/${roomId}`);
+      window.location.href = `/${PROJECT_NAME}`
     } catch (err) {
       message.error('Failed to create room');
       console.error(err);

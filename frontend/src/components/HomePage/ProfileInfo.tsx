@@ -1,27 +1,33 @@
 "use client"
 
-import React from "react"
-import { Typography, Spin } from "antd"
+import React, { useEffect, useState } from "react"
+import { Typography } from "antd"
 import { LumiAvatar } from "../LumiAvatar"
-import { useGlobalStore } from "@/store"
+import globalStore from "@/store"
+import { SupabaseUser } from "@/types/datatypes"
+import { LoadingSpinner } from "../Lumiroom/LoadingSpinner"
+// import { useGlobalStore } from "@/store"
 // import { paths } from "@/game/config/resources"
 
 const { Title, Text } = Typography
 
 export default function ProfileInfo() {
-  const { user } = useGlobalStore.getState();
+  // const { user } = useGlobalStore.getState();
+  // const user = JSON.parse(globalStore.getItem('lumiroom-user') ?? "") as SupabaseUser
+  const [user, setUser] = useState<SupabaseUser>(null!)
+
+  useEffect(() => {
+    const helper = async() => {
+      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+      setUser(u)
+    }
+    helper()
+  })
 
   if (!user) {
     return (
       <div className="flex justify-center items-center h-96">
-        <Spin size="large" />
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="flex justify-center items-center h-96">
+        <LoadingSpinner/>
         <Text type="danger">User not found.</Text>
       </div>
     )

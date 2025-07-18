@@ -8,11 +8,13 @@ import { Engine, DisplayMode, Color, FadeInOut, Loader } from "excalibur";
 import { initializeGame } from "./engine";
 import { Resources } from "@/game/config/resources";
 import { Alert, Button, Card } from "antd";
-import { CalendarOutlined, YoutubeOutlined } from "@ant-design/icons";
+// import { CalendarOutlined, YoutubeOutlined } from "@ant-design/icons";
 import { useParams, useRouter } from "next/navigation";
 import MarkdownCalendar from "../Calendar";
 import { resetPlayerToDefault } from "@/utils/api";
-import { useGlobalStore } from "@/store";
+import globalStore from "@/store";
+import { SupabaseUser } from "@/types/datatypes";
+// import { useGlobalStore } from "@/store";
 
 export default function Game({
   sendMessage,
@@ -28,7 +30,9 @@ export default function Game({
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
   const gameRef = useRef<Engine | null>(null);
   // const params = useParams<{ id: string }>()
-  const { user } = useGlobalStore.getState();
+  // const { user } = useGlobalStore.getState();
+  // const user = JSON.parse(globalStore.getItem('lumiroom-user') ?? "") as SupabaseUser
+  const [user, setUser] = useState<SupabaseUser>(null!)
   const isInCalendarAreaRef = useRef(false);
   const hasPromptedCalendarRef = useRef(false);
   const isInTVAreaRef = useRef(false);
@@ -130,21 +134,23 @@ export default function Game({
 
   useEffect(() => {
     const helper = async () => {
-      if (!user?.id) {
+      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+      setUser(u)
+      if (!u?.id) {
         alert("you have not logged in yet");
         router.push("/");
         return;
       }
-      if (!user?.username) {
+      if (!u?.username) {
         alert("you are not onboard yet");
         router.push("/onboarding");
         return;
       }
       await resetPlayerToDefault(
-        user?.id,
-        user?.username as string,
+        u?.id,
+        u?.username as string,
         chatroomId,
-        user?.avatar_id.toString() ?? "0"
+        u?.avatar_id.toString() ?? "0"
       );
     };
     helper();

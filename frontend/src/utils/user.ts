@@ -1,7 +1,7 @@
 "use client"
 
 import { supabase } from '@/lib/supabase'
-import { useGlobalStore } from '@/store'
+import globalStore from '@/store';
 import { SignInArgs, SupabaseUser } from '@/types/datatypes'
 import {
   AuthResponse
@@ -70,7 +70,9 @@ export async function verifyOtp(otp: string, user: SupabaseUser, password: strin
     }
   }
 
-  useGlobalStore.setState({ user: supabaseuser });
+
+  globalStore.setItem('lumiroom-user', JSON.stringify(supabaseuser))
+
 
   return { data, error: null };
 }
@@ -106,7 +108,9 @@ export async function signIn({
 
   if (error) throw error;
 
-  useGlobalStore.setState({ user: userProfile });
+  globalStore.setItem('lumiroom-user', JSON.stringify(userProfile))
+
+  // useGlobalStore.setState({ user: userProfile });
 
   return userProfile;
 }
@@ -148,7 +152,8 @@ export async function signInWithOtp({
 
 export async function signOut(): Promise<void> {
   const { error } = await supabase.auth.signOut()
-  useGlobalStore.setState({ user: null });
+  // useGlobalStore.setState({ user: null });
+  globalStore.removeItem('lumiroom-user')
   if (error) throw error
 }
 
@@ -181,7 +186,8 @@ export async function fetchUserByUsername(username: string): Promise<SupabaseUse
 
 export async function getCurrentUserProfile(): Promise<SupabaseUser> {
   // should attempt to directly fetch the user profile from the store
-  return useGlobalStore.getState().user as SupabaseUser
+  return JSON.parse(await globalStore.getItem("lumiroom-user") ?? "")
+  // useGlobalStore.getState().user as SupabaseUser
 }
 
 export async function updateUserProfile(

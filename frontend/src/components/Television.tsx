@@ -37,11 +37,11 @@ import {
   SendOutlined,
   ShareAltOutlined,
 } from "@ant-design/icons";
-import { useRouter } from "next/router";
+// import { useRouter } from "next/navigation";
 import { cascaderOptions, isEmoji, PROJECT_NAME } from "@/utils/utils";
 import { setYtPlayer, getYtPlayer, clearYtPlayer, extractVideoId, getCurrentVideoId} from "@/utils/ytPlayerManager";
 
-import { Message, PlayerData, TVState } from "@/types/datatypes";
+import { Message, PlayerData, SupabaseUser, TVState } from "@/types/datatypes";
 import { FullscreenOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -53,7 +53,7 @@ dayjs.extend(timezone);
 import { supabase } from "@/lib/supabase";
 import { getChannel, getPlayers, updateChannel } from "@/utils/api";
 import { RealtimeChannel } from "@supabase/supabase-js";
-import { useGlobalStore } from "@/store";
+import globalStore from "@/store";
 // import { updateChannel } from "@/utils/api";
 
 const { Title } = Typography;
@@ -91,7 +91,7 @@ export default function Television({
   const [username, setUsername] = useState<string>("");
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedTimeZone, setSelectedTimeZone] = useState<string>(dayjs.tz.guess());
-  const { user } = useGlobalStore.getState();
+  const [user, setUser] = useState<SupabaseUser>(null!)
   const [tvState, setTVState] = useState<TVState | null>();
   const [sendEmojis, setSendEmojis] = useState<Record<string, RenderedEmoji>>({
     placeholder: {
@@ -100,7 +100,7 @@ export default function Television({
     },
   });
   const [tvChannel, setTVChannel] = useState<RealtimeChannel | null>(null);
-  const router = useRouter();
+  // const router = useRouter();
   const [userId, setUserId] = useState<string>("");
   const [inputUserId, setInputUserId] = useState<string>("");
   const [inputUserIdRes, setInputUserIdRes] = useState<string>("");
@@ -123,25 +123,31 @@ export default function Television({
 
   // Initialize YouTube Player
   useEffect(() => {
-    if (!user?.id) {
-      message.error("User invalid");
-      router.push("/");
-      return;
+    const helper = async () => {
+      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+      setUser(u)
+      if (!u?.id) {
+        message.error("User invalid");
+        // router.push("/");
+        window.location.href = "/"
+        return;
+      }
+
+      setUserId(u.id);
+      setUsername(u.username);
+      setSendEmojis((prev) => ({
+        [u.username]: {
+          emoji: "",
+          avatarId: u.avatar_id
+        },
+      }));
     }
+    helper()
 
     const handler = () => {
       setIsFullScreen(!!document.fullscreenElement);
     };
     document.addEventListener("fullscreenchange", handler);
-
-    setUserId(user.id);
-    setUsername(user.username);
-    setSendEmojis((prev) => ({
-      [user.username]: {
-        emoji: "",
-        avatarId: user.avatar_id
-      },
-    }));
 
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api?rel=0";
@@ -180,7 +186,7 @@ export default function Television({
       document.removeEventListener("fullscreenchange", handler);
     };
 
-  }, [user, router]);
+  }, [user]);
 
   // subscribe to realtime broadcast for more synchronised update
   useEffect(() => {

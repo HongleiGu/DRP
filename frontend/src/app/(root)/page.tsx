@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { Layout, Typography, Popover, Button, Avatar } from "antd";
 import {
   WechatOutlined,
@@ -16,9 +16,10 @@ import "@/app/antd.css";
 import { ChatsPage } from "@/components/HomePage/ChatsPage";
 import { ContactsPage } from "@/components/HomePage/ContactsPage";
 import { ProfilePage } from "@/components/HomePage/ProfilePage";
-import { useGlobalStore } from "@/store";
+import globalStore from "@/store";
 import { signOut } from "@/utils/user";
 import { LoadingSpinner } from "@/components/Lumiroom/LoadingSpinner";
+import { SupabaseUser } from "@/types/datatypes";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -26,23 +27,30 @@ const { Title } = Typography;
 
 export default function HomePage() {
   const [isClient, setIsClient] = useState(false);
-  const { user } = useGlobalStore();
-  const router = useRouter();
+  const [user, setUser] = useState<SupabaseUser>(null!);
+  // const router = useRouter();
   const [activeTab, setActiveTab] = useState<"chats" | "contacts" | "profile">(
     "chats"
   );
 
   useEffect(() => {
     setIsClient(true);
+    console.log(globalStore.getItem('lumiroom-user'))
   }, []);
 
   useEffect(() => {
-    if (isClient && !user) {
-      router.push("/auth");
+    const helper = async () => {
+      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+      setUser(u)
+      if (isClient && !u) {
+        window.location.href = "/auth"
+        // router.push("/auth");
+      }
     }
-  }, [isClient, user, router]);
+    helper()
+  }, [isClient]);
 
-  if (!isClient) {
+  if (!isClient || !user) {
     return <LoadingSpinner />;
   }
 
@@ -54,7 +62,8 @@ export default function HomePage() {
           icon={<LogoutOutlined />}
           onClick={() => {
             signOut();
-            router.push("/auth");
+            window.location.href = "/auth"
+            // router.push("/auth");
           }}
         >
           Sign out
@@ -63,7 +72,12 @@ export default function HomePage() {
         <Button
           type="text"
           icon={<LoginOutlined />}
-          onClick={() => router.push("/auth")}
+          onClick={() => 
+            {
+              window.location.href = "/auth"
+              // router.push("/auth")
+            }
+          }
         >
           Sign in
         </Button>
