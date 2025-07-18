@@ -14,7 +14,7 @@ export default function RoomPage() {
   const [room, setRoom] = useState<RoomEntry[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   // const router = useRouter();
-  const [user, setUser] = useState<SupabaseUser>(null!)
+  // const [user, setUser] = useState<SupabaseUser>(null!)
   const [roomId, setRoomId] = useState<string>("")
 
   useEffect(() => {
@@ -22,6 +22,7 @@ export default function RoomPage() {
       try {
         const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
         const roomId = await globalStore.getItem('lumiroom-room')
+        console.log(u, roomId)
         setIsLoading(true);
 
         if (!u || !u.id) {
@@ -34,7 +35,7 @@ export default function RoomPage() {
           // router.push(`/`);
           return
         }
-        setUser(u)
+        // setUser(u)
         setRoomId(roomId)
         
         const roomData = await getRoom(roomId!);
@@ -49,7 +50,7 @@ export default function RoomPage() {
     };
 
     loadData();
-  }, [user]);
+  }, []);
 
   if (isLoading) {
     return <GateLoadingCSS/>

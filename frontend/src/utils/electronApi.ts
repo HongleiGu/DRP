@@ -1,99 +1,42 @@
-// eslint-disable 
+// eslint-disable
 
-import { ElectronResponse } from "@/types/datatypes";
-
-export function writeFile(filePath: string, content: string): Promise<ElectronResponse> {
-  return new Promise((resolve, reject) => {
-    window.electronApi.writeFile(filePath, content)
-      .then((response: ElectronResponse) => {
-        if (response.success) {
-          resolve(response);
-        } else {
-          reject(new Error(response.error || 'Failed to write file'));
-        }
-      })
-      .catch((error: Error) => {
-        reject(error);
-      });
-  });
+export async function writeFile(filePath: string, content: string): Promise<void> {
+  const response = await window.electronApi.writeFile(filePath, content);
+  if (!response.success) throw new Error(response.error || 'Failed to write file');
 }
 
-export function readFile(filePath: string): Promise<ElectronResponse> {
-  return new Promise((resolve, reject) => {
-    window.electronApi.readFile(filePath)
-      .then((response: ElectronResponse) => {
-        if (response.success) {
-          resolve(response);
-        } else {
-          reject(new Error(response.error || 'Failed to read file'));
-        }
-      })
-      .catch((error: Error) => {
-        reject(error);
-      });
-  });
+export async function readFile(filePath: string): Promise<string> {
+  const response = await window.electronApi.readFile(filePath);
+  if (response.success && typeof response.data === 'string') {
+    return response.data;
+  }
+  throw new Error(response.error || 'Failed to read file');
 }
 
-export function deleteFile(filePath: string): Promise<ElectronResponse> {
-  return new Promise((resolve, reject) => {
-    window.electronApi.deleteFile(filePath)
-      .then((response: ElectronResponse) => {
-        if (response.success) {
-          resolve(response);
-        } else {
-          reject(new Error(response.error || 'Failed to delete file'));
-        }
-      })
-      .catch((error: Error) => {
-        reject(error);
-      });
-  });
+export async function deleteFile(filePath: string): Promise<void> {
+  const response = await window.electronApi.deleteFile(filePath);
+  if (!response.success) throw new Error(response.error || 'Failed to delete file');
 }
 
-export function createFile(filePath: string): Promise<ElectronResponse> {
-  return new Promise((resolve, reject) => {
-    window.electronApi.createFile(filePath)
-      .then((response: ElectronResponse) => {
-        if (response.success) {
-          resolve(response);
-        } else {
-          reject(new Error(response.error || 'Failed to create file'));
-        }
-      })
-      .catch((error: Error) => {
-        reject(error);
-      });
-  });
+export async function createFile(filePath: string): Promise<void> {
+  const response = await window.electronApi.createFile(filePath);
+  // console.log("creata file", response)
+  if (!response.success) throw new Error(response.error || 'Failed to create file');
 }
 
-export function getFiles(directory: string): Promise<ElectronResponse> {
-  return new Promise((resolve, reject) => {
-    window.electronApi.getFiles(directory)
-      .then((response: ElectronResponse) => {
-        if (response.success) {
-          resolve(response);
-        } else {
-          reject(new Error(response.error || 'Failed to get files'));
-        }
-      })
-      .catch((error: Error) => {
-        reject(error);
-      });
-  });
+export async function getFiles(directory: string): Promise<string[]> {
+  const response = await window.electronApi.getFiles(directory);
+  if (response.success && Array.isArray(response.data)) {
+    return response.data;
+  }
+  throw new Error(response.error || 'Failed to get files');
 }
 
-export function existsFile(filePath: string): Promise<ElectronResponse> {
-  return new Promise((resolve, reject) => {
-    window.electronApi.existsFile(filePath)
-      .then((response: ElectronResponse) => {
-        if (response.success) {
-          resolve(response);
-        } else {
-          reject(new Error(response.error || 'Failed to check file existence'));
-        }
-      })
-      .catch((error: Error) => {
-        reject(error);
-      });
-  });
+export async function existsFile(filePath: string): Promise<boolean> {
+  const response = await window.electronApi.existsFile(filePath);
+  // if (response.success && typeof response.data === 'boolean') {
+  //   return response.data;
+  // }
+  // throw new Error(response.error || 'Failed to check file existence');
+  return response.success // we dont throw an error here
 }

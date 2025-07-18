@@ -35,7 +35,6 @@ export default function HomePage() {
 
   useEffect(() => {
     setIsClient(true);
-    console.log(globalStore.getItem('lumiroom-user'))
   }, []);
 
   useEffect(() => {
@@ -46,6 +45,7 @@ export default function HomePage() {
         window.location.href = "/auth"
         // router.push("/auth");
       }
+      console.log(window.electronApi)
     }
     helper()
   }, [isClient]);

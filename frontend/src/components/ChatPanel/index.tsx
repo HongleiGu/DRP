@@ -146,7 +146,6 @@ export default function ChatPanel({
 
   const send = useCallback(
     async (theMessage: Message) => {
-      console.log(theMessage)
       if (!message || isSending || !userId || !username) return;
       setIsSending(true);
       try {
@@ -155,16 +154,19 @@ export default function ChatPanel({
         broadcastMessage(chatroomId, theMessage)
         // write to local files
         // If the storagePath/{roomId}.jsonl file does not exist, create it
-        const filePath = path.join(STORAGE_PATH, userId, chatroomId, ".jsonl");
-        if (!existsFile(filePath)) {
-          createFile(filePath)
+        const filePath = path.join(STORAGE_PATH, userId, chatroomId + ".jsonl");
+        if (!(await existsFile(filePath))) {
+          await createFile(filePath)
         }
         // Append the message to the file
         appendJsonl(filePath, theMessage)
 
+        console.log(!theMessage, !theMessage.chat_room_id, !theMessage.chat_message)
+
         // Publish the message to the Redis Pub/Sub channel
         await addMessage(theMessage);
-      } catch {
+      } catch (err) {
+        console.error(err)
         message.error("Failed to send message");
       } finally {
         setIsSending(false);

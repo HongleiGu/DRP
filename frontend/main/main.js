@@ -60,6 +60,7 @@ async function createWindow() {
     width: 1600,
     height: 1200,
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       webSecurity: false,
       nodeIntegration: true,
     },
@@ -101,6 +102,8 @@ ipcMain.handle('read-file', async (event, filePath) => {
 
 ipcMain.handle('create-file', async (event, filePath) => {
   try {
+    const dir = path.dirname(filePath);
+    await fs.mkdir(dir, { recursive: true }); // ✅ ensure folder exists
     await fs.writeFile(filePath, '', 'utf8');
     return { success: true };
   } catch (error) {

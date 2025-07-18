@@ -39,101 +39,9 @@ export default function Game({
   const hasPromptedTVRef = useRef(false);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const game = new Engine({
-      resolution: { width: 256, height: 256 },
-      suppressPlayButton: true,
-      canvasElement: canvasRef.current,
-      displayMode: DisplayMode.FitContainerAndFill,
-      pixelArt: true,
-      pixelRatio: 4,
-    });
-
-    gameRef.current = game;
-
-    // Create callbacks object
-    const sceneCallbacks = {
-      showInteractButtonTV: (visible: boolean) => {
-        if (visible) {
-          if (!isInTVAreaRef.current) {
-            isInTVAreaRef.current = true;
-
-            if (!hasPromptedTVRef.current) {
-              setShowButtonTV(true);
-              hasPromptedTVRef.current = true;
-            }
-          }
-        } else {
-          isInTVAreaRef.current = false;
-          hasPromptedTVRef.current = false;
-          setShowButtonTV(false);
-        }
-      },
-
-      showInteractButtonCalendar: (visible: boolean) => {
-        if (visible) {
-          if (!isInCalendarAreaRef.current) {
-            isInCalendarAreaRef.current = true;
-
-            if (!hasPromptedCalendarRef.current) {
-              setShowButtonCalendar(true);
-              hasPromptedCalendarRef.current = true;
-            }
-          }
-        } else {
-          isInCalendarAreaRef.current = false;
-          hasPromptedCalendarRef.current = false;
-          setShowButtonCalendar(false);
-        }
-      },
-    };
-
-    // Initialize game with callbacks
-    // console.log("inited room", chatroomId);
-    initializeGame(
-      game,
-      sceneCallbacks,
-      user?.id ?? "unknown",
-      user?.username ?? "Player",
-      chatroomId,
-      user?.avatar_id?.toString() ?? "0",
-    );
-
-    const loader = new Loader();
-    for (const resource of Object.values(Resources)) {
-      if (Array.isArray(resource)) {
-        for (const res of resource) {
-          loader.addResource(res);
-        }
-      } else {
-        loader.addResource(resource);
-      }
-    }
-
-    const inTransition = new FadeInOut({
-      duration: 1000,
-      direction: "in",
-      color: Color.ExcaliburBlue,
-    });
-
-    game
-      .start("overworld", { loader, inTransition })
-      .then(() => {
-        console.log("Game started successfully");
-      })
-      .catch((err) => {
-        console.error("Game failed to start:", err);
-      });
-
-    return () => {
-      game.stop();
-      gameRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
+    let game: ex.Engine;
     const helper = async () => {
+      if (!canvasRef.current) return;
       const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
       setUser(u)
       if (!u?.id) {
@@ -152,9 +60,100 @@ export default function Game({
         chatroomId,
         u?.avatar_id.toString() ?? "0"
       );
+
+
+      game = new Engine({
+        resolution: { width: 256, height: 256 },
+        suppressPlayButton: true,
+        canvasElement: canvasRef.current,
+        displayMode: DisplayMode.FitContainerAndFill,
+        pixelArt: true,
+        pixelRatio: 4,
+      });
+
+      gameRef.current = game;
+
+      // Create callbacks object
+      const sceneCallbacks = {
+        showInteractButtonTV: (visible: boolean) => {
+          if (visible) {
+            if (!isInTVAreaRef.current) {
+              isInTVAreaRef.current = true;
+
+              if (!hasPromptedTVRef.current) {
+                setShowButtonTV(true);
+                hasPromptedTVRef.current = true;
+              }
+            }
+          } else {
+            isInTVAreaRef.current = false;
+            hasPromptedTVRef.current = false;
+            setShowButtonTV(false);
+          }
+        },
+
+        showInteractButtonCalendar: (visible: boolean) => {
+          if (visible) {
+            if (!isInCalendarAreaRef.current) {
+              isInCalendarAreaRef.current = true;
+
+              if (!hasPromptedCalendarRef.current) {
+                setShowButtonCalendar(true);
+                hasPromptedCalendarRef.current = true;
+              }
+            }
+          } else {
+            isInCalendarAreaRef.current = false;
+            hasPromptedCalendarRef.current = false;
+            setShowButtonCalendar(false);
+          }
+        },
+      };
+
+      // Initialize game with callbacks
+      // console.log("inited room", chatroomId);
+      initializeGame(
+        game,
+        sceneCallbacks,
+        u?.id ?? "unknown",
+        u?.username ?? "Player",
+        chatroomId,
+        u?.avatar_id?.toString() ?? "0",
+      );
+
+      const loader = new Loader();
+      for (const resource of Object.values(Resources)) {
+        if (Array.isArray(resource)) {
+          for (const res of resource) {
+            loader.addResource(res);
+          }
+        } else {
+          loader.addResource(resource);
+        }
+      }
+
+      const inTransition = new FadeInOut({
+        duration: 1000,
+        direction: "in",
+        color: Color.ExcaliburBlue,
+      });
+
+      game
+        .start("overworld", { loader, inTransition })
+        .then(() => {
+          console.log("Game started successfully");
+        })
+        .catch((err) => {
+          console.error("Game failed to start:", err);
+        });
     };
     helper();
-  }, []);
+
+    return () => {
+      game.stop();
+      gameRef.current = null;
+    };
+  }, [])
 
   const handleTVButtonClick = () => {
     hasPromptedTVRef.current = true; // 确保不回到页面时误弹
