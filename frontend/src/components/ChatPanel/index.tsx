@@ -19,7 +19,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { LumiAvatar } from "../LumiAvatar";
 import { createFile, existsFile } from "@/utils/electronApi";
 import path from "path"
-import { appendJsonl } from "@/utils/json";
+import { appendJsonl, parseJsonlToTypedObjects } from "@/utils/json";
 import globalStore from "@/store";
 
 interface ChatPanelProps {
@@ -68,7 +68,18 @@ export default function ChatPanel({
       if (msg.id) await deleteMessage(chatroomId, msg.id)
       // await redis.lRem(chatroomId, 0, JSON.stringify(msg));
     }
-  }, [chatroomId]);
+  }, [chatroomId, userId]);
+
+  const loadLocalMessages = useCallback(async () => {
+    const messages = await parseJsonlToTypedObjects<Message>(path.join(STORAGE_PATH, userId, chatroomId + ".jsonl"))
+
+    // since we dont want chat messages of two chatrooms be mixed up
+    // and we are safe to assume that all the messages are stored in local, including the recieved ones from redis
+    // so instead of append, we replace the whole message list with the messages we load from local
+
+    setMessages(messages)
+
+  }, [chatroomId, userId])
 
   useEffect(() => {
     const helper = async () => {
@@ -95,12 +106,17 @@ export default function ChatPanel({
     helper()
   }, []);
 
-  // Load messages from the Redis queue
+  // Load messages from the Redis queue and local
   useEffect(() => {
-    if (userId) {
-      loadMessages();
+    const helper = async () => {
+      if (userId) {
+        // loadLocalMessage is destructive, need to preserve order here
+        await loadLocalMessages()
+        await loadMessages();
+      }
     }
-  }, [chatroomId, loadMessages, user]);
+    helper()
+  }, [chatroomId, loadMessages, loadLocalMessages, user]);
 
   // Subscribe to the Supabase real-time channel for messages
   useEffect(() => {
@@ -113,8 +129,6 @@ export default function ChatPanel({
         console.log(payload.payload.message, userId)
         if (((payload.payload.message) as Message).speaker !== userId) {
           console.log("Received broadcast message:", payload.message);
-          // loadMessages();  // Ensure loadMessages is called to fetch updated data
-          // setMessages((prev) => [...prev, payload.message]);
           loadMessages();
         }
       });
@@ -160,6 +174,7 @@ export default function ChatPanel({
         }
         // Append the message to the file
         appendJsonl(filePath, theMessage)
+        console.log(theMessage)
 
         console.log(!theMessage, !theMessage.chat_room_id, !theMessage.chat_message)
 

@@ -6,9 +6,6 @@ const BASE_URL = process.env.SPRINGBOOT_URL || 'http://localhost:8080/api/messag
  * POST /api/message/addMessage
  */
 export async function addMessage(messageData: Message): Promise<void> {
-  console.log(messageData)
-  console.log(!messageData, !messageData.chat_room_id, !messageData.chat_message)
-  console.log(!messageData || !messageData.chat_room_id || !messageData.chat_message)
   if (!messageData || !messageData.chat_room_id || !messageData.chat_message) {
     throw new Error('Invalid message data');
   }
@@ -27,6 +24,8 @@ export async function addMessage(messageData: Message): Promise<void> {
 
 /**
  * GET /api/message/getMessage?chatRoomId={chatRoomId}
+ * 
+ * this only loads from the redis server
  */
 export async function getMessages(chatRoomId: string): Promise<Message[]> {
   if (!chatRoomId) {
@@ -52,7 +51,7 @@ export async function deleteMessage(chatRoomId: string, messageId: string): Prom
     throw new Error('Missing chat room or message ID');
   }
 
-  const res = await fetch(`${BASE_URL}/deleteMessage?chatRoomId${chatRoomId}&messageId=${messageId}`, {
+  const res = await fetch(`${BASE_URL}/deleteMessage?chatRoomId=${chatRoomId}&messageId=${messageId}`, {
     method: 'DELETE',
   });
 
