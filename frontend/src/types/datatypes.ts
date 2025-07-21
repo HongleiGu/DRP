@@ -128,6 +128,7 @@ export interface Room {
   last_message: string;
   unread: number;
   created_at: string;
+  creator_id: string
 }
 
 export interface ElectronResponse {

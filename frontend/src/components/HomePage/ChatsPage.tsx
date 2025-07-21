@@ -4,10 +4,12 @@ import { Input, Avatar, Typography, List, Button, Popover } from "antd";
 import { useEffect, useState, useCallback } from "react";
 import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
 import { Room, SupabaseUser } from "@/types/datatypes";
-import { getGroups } from "@/utils/api";
 import '@/app/antd.css';
-import { PROJECT_NAME } from "@/utils/utils";
+import { PROJECT_NAME, STORAGE_PATH } from "@/utils/utils";
 import globalStore from "@/store";
+import path from "path";
+import { createFile, existsFile } from "@/utils/electronApi";
+import { parseJsonlToTypedObjects } from "@/utils/json";
 
 const { Text } = Typography;
 
@@ -40,7 +42,19 @@ export function ChatsPage() {
     const fetchGroups = async () => {
       setLoading(true);
       try {
-        const groups = await getGroups(user.id);
+        // TODO: add loading chatgroups from local files
+        // file path should be ./storage/{userId}/groups.jsonl
+        // use the json.ts helper functions
+        // the idea is: on groups creation, the creator inserts a message for every other member in redis
+        // with key member user id or a single fixed key group creation
+        // then on enter it should do the same as message queue 
+        // (if an entry for this user is found, then add to local file and delete the entry)
+        const filePath = path.join(STORAGE_PATH, user.id,  "groups.jsonl");
+        if (!(await existsFile(filePath))) {
+          await createFile(filePath)
+        }
+        const groups = await parseJsonlToTypedObjects<Room>(filePath)
+        // const groups = await getGroups(user.id);
         setGroupChats(groups);
       } catch (error) {
         console.error("Failed to fetch groups:", error);

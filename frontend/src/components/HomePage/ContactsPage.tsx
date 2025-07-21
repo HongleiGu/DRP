@@ -3,8 +3,12 @@
 import globalStore from "@/store";
 // import { useGlobalStore } from "@/store";
 import { SupabaseUser } from "@/types/datatypes";
-import { getContacts } from "@/utils/api";
+// import { getContacts } from "@/utils/api";
+import { createFile, existsFile } from "@/utils/electronApi";
+import { parseJsonlToTypedObjects } from "@/utils/json";
+import { STORAGE_PATH } from "@/utils/utils";
 import { Avatar, Card, Empty, List, Spin, Typography } from "antd";
+import path from "path";
 import { useEffect, useMemo, useState } from "react";
 
 const { Title, Text } = Typography;
@@ -16,12 +20,23 @@ export function ContactsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
-    const fetchContacts = async () => {
+    const helper = async () => {
       const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
       setUser(u)
+    }
+    helper()
+  }, [])
+
+  useEffect(() => {
+
+    const fetchContacts = async () => {
       if (!user?.id) return;
-      const c = await getContacts(user.id);
+      const filePath = path.join(STORAGE_PATH, user.id,  "contacts.jsonl");
+      if (!(await existsFile(filePath))) {
+        await createFile(filePath)
+      }
+      const c = await parseJsonlToTypedObjects<SupabaseUser>(filePath)
+      console.log(c)
       setContactList(c);
       setLoading(false);
     };
