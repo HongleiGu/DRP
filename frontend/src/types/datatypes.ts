@@ -112,6 +112,7 @@ export interface SupabaseUser {
   email: string; // since supabase only supports email/password auth, this is required
 }
 
+// this is only used to check if the room exists or not, wrap in type to prevent errors
 export interface RoomEntry {
   id: string;
   created_at: string;

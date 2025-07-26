@@ -336,30 +336,6 @@ export async function updatePlayerPosition(userId: string, position: {
   }
 }
 
-// export const updateChannelPlayback = async (roomId: string, isPlaying: boolean) => {
-//   return supabase
-//     .from('tv_channel')
-//     .update({ is_playing: isPlaying })
-//     .eq('room_id', roomId);
-// };
-
-// export const updateChannelTime = async (roomId: string, time: number) => {
-//   return supabase
-//     .from('tv_channel')
-//     .update({ time })
-//     .eq('room_id', roomId);
-// };
-
-// export const updateChannelState = async (
-//   roomId: string,
-//   data: Partial<TVState>
-// ) => {
-//   return supabase
-//     .from('tv_channel')
-//     .update(data)
-//     .eq('room_id', roomId);
-// };
-
 export const getContacts = async (user_id: string): Promise<SupabaseUser[]> => {
   // Query where user is in other_user_id
   const { data: contacts1, error: error1 } = await supabase

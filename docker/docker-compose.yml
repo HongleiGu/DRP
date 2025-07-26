@@ -7,6 +7,15 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
+  rabbitmq:
+    image: rabbitmq:4.0-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # AMQP port
+      - "15672:15672"  # Management UI port
+    volumes:
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+
 
 volumes:
   redis_data:

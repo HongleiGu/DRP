@@ -1,0 +1,30 @@
+package com.lumiroom.lumiroom.service.sender;
+
+import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.context.annotation.Profile;
+
+import com.alibaba.fastjson2.JSON;
+import com.lumiroom.lumiroom.model.Message;
+
+/**
+ * Sends messages to the topic exchange using keys like roomId.userId.suffix.
+ */
+@Profile("sender")
+public class Sender {
+
+    private final RabbitTemplate rabbitTemplate;
+    private final TopicExchange exchange;
+
+    public Sender(RabbitTemplate amqpTemplate, TopicExchange exchange) {
+        this.rabbitTemplate = amqpTemplate;
+        this.exchange = exchange;
+    }
+
+    public void send(String routingKey, Message message) {
+      String jsonMessage = JSON.toJSONString(message);
+      rabbitTemplate.convertAndSend(exchange.getName(), routingKey, jsonMessage);
+      System.out.println("📤 Sent: '" + message + "' to '" + routingKey + "'");
+    }
+}

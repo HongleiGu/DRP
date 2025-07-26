@@ -1,54 +1,36 @@
 package com.lumiroom.lumiroom.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-/**
- * Represents a chat message in a chat room.
- */
-@Data
+@Getter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@ToString
 public class Message {
+  private final String id;             // Optional: Unique message ID
+  private final String speaker;      // ID of the speaker
+  private final String speakerName;  // Name of the speaker
+  private final String chatMessage;  // The actual chat message
+  private final LocalDateTime createdAt;   // Timestamp when the message was created
+  private final String chatRoomId;   // Unique ID for the chatroom
+  private final String videoUrl;     // Optional: URL of video
+  private final Double videoTime;    // Optional: Timestamp of video time
 
-    private String id;              // Unique message ID
-    private String speaker;         // ID of the speaker
-    private String speakerName;     // Name of the speaker
-    private String chatMessage;     // The actual chat message
-    private LocalDateTime createdAt;// Timestamp when the message was created
-    private String chatRoomId;      // Unique ID for the chatroom
-    private String videoUrl;        // URL of video (optional)
-    private Double videoTime;       // Video time position (optional)
-
-    /**
-     * Factory method for creating a message without video info.
-     */
-    public static Message noVideo(String id, String speaker, String chatMessage, LocalDateTime createdAt, String chatRoomId) {
-        return Message.builder()
-            .id(id)
-            .speaker(speaker)
-            .chatMessage(chatMessage)
-            .createdAt(createdAt)
-            .chatRoomId(chatRoomId)
-            .build();
-    }
-
-    /**
-     * Factory method for creating a system message.
-     */
-    public static Message systemMessage(String id, String chatRoomId, String chatMessage) {
-        return Message.builder()
-            .id(id)
-            .chatRoomId(chatRoomId)
-            .chatMessage(chatMessage)
-            .createdAt(LocalDateTime.now())
-            .speaker("system")
-            .speakerName("System")
-            .build();
-    }
+  public static Message system(String chatMessage, String chatRoomId) {
+    String randomId = UUID.randomUUID().toString();
+    LocalDateTime timeStr = LocalDateTime.now();
+    return Message.builder()
+      .id(randomId)
+      .chatMessage(chatMessage)
+      .chatRoomId(chatRoomId)
+      .createdAt(timeStr)
+      .speaker("system")
+      .speakerName("system")
+      .build();
+  }
 }

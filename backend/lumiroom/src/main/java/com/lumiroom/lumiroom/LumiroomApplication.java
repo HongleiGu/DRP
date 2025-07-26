@@ -1,9 +1,11 @@
 package com.lumiroom.lumiroom;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
+@MapperScan("com.lumiroom.lumiroom.mapper") // temporary workaround
 public class LumiroomApplication {
 
 	public static void main(String[] args) {

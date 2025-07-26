@@ -1,0 +1,16 @@
+# Conversion to YAML from Properties formar report
+# Warnings:
+# - The yaml file had comments which are lost in the refactoring!
+spring:
+  application:
+    name: lumiroom
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  datasource:
+    url: jdbc:postgresql://db.ukyzdmszbelcxbkrgtrt.supabase.co:5432/postgres?user=postgres&password=8nXbjPtr6aC7Msaa
+    username: postgres
+    password: 8nXbjPtr6aC7Msaa
+    driver-class-name: org.postgresql.Driver
+

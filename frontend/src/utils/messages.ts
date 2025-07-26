@@ -1,4 +1,7 @@
-import { Message } from '@/types/datatypes';
+import { Message, Room } from '@/types/datatypes';
+import path from 'path'
+import { STORAGE_PATH } from './utils';
+import { appendJsonl, deleteJsonlById } from './json';
 
 const BASE_URL = process.env.SPRINGBOOT_URL || 'http://localhost:8080/api/message';
 
@@ -62,4 +65,19 @@ export async function deleteMessage(chatRoomId: string, messageId: string): Prom
 
   const message = await res.text(); // Assumes backend returns plain string in body
   return message;
+}
+
+export async function updateGroupDetails(room: Room, userId: string) {
+  const filePath = path.join(STORAGE_PATH, userId,"groups.jsonl");
+
+  // try catch to ensure ACID
+  try {
+    // delete the entry first
+    await deleteJsonlById(filePath, room.id)
+
+    // add back the updated entry
+    await appendJsonl(filePath, room)
+  } catch (err) {
+    console.error(err)
+  }
 }
