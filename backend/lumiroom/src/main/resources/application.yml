@@ -13,4 +13,11 @@ spring:
     username: postgres
     password: 8nXbjPtr6aC7Msaa
     driver-class-name: org.postgresql.Driver
-
+  security:
+    user:
+      name: user
+      password: 123
+  profiles:
+    active:
+    - sender
+    - receiver

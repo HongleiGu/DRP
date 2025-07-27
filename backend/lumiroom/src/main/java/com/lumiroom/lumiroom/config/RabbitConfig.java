@@ -34,9 +34,6 @@ public class RabbitConfig {
     @Configuration
     static class ReceiverConfig {
 
-        @Value("${lumiroom.user-id}")
-        private String userId;
-
         @Bean
         public Queue userQueue() {
             return new AnonymousQueue();
