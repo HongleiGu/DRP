@@ -6,23 +6,24 @@ import { appendJsonl, deleteJsonlById } from './json';
 const BASE_URL = process.env.SPRINGBOOT_URL || 'http://localhost:8080/api/message';
 
 /**
- * POST /api/message/addMessage
+ * Sends a chat message to the API.
+ *
+ * @param message - The message object to send.
+ * @param userId - The user ID to attach as a query parameter.
+ * @returns A promise resolving to the server's response.
  */
-export async function addMessage(messageData: Message): Promise<void> {
-  if (!messageData || !messageData.chat_room_id || !messageData.chat_message) {
-    throw new Error('Invalid message data');
-  }
-
-  const res = await fetch(`${BASE_URL}/addMessage`, {
+export async function sendMessage(message: Message, userId: string): Promise<Response> {
+  const response = await fetch(`http://localhost:8080/api/message?userId=${encodeURIComponent(userId)}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(messageData),
+    headers: {
+      'Content-Type': 'application/json',
+      // JSESSIONID is assumed to be managed by the browser or manually set in cookies
+    },
+    body: JSON.stringify(message),
+    credentials: 'include', // includes cookies like JSESSIONID
   });
 
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to add message: ${errorText}`);
-  }
+  return response;
 }
 
 /**

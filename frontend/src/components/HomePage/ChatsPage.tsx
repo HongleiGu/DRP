@@ -3,13 +3,14 @@ import { Input, Avatar, Typography, List, Button, Popover } from "antd";
 // import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
-import { Room, SupabaseUser } from "@/types/datatypes";
+import { Message, Room, SupabaseUser } from "@/types/datatypes";
 import '@/app/antd.css';
 import { PROJECT_NAME, STORAGE_PATH } from "@/utils/utils";
 import globalStore from "@/store";
 import path from "path";
 import { createFile, existsFile } from "@/utils/electronApi";
-import { parseJsonlToTypedObjects } from "@/utils/json";
+import { parseJsonlToTypedObjects, replaceJsonlById } from "@/utils/json";
+import { useStompClient } from "@/hooks/useStompClient";
 
 const { Text } = Typography;
 
@@ -35,6 +36,30 @@ export function ChatsPage() {
     }
     helper()
   }, [isMounted])
+
+  useStompClient({
+    userId: user ? user.id : null,
+    onMessage: async (msg: Message) => {
+      console.log("📬 Got message in component:", msg);
+      const receivedRoomId: string = msg.chat_room_id
+      const targetRoomEntry: Room = groupChats.filter((it: Room) => it.id === receivedRoomId)[0]
+      console.log(targetRoomEntry)
+      const alteredRoomEntry: Room = {
+        ...targetRoomEntry,
+        unread: (targetRoomEntry.unread as number) + 1,
+        last_message: msg.chat_message,
+        created_at: Date.now().toLocaleString()
+      }
+      const filePath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
+      setGroupChats(
+        groupChats.map(it => 
+          it.id === alteredRoomEntry.id ? alteredRoomEntry : it
+        )
+      )
+      
+      await replaceJsonlById(filePath, alteredRoomEntry)
+    }
+  })
 
   useEffect(() => {
     if (!isMounted || !user?.id) return;

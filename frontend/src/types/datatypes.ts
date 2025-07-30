@@ -1,5 +1,8 @@
 "use client"
 
+export type MessageScope = "public" | "personal";
+export type MessageType = "message" | "invite";
+
 export interface Message {
   id?: string;  // UUID for unique message ID
   speaker: string;  // ID of the speaker
@@ -9,6 +12,10 @@ export interface Message {
   chat_room_id: string;  // Unique ID for the chatroom
   video_url?: string;  // URL of video (if any)
   video_time?: number;  // Timestamp of video time (if any)
+  metadata: {
+    scope: MessageScope,
+    type: MessageType
+  }
 }
 
 

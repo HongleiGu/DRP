@@ -1,5 +1,5 @@
 import { ElectronResponse } from "@/types/datatypes";
-import { readFile, writeFile } from "./electronApi";
+import { createFile, existsFile, readFile, writeFile } from "./electronApi";
 
 /**
  * Append a single object as a new line (JSONL format) to the specified file.
@@ -49,6 +49,10 @@ export async function deleteJsonlById(filePath: string, id: string): Promise<Ele
  */
 export async function parseJsonlToTypedObjects<T>(filePath: string): Promise<T[]> {
   try {
+    if (!(await existsFile(filePath))) {
+      await createFile(filePath)
+      return []
+    }
     const content = await readFile(filePath);
     const lines = content.split('\n').filter(line => line.trim() !== '');
 
@@ -56,5 +60,38 @@ export async function parseJsonlToTypedObjects<T>(filePath: string): Promise<T[]
   } catch (error) {
     console.error(`Failed to parse JSONL from ${filePath}:`, error);
     return [];
+  }
+}
+
+/**
+ * Replace a JSONL entry with a matching `id` while preserving line order.
+ */
+export async function replaceJsonlById(filePath: string, updatedObj: { id: string }): Promise<ElectronResponse> {
+  try {
+    const content = await readFile(filePath);
+    const lines = content.split('\n').filter(line => line.trim() !== '');
+
+    let replaced = false;
+    const updatedLines = lines.map(line => {
+      try {
+        const obj = JSON.parse(line);
+        if (!replaced && obj.id === updatedObj.id) {
+          replaced = true;
+          return JSON.stringify(updatedObj);
+        }
+        return line;
+      } catch {
+        throw new Error('Invalid JSON format in file');
+      }
+    });
+
+    if (!replaced) {
+      return { success: false, error: `No entry with id "${updatedObj.id}" found` };
+    }
+
+    await writeFile(filePath, updatedLines.join('\n') + '\n');
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
   }
 }

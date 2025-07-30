@@ -22,7 +22,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { supabase } from '@/lib/supabase';
 import { getCalendarEntries, insertChatHistory } from '@/utils/api';
-import { CalendarEntry, SupabaseUser } from '@/types/datatypes';
+import { CalendarEntry, MessageScope, MessageType, SupabaseUser } from '@/types/datatypes';
 
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -274,7 +274,11 @@ export default function FestivalCalendar({
           speaker_name: user.username,
           chat_message: `/alert ${user.username}`,
           created_at: new Date().toISOString(),
-          chat_room_id: roomId
+          chat_room_id: roomId,
+          metadata: {
+            scope: "public" as MessageScope,
+            type: "message" as MessageType
+          }
         }
         await insertChatHistory(messageObj);
       }

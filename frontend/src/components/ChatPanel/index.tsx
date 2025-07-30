@@ -4,23 +4,24 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Badge, Button, Input, List, Popover, Modal, Space, Typography, message, Divider, Card } from "antd";
 import { BookOutlined } from "@ant-design/icons";
 import EmojiGrid from "../EmojiGrids";
-import { Message, PlayerData, SupabaseUser } from "@/types/datatypes";
+import { Message, MessageScope, MessageType, PlayerData, SupabaseUser } from "@/types/datatypes";
 import { updateChannel } from "@/utils/api";
 import { getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
-import { addMessage, deleteMessage, getMessages } from "@/utils/messages";
+import { sendMessage, deleteMessage, getMessages } from "@/utils/messages";
 // import { getMessagesFromQueue, sendMessageToQueue } from "@/lib/messages"; // Adjusted to interact with Redis
 import VideoDetails from "../VideoDetails";
 import { PROJECT_NAME, STORAGE_PATH } from "@/utils/utils";
 // import { redis } from '@/lib/redis';
 import InfiniteScroll from "react-infinite-scroll-component";
-import { supabase } from "@/lib/supabase";
-import { RealtimeChannel } from "@supabase/supabase-js";
+// import { supabase } from "@/lib/supabase";
+// import { RealtimeChannel } from "@supabase/supabase-js";
 import { v4 as uuidv4 } from 'uuid';
 import { LumiAvatar } from "../LumiAvatar";
 import { createFile, existsFile } from "@/utils/electronApi";
 import path from "path"
 import { appendJsonl, parseJsonlToTypedObjects } from "@/utils/json";
 import globalStore from "@/store";
+import { useStompClient } from "@/hooks/useStompClient";
 
 interface ChatPanelProps {
   isTV?: boolean;
@@ -51,7 +52,7 @@ export default function ChatPanel({
   // const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [, contextHolder] = message.useMessage();
-  const [msgChannel, setMsgChannel] = useState<RealtimeChannel>(null!);
+  // const [msgChannel, setMsgChannel] = useState<RealtimeChannel>(null!); // use websocket instead of supabase
   
   
   const memoizedMessages = useMemo(() => messages, [messages]);
@@ -80,6 +81,29 @@ export default function ChatPanel({
     setMessages(messages)
 
   }, [chatroomId, userId])
+
+  // setup websocket
+  // Initialize WebSocket message listener once userId is set
+  useStompClient({
+    userId,
+    onMessage: async (msg: Message) => { 
+      console.log("received message", msg, chatroomId)
+      if (msg.metadata.scope == "personal") {
+        // TODO: handle personal msg
+        return
+      }
+      if (msg.chat_room_id !== chatroomId) return; // Ignore other rooms
+
+      // Append message and save locally
+      setMessages((prev) => [...prev, msg]);
+
+      const filePath = path.join(STORAGE_PATH, userId, `${chatroomId}.jsonl`);
+      const response = await appendJsonl(filePath, msg); // it is best to await for this, though it can work without it
+      if (!response.success) {
+        throw new Error(response.error)
+      }
+    },
+  });
 
   useEffect(() => {
     const helper = async () => {
@@ -118,44 +142,44 @@ export default function ChatPanel({
     helper()
   }, [chatroomId, loadMessages, loadLocalMessages, user]);
 
-  // Subscribe to the Supabase real-time channel for messages
-  useEffect(() => {
-    const subscribeToMessages = async () => {
-      const channel = supabase.channel(`messages:${chatroomId}`);
-      setMsgChannel(channel);
+  // // Subscribe to the Supabase real-time channel for messages
+  // useEffect(() => {
+  //   const subscribeToMessages = async () => {
+  //     const channel = supabase.channel(`messages:${chatroomId}`);
+  //     setMsgChannel(channel);
 
-      // Subscribe to the 'new-message' event
-      channel.on('broadcast', { event: 'new-message' }, (payload) => {
-        console.log(payload.payload.message, userId)
-        if (((payload.payload.message) as Message).speaker !== userId) {
-          console.log("Received broadcast message:", payload.message);
-          loadMessages();
-        }
-      });
+  //     // Subscribe to the 'new-message' event
+  //     channel.on('broadcast', { event: 'new-message' }, (payload) => {
+  //       console.log(payload.payload.message, userId)
+  //       if (((payload.payload.message) as Message).speaker !== userId) {
+  //         console.log("Received broadcast message:", payload.message);
+  //         loadMessages();
+  //       }
+  //     });
 
-      // Subscribe to the channel
-      channel.subscribe();
+  //     // Subscribe to the channel
+  //     channel.subscribe();
 
-      // Cleanup on unmount
-      return () => {
-        channel.unsubscribe();
-      };
-    };
+  //     // Cleanup on unmount
+  //     return () => {
+  //       channel.unsubscribe();
+  //     };
+  //   };
 
-    subscribeToMessages();
-  }, [chatroomId, loadMessages, userId]);
+  //   subscribeToMessages();
+  // }, [chatroomId, loadMessages, userId]);
 
 
-  const broadcastMessage = async (chatroomId: string, message: Message) => {
-    console.log("Broadcasting message", message);
-    if (msgChannel) {
-      await msgChannel.send({
-        type: 'broadcast',
-        event: 'new-message',
-        payload: { message: message },  // Ensure payload is being sent with the message
-      });
-    }
-  };
+  // const broadcastMessage = async (chatroomId: string, message: Message) => {
+  //   console.log("Broadcasting message", message);
+  //   if (msgChannel) {
+  //     await msgChannel.send({
+  //       type: 'broadcast',
+  //       event: 'new-message',
+  //       payload: { message: message },  // Ensure payload is being sent with the message
+  //     });
+  //   }
+  // };
 
 
   const send = useCallback(
@@ -165,7 +189,7 @@ export default function ChatPanel({
       try {
         setMessages((prev) => [...prev, theMessage]);
         setNewMessage("");
-        broadcastMessage(chatroomId, theMessage)
+        // broadcastMessage(chatroomId, theMessage)
         // write to local files
         // If the storagePath/{roomId}.jsonl file does not exist, create it
         const filePath = path.join(STORAGE_PATH, userId, chatroomId + ".jsonl");
@@ -174,12 +198,10 @@ export default function ChatPanel({
         }
         // Append the message to the file
         appendJsonl(filePath, theMessage)
-        console.log(theMessage)
 
-        console.log(!theMessage, !theMessage.chat_room_id, !theMessage.chat_message)
+        // send the message through springboot api
+        sendMessage(theMessage, userId)
 
-        // Publish the message to the Redis Pub/Sub channel
-        await addMessage(theMessage);
       } catch (err) {
         console.error(err)
         message.error("Failed to send message");
@@ -187,7 +209,7 @@ export default function ChatPanel({
         setIsSending(false);
       }
     },
-    [isSending, userId, username, broadcastMessage, chatroomId]
+    [isSending, userId, username, chatroomId]
   )
 
   const handleSend = useCallback(
@@ -201,6 +223,10 @@ export default function ChatPanel({
         chat_message: theMessage,
         created_at: new Date().toISOString(),
         chat_room_id: chatroomId,
+        metadata: {
+          scope: "public" as MessageScope,
+          type: "message" as MessageType
+        }
       };
       
       await send(messageObj)
@@ -222,6 +248,10 @@ export default function ChatPanel({
         chat_room_id: chatroomId,
         video_url: getCurrentVideoId(),
         video_time: getCurrentTime(),
+        metadata: {
+          scope: 'public' as MessageScope,
+          type: 'message' as MessageType
+        }
       };
 
       await send(messageObj)
