@@ -3,7 +3,7 @@ import { Input, Avatar, Typography, List, Button, Popover } from "antd";
 // import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
-import { Message, Room, SupabaseUser } from "@/types/datatypes";
+import { Message, MessageScope, Room, SupabaseUser } from "@/types/datatypes";
 import '@/app/antd.css';
 import { PROJECT_NAME, STORAGE_PATH } from "@/utils/utils";
 import globalStore from "@/store";
@@ -11,6 +11,7 @@ import path from "path";
 import { createFile, existsFile } from "@/utils/electronApi";
 import { parseJsonlToTypedObjects, replaceJsonlById } from "@/utils/json";
 import { useStompClient } from "@/hooks/useStompClient";
+import { getMessages } from "@/utils/messages";
 
 const { Text } = Typography;
 
@@ -46,7 +47,7 @@ export function ChatsPage() {
       console.log(targetRoomEntry)
       const alteredRoomEntry: Room = {
         ...targetRoomEntry,
-        unread: (targetRoomEntry.unread as number) + 1,
+        unread: Number(targetRoomEntry.unread) + 1, // BUG: unsure why but the unread is a number but behaves like a string, 3 + 1 = 31
         last_message: msg.chat_message,
         created_at: Date.now().toLocaleString()
       }
@@ -61,34 +62,91 @@ export function ChatsPage() {
     }
   })
 
+  const fetchGroups = async () => {
+    try {
+      // file path should be ./storage/{userId}/groups.jsonl
+      const filePath = path.join(STORAGE_PATH, user.id,  "groups.jsonl");
+      if (!(await existsFile(filePath))) {
+        await createFile(filePath)
+      }
+      const groups = await parseJsonlToTypedObjects<Room>(filePath)
+      // const groups = await getGroups(user.id);
+      return groups;
+    } catch (error) {
+      console.error("Failed to fetch groups:", error);
+      return []
+    }
+  };
+
+  // merge the local groups with those from redis
+  // TODO: currently the room creation logic is unhandled
+  const fetchFromRedis = async (localGroups: Room[]) => {
+    try {
+      const messages = await getMessages(user.id); // assumes user.id is present
+
+      console.log("redis data", messages)
+
+      // Group messages by room
+      const messagesByRoom: Record<string, Message[]> = {};
+
+      for (const msg of messages) {
+        const roomKey = msg.metadata?.scope === "private" as MessageScope ? "private" : msg.chat_room_id;
+        if (!messagesByRoom[roomKey]) {
+          messagesByRoom[roomKey] = [];
+        }
+        messagesByRoom[roomKey].push(msg);
+      }
+
+      console.log("data map", messagesByRoom)
+
+      const updatedRooms: Record<string, Room> = {};
+
+      for (const [roomKey, msgs] of Object.entries(messagesByRoom)) {
+        const localRoom = localGroups.find(g => g.id === roomKey);
+        if (!localRoom) continue;
+
+        // Find the latest message by timestamp
+        const latestMsg = msgs.reduce((latest, curr) =>
+          new Date(curr.created_at).getTime() > new Date(latest.created_at).getTime()
+            ? curr
+            : latest
+        );
+
+        updatedRooms[roomKey] = {
+          ...localRoom,
+          last_message: latestMsg.chat_message,
+          created_at: latestMsg.created_at,
+          unread: (localRoom.unread ?? 0) + msgs.length
+        };
+      }
+
+      // Merge updated groups with untouched local groups
+      const mergedGroups: Room[] = [
+        ...localGroups.filter(g => !updatedRooms[g.id]),
+        ...Object.values(updatedRooms)
+      ];
+
+      return mergedGroups;
+    } catch (err) {
+      console.error("❌ Failed to fetch groups from Redis:", err);
+      return localGroups;
+    }
+  };
+
+
+
   useEffect(() => {
     if (!isMounted || !user?.id) return;
-    
-    const fetchGroups = async () => {
+    const helper = async () => {
       setLoading(true);
-      try {
-        // TODO: add loading chatgroups from local files
-        // file path should be ./storage/{userId}/groups.jsonl
-        // use the json.ts helper functions
-        // the idea is: on groups creation, the creator inserts a message for every other member in redis
-        // with key member user id or a single fixed key group creation
-        // then on enter it should do the same as message queue 
-        // (if an entry for this user is found, then add to local file and delete the entry)
-        const filePath = path.join(STORAGE_PATH, user.id,  "groups.jsonl");
-        if (!(await existsFile(filePath))) {
-          await createFile(filePath)
-        }
-        const groups = await parseJsonlToTypedObjects<Room>(filePath)
-        // const groups = await getGroups(user.id);
-        setGroupChats(groups);
-      } catch (error) {
-        console.error("Failed to fetch groups:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const localGroups: Room[] = await fetchGroups()
+      const g = await fetchFromRedis(localGroups)
+      console.log("merged groups", g)
+      setGroupChats(g)
+      setLoading(false);
+    }
 
-    fetchGroups();
+    helper();
   }, [user, isMounted]);
 
   const filteredChats = groupChats.filter((chat) =>

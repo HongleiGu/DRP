@@ -7,7 +7,7 @@ import EmojiGrid from "../EmojiGrids";
 import { Message, MessageScope, MessageType, PlayerData, SupabaseUser } from "@/types/datatypes";
 import { updateChannel } from "@/utils/api";
 import { getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
-import { sendMessage, deleteMessage, getMessages } from "@/utils/messages";
+import { sendMessage, deleteMessage, getMessage } from "@/utils/messages";
 // import { getMessagesFromQueue, sendMessageToQueue } from "@/lib/messages"; // Adjusted to interact with Redis
 import VideoDetails from "../VideoDetails";
 import { PROJECT_NAME, STORAGE_PATH } from "@/utils/utils";
@@ -58,7 +58,7 @@ export default function ChatPanel({
   const memoizedMessages = useMemo(() => messages, [messages]);
 
   const loadMessages = useCallback(async () => {
-    const messages = await getMessages(chatroomId)
+    const messages = await getMessage(userId, chatroomId)
     // const messages = messageData.map((msg) => JSON.parse(msg));
     // setMessages(messages);
     setMessages((prev) => [...prev, ...messages]);

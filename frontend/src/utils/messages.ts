@@ -27,16 +27,37 @@ export async function sendMessage(message: Message, userId: string): Promise<Res
 }
 
 /**
- * GET /api/message/getMessage?chatRoomId={chatRoomId}
+ * GET /api/message/getMessage?userId={userId}&roomId={chatRoomId}
  * 
  * this only loads from the redis server
  */
-export async function getMessages(chatRoomId: string): Promise<Message[]> {
+export async function getMessage(userId: string, chatRoomId: string): Promise<Message[]> {
   if (!chatRoomId) {
     throw new Error('Invalid chat room ID');
   }
 
-  const res = await fetch(`${BASE_URL}/getMessage?chatRoomId=${chatRoomId}`);
+  const res = await fetch(`${BASE_URL}/getMessage?userId=${userId}&roomId=${chatRoomId}`);
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to get messages: ${errorText}`);
+  }
+
+  const response: Message[] = await res.json();
+  return response;
+}
+
+/**
+ * GET /api/message/getMessages?userId={userId}
+ * 
+ * this only loads from the redis server, regardless of the room
+ */
+export async function getMessages(userId: string): Promise<Message[]> {
+  if (!userId) {
+    throw new Error('Invalid user ID');
+  }
+
+  const res = await fetch(`${BASE_URL}/getMessages?userId=${userId}`);
 
   if (!res.ok) {
     const errorText = await res.text();
