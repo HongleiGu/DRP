@@ -1,7 +1,7 @@
 "use client" 
 // supabase is safe to run on the client side, plus electron does not support server components
 
-import { CalendarEntry, Direction, Message, PlayerData, Room, RoomEntry, SupabaseUser, TVState } from '@/types/datatypes';
+import { CalendarEntry, Direction, Message, PlayerData, RoomEntry, SupabaseUser, TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
 import { VideoElement } from '@/components/PlayList';
 import { v4 as uuidv4 } from 'uuid';
@@ -369,22 +369,4 @@ export const getContacts = async (user_id: string): Promise<SupabaseUser[]> => {
   if (usersError) throw usersError;
 
   return users.map(it => it as SupabaseUser);
-}
-
-export const getGroups = async (userId: string) => {
-  const {data: groups, error } = await supabase
-    .from("rooms")
-    .select("*")
-    .eq("member_id", userId)
-  if (error) {
-    throw new Error (`Error fetching groups ${error.message}`)
-  }
-  
-  return groups.map(it => it as RoomEntry).map(it => ({
-    id: it.room_id,
-    name: it.name,
-    last_message: "testing last message",
-    unread: 1,
-    created_at: it.created_at
-  } as Room))
 }

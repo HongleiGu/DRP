@@ -16,6 +16,20 @@ export async function appendJsonl(filePath: string, data: object): Promise<Elect
 }
 
 /**
+ * Append multiple objects as new lines (JSONL format) to the specified file.
+ */
+export async function appendJsonls(filePath: string, data: object[]): Promise<ElectronResponse> {
+  try {
+    const originalContent = await readFile(filePath).catch(() => '');
+    const newContent = originalContent + (data.map(it => JSON.stringify(it)).join("\n")) + '\n';
+    await writeFile(filePath, newContent);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
  * Delete the first JSONL line with a matching `id` field.
  */
 export async function deleteJsonlById(filePath: string, id: string): Promise<ElectronResponse> {

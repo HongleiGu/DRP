@@ -1,7 +1,4 @@
-import { Message, Room } from '@/types/datatypes';
-import path from 'path'
-import { STORAGE_PATH } from './utils';
-import { appendJsonl, deleteJsonlById } from './json';
+import { Message } from '@/types/datatypes';
 
 const BASE_URL = process.env.SPRINGBOOT_URL || 'http://localhost:8080/api/message';
 
@@ -69,14 +66,14 @@ export async function getMessages(userId: string): Promise<Message[]> {
 }
 
 /**
- * DELETE /api/message/deleteMessage?chatRoomId={chatRoomId}&messageId={messageId}
+ * DELETE /api/message/deleteMessage?userId={userId}&roomId={chatRoomId}
  */
-export async function deleteMessage(chatRoomId: string, messageId: string): Promise<string> {
-  if (!chatRoomId || !messageId) {
-    throw new Error('Missing chat room or message ID');
+export async function deleteMessage(userId: string, chatRoomId: string): Promise<string> {
+  if (!chatRoomId || !userId) {
+    throw new Error('Missing chat room or user ID');
   }
 
-  const res = await fetch(`${BASE_URL}/deleteMessage?chatRoomId=${chatRoomId}&messageId=${messageId}`, {
+  const res = await fetch(`${BASE_URL}/deleteMessage?userId=${userId}&roomId=${chatRoomId}`, {
     method: 'DELETE',
   });
 
@@ -89,17 +86,24 @@ export async function deleteMessage(chatRoomId: string, messageId: string): Prom
   return message;
 }
 
-export async function updateGroupDetails(room: Room, userId: string) {
-  const filePath = path.join(STORAGE_PATH, userId,"groups.jsonl");
 
-  // try catch to ensure ACID
-  try {
-    // delete the entry first
-    await deleteJsonlById(filePath, room.id)
-
-    // add back the updated entry
-    await appendJsonl(filePath, room)
-  } catch (err) {
-    console.error(err)
+/**
+ * DELETE /api/message/deleteMessage?userId={userId}
+ */
+export async function deleteMessages(userId: string): Promise<string> {
+  if (!userId) {
+    throw new Error('Missing user ID');
   }
+
+  const res = await fetch(`${BASE_URL}/deleteMessage?userId=${userId}`, {
+    method: 'DELETE',
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to delete message: ${errorText}`);
+  }
+
+  const message = await res.text(); // Assumes backend returns plain string in body
+  return message;
 }

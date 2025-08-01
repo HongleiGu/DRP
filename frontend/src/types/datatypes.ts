@@ -133,7 +133,7 @@ export interface RoomEntry {
 export interface Room {
   id: string;
   name: string;
-  last_message: string;
+  last_message: Message | null;
   unread: number;
   created_at: string;
   creator_id: string

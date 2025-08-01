@@ -3,15 +3,15 @@ import { Input, Avatar, Typography, List, Button, Popover } from "antd";
 // import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
-import { Message, MessageScope, Room, SupabaseUser } from "@/types/datatypes";
+import { Message, Room, SupabaseUser } from "@/types/datatypes";
 import '@/app/antd.css';
-import { PROJECT_NAME, STORAGE_PATH } from "@/utils/utils";
+import { PROJECT_NAME, STORAGE_PATH, veryOldDate } from "@/utils/utils";
 import globalStore from "@/store";
 import path from "path";
-import { createFile, existsFile } from "@/utils/electronApi";
-import { parseJsonlToTypedObjects, replaceJsonlById } from "@/utils/json";
+import { createFile, existsFile, writeFile } from "@/utils/electronApi";
+import { appendJsonl, appendJsonls, parseJsonlToTypedObjects, replaceJsonlById } from "@/utils/json";
 import { useStompClient } from "@/hooks/useStompClient";
-import { getMessages } from "@/utils/messages";
+import { deleteMessage, getMessages } from "@/utils/messages";
 
 const { Text } = Typography;
 
@@ -38,6 +38,7 @@ export function ChatsPage() {
     helper()
   }, [isMounted])
 
+  // here, if the message comes from a new room, we add it the the local storage
   useStompClient({
     userId: user ? user.id : null,
     onMessage: async (msg: Message) => {
@@ -48,8 +49,7 @@ export function ChatsPage() {
       const alteredRoomEntry: Room = {
         ...targetRoomEntry,
         unread: Number(targetRoomEntry.unread) + 1, // BUG: unsure why but the unread is a number but behaves like a string, 3 + 1 = 31
-        last_message: msg.chat_message,
-        created_at: Date.now().toLocaleString()
+        last_message: msg
       }
       const filePath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
       setGroupChats(
@@ -79,57 +79,74 @@ export function ChatsPage() {
   };
 
   // merge the local groups with those from redis
+  // we can reasonably assume the messages in redis is sorted by time
   // TODO: currently the room creation logic is unhandled
-  const fetchFromRedis = async (localGroups: Room[]) => {
+  const fetchFromRedis = async (): Promise<Room[]> => {
     try {
-      const messages = await getMessages(user.id); // assumes user.id is present
-
-      console.log("redis data", messages)
+      const returnGroupsChats = groupChats;
+      const messages: Message[] = await getMessages(user.id); // assumes user.id is present
+      console.log("redis data:", messages);
+      const allMessages: Record<string, Message[]> = {};
 
       // Group messages by room
-      const messagesByRoom: Record<string, Message[]> = {};
-
       for (const msg of messages) {
-        const roomKey = msg.metadata?.scope === "private" as MessageScope ? "private" : msg.chat_room_id;
-        if (!messagesByRoom[roomKey]) {
-          messagesByRoom[roomKey] = [];
+        const roomId = msg.metadata && msg.metadata.scope === "public" ? msg.chat_room_id : msg.speaker; // fallback for personal
+        if (!allMessages[roomId]) {
+          allMessages[roomId] = [];
         }
-        messagesByRoom[roomKey].push(msg);
+        allMessages[roomId].push(msg);
       }
 
-      console.log("data map", messagesByRoom)
+      // Process each room
+      for (const roomId of Object.keys(allMessages)) {
+        const roomMessages = allMessages[roomId];
+        const filePath = path.join(STORAGE_PATH, user.id, roomId + `.jsonl`);
 
-      const updatedRooms: Record<string, Room> = {};
+        // Append all messages to chat history file
+        await appendJsonls(filePath, roomMessages);
+        const groupPath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
 
-      for (const [roomKey, msgs] of Object.entries(messagesByRoom)) {
-        const localRoom = localGroups.find(g => g.id === roomKey);
-        if (!localRoom) continue;
 
-        // Find the latest message by timestamp
-        const latestMsg = msgs.reduce((latest, curr) =>
-          new Date(curr.created_at).getTime() > new Date(latest.created_at).getTime()
-            ? curr
-            : latest
+        // Get current group entry
+        const localRoom = groupChats.find((room) => room.id === roomId);
+        if (!localRoom) {
+          const tempRoom = {
+            id: roomId,
+            name: roomId,
+            last_message: null,
+            unread: 0,
+            created_at: Date.now().toLocaleString(),
+            creator_id: roomId,
+          } as Room
+          // I think no need to append as a final write
+          returnGroupsChats.push(tempRoom);
+          await appendJsonl(groupPath, tempRoom);
+          await deleteMessage(user.id, roomId)
+          continue
+        }; // TODO: handle room creation logic
+
+        // Sort messages by creation time
+        const sorted = roomMessages.sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
+        const latest = sorted[sorted.length - 1];
 
-        updatedRooms[roomKey] = {
+        // Update local group entry
+        const updatedRoom: Room = {
           ...localRoom,
-          last_message: latestMsg.chat_message,
-          created_at: latestMsg.created_at,
-          unread: (localRoom.unread ?? 0) + msgs.length
+          last_message: latest,
+          unread: localRoom.unread + sorted.length,
+          created_at: latest.created_at,
         };
+
+        await replaceJsonlById(groupPath, { ...updatedRoom, id: roomId });
+        await deleteMessage(user.id, roomId)
       }
 
-      // Merge updated groups with untouched local groups
-      const mergedGroups: Room[] = [
-        ...localGroups.filter(g => !updatedRooms[g.id]),
-        ...Object.values(updatedRooms)
-      ];
-
-      return mergedGroups;
+      return returnGroupsChats;
     } catch (err) {
       console.error("❌ Failed to fetch groups from Redis:", err);
-      return localGroups;
+      return groupChats;
     }
   };
 
@@ -137,17 +154,51 @@ export function ChatsPage() {
 
   useEffect(() => {
     if (!isMounted || !user?.id) return;
+
     const helper = async () => {
       setLoading(true);
-      const localGroups: Room[] = await fetchGroups()
-      const g = await fetchFromRedis(localGroups)
-      console.log("merged groups", g)
-      setGroupChats(g)
+
+      const localGroups: Room[] = await fetchGroups();
+      const redisGroups: Room[] = await fetchFromRedis(); // returns updated Rooms from Redis
+      console.log("groups", localGroups, redisGroups)
+
+      // Build map from localGroups
+      const roomMap: Record<string, Room> = {};
+      for (const room of localGroups) {
+        roomMap[room.id] = room;
+      }
+
+      for (const redisRoom of redisGroups) {
+        const existing = roomMap[redisRoom.id];
+
+        if (!existing) {
+          // Not in local, just add
+          roomMap[redisRoom.id] = redisRoom;
+        } else {
+          // Exists — merge by latest message
+          const isRedisNewer =
+            new Date(redisRoom.last_message ? redisRoom.last_message.created_at : veryOldDate).getTime() >
+            new Date(existing.last_message ? existing.last_message.created_at : veryOldDate).getTime();
+
+          roomMap[redisRoom.id] = {
+            ...existing,
+            ...redisRoom,
+            last_message: isRedisNewer ? redisRoom.last_message : existing.last_message,
+            unread: existing.unread + redisRoom.unread,
+          };
+        }
+      }
+
+      const mergedGroups = Object.values(roomMap);
+      setGroupChats(mergedGroups);
+      const groupPath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
+      await writeFile(groupPath, mergedGroups.map(it => JSON.stringify(it)).join("\n") + "\n")
       setLoading(false);
-    }
+    };
 
     helper();
   }, [user, isMounted]);
+
 
   const filteredChats = groupChats.filter((chat) =>
     chat.name.toLowerCase().includes(searchText.toLowerCase())
@@ -235,7 +286,7 @@ export function ChatsPage() {
               description={
                 <div className="flex justify-between">
                   <Text ellipsis className="max-w-[80%] text-gray-600">
-                    {chat.last_message}
+                    {chat.last_message ? chat.last_message.chat_message : ""}
                   </Text>
                   {chat.unread > 0 && (
                     <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">

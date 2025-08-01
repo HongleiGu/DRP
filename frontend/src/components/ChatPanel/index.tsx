@@ -64,11 +64,12 @@ export default function ChatPanel({
     setMessages((prev) => [...prev, ...messages]);
 
 
-    // Delete the messages after they are loaded
-    for (const msg of messages) {
-      if (msg.id) await deleteMessage(chatroomId, msg.id)
-      // await redis.lRem(chatroomId, 0, JSON.stringify(msg));
-    }
+    // // Delete the messages after they are loaded
+    // for (const msg of messages) {
+    //   if (msg.id) await deleteMessage(chatroomId, msg.id)
+    //   // await redis.lRem(chatroomId, 0, JSON.stringify(msg));
+    // }
+    await deleteMessage(userId, chatroomId)
   }, [chatroomId, userId]);
 
   const loadLocalMessages = useCallback(async () => {
