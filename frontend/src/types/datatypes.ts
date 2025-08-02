@@ -1,7 +1,7 @@
 "use client"
 
 export type MessageScope = "public" | "personal";
-export type MessageType = "message" | "invite";
+export type MessageType = "message" | "invite" | "greeting";
 
 export interface Message {
   id?: string;  // UUID for unique message ID
@@ -14,7 +14,8 @@ export interface Message {
   video_time?: number;  // Timestamp of video time (if any)
   metadata: {
     scope: MessageScope,
-    type: MessageType
+    type: MessageType,
+    data: unknown // not any as eslint unhappy, this should be any data, if taking all possible and future circumstances
   }
 }
 

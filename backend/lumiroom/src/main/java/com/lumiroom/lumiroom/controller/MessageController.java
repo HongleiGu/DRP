@@ -3,14 +3,19 @@ package com.lumiroom.lumiroom.controller;
 
 import com.lumiroom.lumiroom.model.Message;
 import com.lumiroom.lumiroom.model.RoomMember;
+import com.lumiroom.lumiroom.service.RedisService;
 import com.lumiroom.lumiroom.service.RoomService;
 import com.lumiroom.lumiroom.service.sender.Sender;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 /**
  * Provides REST APIs for sending messages to users or rooms.
@@ -23,6 +28,9 @@ public class MessageController {
     
     private final Sender sender;
     private final RoomService roomService;
+
+    @Autowired
+    private RedisService redisService;
 
     public MessageController(Sender sender, RoomService roomService) {
       this.sender = sender;
@@ -73,5 +81,35 @@ public class MessageController {
         }
 
         return ResponseEntity.ok("Message sent to room " + roomId);
+    }
+
+    @GetMapping("/getMessages")
+    public ResponseEntity<List<Message>> getMessages(@RequestParam String userId) {
+        return ResponseEntity.ok(redisService.getMessages(userId));
+    }
+
+    @GetMapping("/getMessage")
+    public ResponseEntity<List<Message>> getMessage(@RequestParam String userId, @RequestParam String roomId) {
+        return ResponseEntity.ok(redisService.getMessages(userId, roomId));
+    }
+    
+    @DeleteMapping("/deleteMessages")
+    public ResponseEntity<String> deleteMessages(@RequestParam String userId) {
+        try {
+            redisService.deleteMessages(userId);
+            return ResponseEntity.ok("Deleted");
+        } catch (Error e) {
+            return ResponseEntity.status(500).body("Failed");
+        }
+    }
+
+    @DeleteMapping("/deleteMessage")
+    public ResponseEntity<String> deleteMessage(@RequestParam String userId, @RequestParam String roomId) {
+        try {
+            redisService.deleteMessages(userId, roomId);
+            return ResponseEntity.ok("Deleted");
+        } catch (Error e) {
+            return ResponseEntity.status(500).body("Failed");
+        }
     }
 }

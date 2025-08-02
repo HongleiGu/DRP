@@ -1,12 +1,13 @@
 package com.lumiroom.lumiroom.service.receiver;
 
-import com.alibaba.fastjson2.JSON;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lumiroom.lumiroom.model.Message;
 import com.lumiroom.lumiroom.ws.WebSocketAckTracker;
 import com.lumiroom.lumiroom.ws.WebSocketDispatcher;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,9 @@ import java.util.concurrent.CompletableFuture;
 @Component
 @Profile("receiver")
 public class Receiver {
+
+    @Autowired
+    ObjectMapper mapper;
 
     private static final Duration ACK_TIMEOUT = Duration.ofSeconds(5);
 
@@ -36,7 +40,7 @@ public class Receiver {
         Channel channel
     ) {
         try {
-            Message message = JSON.parseObject(msg, Message.class);
+            Message message = mapper.readValue(msg, Message.class);
             String[] parts = routingKey.split("\\.");
             if (parts.length < 2) throw new IllegalArgumentException("Invalid routing key: " + routingKey);
 

@@ -1,133 +1,257 @@
 "use client";
 
+import { useStompClient } from "@/hooks/useStompClient";
 import globalStore from "@/store";
-// import { useGlobalStore } from "@/store";
-import { SupabaseUser } from "@/types/datatypes";
-// import { getContacts } from "@/utils/api";
+import { Message, Room, SupabaseUser } from "@/types/datatypes";
 import { createFile, existsFile } from "@/utils/electronApi";
-import { parseJsonlToTypedObjects } from "@/utils/json";
-import { STORAGE_PATH } from "@/utils/utils";
-import { Avatar, Card, Empty, List, Spin, Typography } from "antd";
+import {
+  appendJsonl,
+  deleteJsonlById,
+  parseJsonlToTypedObjects,
+} from "@/utils/json";
+import { formatDate, STORAGE_PATH } from "@/utils/utils";
+import { Avatar, Button, Card, Empty, List, Spin, Typography } from "antd";
 import path from "path";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 const { Title, Text } = Typography;
+const PENDING_KEY = "__pending__";
 
 export function ContactsPage() {
-  // const { user } = useGlobalStore.getState();
-  const [user, setUser] = useState<SupabaseUser>(null!)
+  const [user, setUser] = useState<SupabaseUser>(null!);
   const [contactsList, setContactList] = useState<SupabaseUser[]>([]);
+  const [pendingList, setPendingList] = useState<
+    { user: SupabaseUser; last_msg: Message | null }[]
+  >([]);
   const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
-    const helper = async () => {
-      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
-      setUser(u)
-    }
-    helper()
-  }, [])
+    const fetchUser = async () => {
+      const u = JSON.parse(
+        (await globalStore.getItem("lumiroom-user")) ?? "{}"
+      ) as SupabaseUser;
+      setUser(u);
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
-
     const fetchContacts = async () => {
       if (!user?.id) return;
-      const filePath = path.join(STORAGE_PATH, user.id,  "contacts.jsonl");
-      if (!(await existsFile(filePath))) {
-        await createFile(filePath)
-      }
-      const c = await parseJsonlToTypedObjects<SupabaseUser>(filePath)
-      console.log(c)
-      setContactList(c);
+
+      const filePath = path.join(STORAGE_PATH, user.id, "contacts.jsonl");
+      const pendingFilePath = path.join(STORAGE_PATH, user.id, "pending.jsonl");
+
+      if (!(await existsFile(filePath))) await createFile(filePath);
+      if (!(await existsFile(pendingFilePath))) await createFile(pendingFilePath);
+
+      const all = await parseJsonlToTypedObjects<SupabaseUser>(filePath);
+      const pending = await parseJsonlToTypedObjects<{user: SupabaseUser, last_msg: Message}>(pendingFilePath);
+
+      setContactList(all);
+      setPendingList(pending);
       setLoading(false);
     };
+
     fetchContacts();
   }, [user]);
 
-  const renderedContacts = useMemo(() => {
-    if (loading) {
-      return (
-        <div className="flex justify-center items-center h-48">
-          <Spin size="large" />
-        </div>
-      );
-    }
+  useStompClient({
+    userId: user ? user.id : null,
+    onMessage: async (msg: Message) => {
+      console.log(msg);
+      if (msg.metadata.type === "greeting" && msg.metadata.scope === "personal") {
+        await addToPending(msg.metadata.data as SupabaseUser, msg);
+      } else {
+        // handle normal messages
+      }
+    },
+  });
 
-    if (contactsList.length === 0) {
-      return (
-        <Empty
-          description={
-            <Text type="secondary">
-              You haven’t added any contacts yet.
-            </Text>
-          }
-        />
-      );
+  const addToPending = async (u: SupabaseUser, msg: Message) => {
+    const filePath = path.join(STORAGE_PATH, user.id, `pending.jsonl`);
+    if (!pendingList.find(it => it.user.id === u.id)) {
+      setPendingList([...pendingList, { user: u, last_msg: msg }]);
     }
+    await appendJsonl(filePath, u);
+  };
+
+  const acceptGreeting = async (u: SupabaseUser, msg: Message | null) => {
+    const filePath = path.join(STORAGE_PATH, user.id, "contacts.jsonl");
+    const pendingFilePath = path.join(STORAGE_PATH, user.id, "pending.jsonl");
+
+    setPendingList(pendingList.filter(it => it.user.id !== u.id));
+    await deleteJsonlById(pendingFilePath, u.id);
+    await appendJsonl(filePath, u);
+
+    const group: Room = {
+      id: u.id,
+      name: u.username,
+      last_message: msg,
+      unread: 0,
+      created_at: formatDate(),
+      creator_id: user.id,
+    };
+    await appendJsonl(
+      path.join(STORAGE_PATH, user.id, "rooms.jsonl"),
+      group
+    );
+  };
+
+  const renderContactList = () => {
+    const items = [
+      ...contactsList.map(c => ({ key: c.id, user: c, label: c.username })),
+      { key: PENDING_KEY, label: "Pending Requests" },
+    ];
 
     return (
       <List
+        dataSource={items}
         itemLayout="horizontal"
-        dataSource={contactsList}
-        style={{
-          maxHeight: 400,
-          overflow: "auto",
-          borderRadius: 12,
-        }}
-        renderItem={(contact) => (
-          <List.Item
-            key={contact.id}
-            style={{
-              borderBottom: "1px solid #f0f0f0",
-              cursor: "pointer",
-              transition: "background 0.2s",
-            }}
-            className="hover:bg-gray-100 rounded-lg"
-          >
-            <List.Item.Meta
-              avatar={
-                <Avatar
-                  size="large"
-                  src={
-                    contact.avatar_id
-                      ? `/sprites/avatar-${contact.avatar_id}.png`
-                      : undefined
+        renderItem={(item: {
+          key: string;
+          user?: SupabaseUser;
+          label: string;
+        }) => {
+          if (item.key === PENDING_KEY) {
+            return (
+              <List.Item
+                key={PENDING_KEY}
+                className="hover:bg-gray-100 rounded-md cursor-pointer px-2"
+                onClick={() => setSelectedId(PENDING_KEY)}
+              >
+                <List.Item.Meta
+                  avatar={<Avatar style={{ backgroundColor: "#fadb14" }}>🕓</Avatar>}
+                  title={<Text strong>Pending Requests</Text>}
+                  description={`${pendingList.length} request(s)`}
+                />
+              </List.Item>
+            );
+          }
+
+          return (
+            <List.Item
+              key={item.key}
+              className="hover:bg-gray-100 rounded-md cursor-pointer px-2"
+              onClick={() => setSelectedId(item.key)}
+            >
+              {item.user && (
+                <List.Item.Meta
+                  avatar={
+                    <Avatar
+                      src={
+                        item.user.avatar_id
+                          ? `/sprites/avatar-${item.user.avatar_id}.png`
+                          : undefined
+                      }
+                    >
+                      {item.user.username?.charAt(0)?.toUpperCase() ?? "?"}
+                    </Avatar>
                   }
-                  style={{
-                    backgroundColor: "#1677ff",
-                  }}
-                >
-                  {contact.username?.charAt(0)?.toUpperCase() ?? "?"}
-                </Avatar>
-              }
-              title={
-                <Text strong style={{ fontSize: 16 }}>
-                  {contact.username}
-                </Text>
-              }
-            />
-          </List.Item>
-        )}
+                  title={<Text>{item.user.username}</Text>}
+                />
+              )}
+            </List.Item>
+          );
+        }}
       />
     );
-  }, [loading, contactsList]);
+  };
+
+  const renderPendingPanel = () => {
+    if (!pendingList || pendingList.length === 0) {
+      return <Empty description="No pending requests" />;
+    }
+
+    return (
+      <Card title="Pending Requests" className="w-full h-full" bodyStyle={{ padding: 24 }}>
+        <List
+          dataSource={pendingList}
+          itemLayout="horizontal"
+          renderItem={({ user, last_msg }) => (
+            <List.Item
+              key={user.id}
+              actions={[
+                <Button key="accept" type="primary" onClick={() => acceptGreeting(user, last_msg)}>
+                  Accept
+                </Button>,
+              ]}
+            >
+              <List.Item.Meta
+                avatar={
+                  <Avatar
+                    src={
+                      user.avatar_id
+                        ? `/sprites/avatar-${user.avatar_id}.png`
+                        : undefined
+                    }
+                  >
+                    {user.username?.charAt(0)?.toUpperCase() ?? "?"}
+                  </Avatar>
+                }
+                title={user.username}
+                description={last_msg?.chat_message}
+              />
+            </List.Item>
+          )}
+        />
+      </Card>
+    );
+  };
+
+  const renderContactDetail = () => {
+    const contactEntry = contactsList.find(c => c.id === selectedId);
+    const contact = contactEntry;
+    if (!contact) {
+      return <Empty description="Select a contact to view details" />;
+    }
+
+    return (
+      <Card title={contact.username} className="w-full h-full" bodyStyle={{ padding: 24 }}>
+        <div className="flex flex-col items-center gap-4">
+          <Avatar
+            size={96}
+            src={
+              contact.avatar_id
+                ? `/sprites/avatar-${contact.avatar_id}.png`
+                : undefined
+            }
+            style={{ backgroundColor: "#1677ff" }}
+          >
+            {contact.username?.charAt(0)?.toUpperCase() ?? "?"}
+          </Avatar>
+          <Text>Email: {contact.email || "N/A"}</Text>
+          <Text>ID: {contact.id}</Text>
+        </div>
+      </Card>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col items-center p-6 min-h-screen bg-gray-50">
+    <div className="flex h-screen p-4 bg-gray-100 gap-4">
+      {/* Left Panel */}
       <Card
-        style={{
-          width: "100%",
-          maxWidth: 400,
-          borderRadius: 16,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
-        }}
-        styles={{body: { padding: 24 }}}
+        className="w-1/3 max-w-xs flex flex-col gap-4 overflow-auto"
+        style={{ borderRadius: 16 }}
+        bodyStyle={{ padding: 16 }}
       >
-        <Title level={3} style={{ textAlign: "center", marginBottom: 24 }}>
-          Your Contacts
-        </Title>
-
-        {renderedContacts}
+        <Title level={4}>Contacts</Title>
+        {renderContactList()}
       </Card>
+
+      {/* Right Panel */}
+      <div className="flex-1">
+        {selectedId === PENDING_KEY ? renderPendingPanel() : renderContactDetail()}
+      </div>
     </div>
   );
 }

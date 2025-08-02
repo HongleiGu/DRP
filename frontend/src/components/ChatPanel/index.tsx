@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-// import { useRouter, usePathname } from "next/navigation";
 import { Badge, Button, Input, List, Popover, Modal, Space, Typography, message, Divider, Card } from "antd";
 import { BookOutlined } from "@ant-design/icons";
 import EmojiGrid from "../EmojiGrids";
@@ -8,13 +7,9 @@ import { Message, MessageScope, MessageType, PlayerData, SupabaseUser } from "@/
 import { updateChannel } from "@/utils/api";
 import { getCurrentTime, getCurrentVideoId, getYtPlayer } from "@/utils/ytPlayerManager";
 import { sendMessage, deleteMessage, getMessage } from "@/utils/messages";
-// import { getMessagesFromQueue, sendMessageToQueue } from "@/lib/messages"; // Adjusted to interact with Redis
 import VideoDetails from "../VideoDetails";
 import { PROJECT_NAME, STORAGE_PATH } from "@/utils/utils";
-// import { redis } from '@/lib/redis';
 import InfiniteScroll from "react-infinite-scroll-component";
-// import { supabase } from "@/lib/supabase";
-// import { RealtimeChannel } from "@supabase/supabase-js";
 import { v4 as uuidv4 } from 'uuid';
 import { LumiAvatar } from "../LumiAvatar";
 import { createFile, existsFile } from "@/utils/electronApi";
@@ -143,46 +138,6 @@ export default function ChatPanel({
     helper()
   }, [chatroomId, loadMessages, loadLocalMessages, user]);
 
-  // // Subscribe to the Supabase real-time channel for messages
-  // useEffect(() => {
-  //   const subscribeToMessages = async () => {
-  //     const channel = supabase.channel(`messages:${chatroomId}`);
-  //     setMsgChannel(channel);
-
-  //     // Subscribe to the 'new-message' event
-  //     channel.on('broadcast', { event: 'new-message' }, (payload) => {
-  //       console.log(payload.payload.message, userId)
-  //       if (((payload.payload.message) as Message).speaker !== userId) {
-  //         console.log("Received broadcast message:", payload.message);
-  //         loadMessages();
-  //       }
-  //     });
-
-  //     // Subscribe to the channel
-  //     channel.subscribe();
-
-  //     // Cleanup on unmount
-  //     return () => {
-  //       channel.unsubscribe();
-  //     };
-  //   };
-
-  //   subscribeToMessages();
-  // }, [chatroomId, loadMessages, userId]);
-
-
-  // const broadcastMessage = async (chatroomId: string, message: Message) => {
-  //   console.log("Broadcasting message", message);
-  //   if (msgChannel) {
-  //     await msgChannel.send({
-  //       type: 'broadcast',
-  //       event: 'new-message',
-  //       payload: { message: message },  // Ensure payload is being sent with the message
-  //     });
-  //   }
-  // };
-
-
   const send = useCallback(
     async (theMessage: Message) => {
       if (!message || isSending || !userId || !username) return;
@@ -226,7 +181,8 @@ export default function ChatPanel({
         chat_room_id: chatroomId,
         metadata: {
           scope: "public" as MessageScope,
-          type: "message" as MessageType
+          type: "message" as MessageType,
+          data: null
         }
       };
       
@@ -251,7 +207,8 @@ export default function ChatPanel({
         video_time: getCurrentTime(),
         metadata: {
           scope: 'public' as MessageScope,
-          type: 'message' as MessageType
+          type: 'message' as MessageType,
+          data: null
         }
       };
 

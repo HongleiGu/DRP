@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from "react";
 import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
 import { Message, Room, SupabaseUser } from "@/types/datatypes";
 import '@/app/antd.css';
-import { PROJECT_NAME, STORAGE_PATH, veryOldDate } from "@/utils/utils";
+import { formatDate, PROJECT_NAME, STORAGE_PATH, veryOldDate } from "@/utils/utils";
 import globalStore from "@/store";
 import path from "path";
 import { createFile, existsFile, writeFile } from "@/utils/electronApi";
@@ -43,22 +43,40 @@ export function ChatsPage() {
     userId: user ? user.id : null,
     onMessage: async (msg: Message) => {
       console.log("📬 Got message in component:", msg);
-      const receivedRoomId: string = msg.chat_room_id
-      const targetRoomEntry: Room = groupChats.filter((it: Room) => it.id === receivedRoomId)[0]
-      console.log(targetRoomEntry)
-      const alteredRoomEntry: Room = {
-        ...targetRoomEntry,
-        unread: Number(targetRoomEntry.unread) + 1, // BUG: unsure why but the unread is a number but behaves like a string, 3 + 1 = 31
-        last_message: msg
-      }
       const filePath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
-      setGroupChats(
-        groupChats.map(it => 
-          it.id === alteredRoomEntry.id ? alteredRoomEntry : it
+      // we assume the room is created
+      // TODO: room creation, metadata type invite / create
+      if (msg.metadata && msg.metadata.scope != "public") {
+        const receivedRoomId: string = msg.speaker
+        const targetRoomEntry: Room = groupChats.filter((it: Room) => it.id === receivedRoomId)[0]
+        const alteredRoomEntry: Room = {
+          ...targetRoomEntry,
+          unread: Number(targetRoomEntry.unread) + 1, // BUG: unsure why but the unread is a number but behaves like a string, 3 + 1 = 31
+          last_message: msg
+        }
+        setGroupChats(
+          groupChats.map(it => 
+            it.id === alteredRoomEntry.id ? alteredRoomEntry : it
+          )
         )
-      )
-      
-      await replaceJsonlById(filePath, alteredRoomEntry)
+        
+        await replaceJsonlById(filePath, alteredRoomEntry)
+      } else {
+        const receivedRoomId: string = msg.chat_room_id
+        const targetRoomEntry: Room = groupChats.filter((it: Room) => it.id === receivedRoomId)[0]
+        const alteredRoomEntry: Room = {
+          ...targetRoomEntry,
+          unread: Number(targetRoomEntry.unread) + 1, // BUG: unsure why but the unread is a number but behaves like a string, 3 + 1 = 31
+          last_message: msg
+        }
+        setGroupChats(
+          groupChats.map(it => 
+            it.id === alteredRoomEntry.id ? alteredRoomEntry : it
+          )
+        )
+        
+        await replaceJsonlById(filePath, alteredRoomEntry)
+      }
     }
   })
 
@@ -90,7 +108,7 @@ export function ChatsPage() {
 
       // Group messages by room
       for (const msg of messages) {
-        const roomId = msg.metadata && msg.metadata.scope === "public" ? msg.chat_room_id : msg.speaker; // fallback for personal
+        const roomId = msg.metadata && msg.metadata.scope === "public" ? msg.chat_room_id : msg.speaker + "." + msg.speaker_name; // fallback for personal
         if (!allMessages[roomId]) {
           allMessages[roomId] = [];
         }
@@ -110,18 +128,22 @@ export function ChatsPage() {
         // Get current group entry
         const localRoom = groupChats.find((room) => room.id === roomId);
         if (!localRoom) {
+          // we now the speaker attr is a uuid, but the speaker_name may have dots, this is ugly, but maybe will just leave it there
+          const firstDotIndex = roomId.indexOf('.');
+          const speaker = roomId.substring(0, firstDotIndex);
+          const speaker_name = roomId.substring(firstDotIndex + 1);
           const tempRoom = {
-            id: roomId,
-            name: roomId,
+            id: speaker,
+            name: speaker_name,
             last_message: null,
             unread: 0,
-            created_at: Date.now().toLocaleString(),
-            creator_id: roomId,
+            created_at: formatDate(),
+            creator_id: speaker,
           } as Room
           // I think no need to append as a final write
           returnGroupsChats.push(tempRoom);
           await appendJsonl(groupPath, tempRoom);
-          await deleteMessage(user.id, roomId)
+          await deleteMessage(user.id, speaker)
           continue
         }; // TODO: handle room creation logic
 

@@ -21,3 +21,5 @@ spring:
     active:
     - sender
     - receiver
+  jackson:
+    property-naming-strategy: SNAKE_CASE

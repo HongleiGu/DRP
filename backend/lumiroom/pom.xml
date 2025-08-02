@@ -86,12 +86,12 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- fastJson -->
+		<!-- fastJson
 		<dependency> 
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-			<version>2.0.48</version> <!-- Use latest version -->
-		</dependency>
+			<version>2.0.48</version>
+		</dependency> -->
 
 		<!-- RabbitMQ support via Spring AMQP -->
 		<dependency>

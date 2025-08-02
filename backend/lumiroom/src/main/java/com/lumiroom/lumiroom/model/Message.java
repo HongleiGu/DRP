@@ -8,6 +8,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.lumiroom.lumiroom.model.enums.MessageScope;
+import com.lumiroom.lumiroom.model.enums.MessageType;
+
 @Getter
 @Builder
 @ToString
@@ -20,6 +23,7 @@ public class Message {
   private final String chatRoomId;   // Unique ID for the chatroom
   private final String videoUrl;     // Optional: URL of video
   private final Double videoTime;    // Optional: Timestamp of video time
+  private final MessageMetadata metadata;
 
   public static Message system(String chatMessage, String chatRoomId) {
     String randomId = UUID.randomUUID().toString();
@@ -31,6 +35,11 @@ public class Message {
       .createdAt(timeStr)
       .speaker("system")
       .speakerName("system")
+      .metadata(MessageMetadata.builder()
+        .scope(MessageScope.PUBLIC)
+        .type(MessageType.MESSAGE)
+        .build()
+      )
       .build();
   }
 }

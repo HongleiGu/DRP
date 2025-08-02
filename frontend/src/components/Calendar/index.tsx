@@ -277,7 +277,8 @@ export default function FestivalCalendar({
           chat_room_id: roomId,
           metadata: {
             scope: "public" as MessageScope,
-            type: "message" as MessageType
+            type: "message" as MessageType,
+            data: null
           }
         }
         await insertChatHistory(messageObj);
