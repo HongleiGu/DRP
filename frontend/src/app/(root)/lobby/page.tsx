@@ -13,7 +13,7 @@ const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 
 export default function CreateRoomPage() {
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<SupabaseUser[]>([]);
   const [groupName, setGroupName] = useState('');
   const [contactsList, setContactList] = useState<SupabaseUser[]>([]);
   const [contactsLoading, setContactsLoading] = useState<boolean>(true);
@@ -21,7 +21,7 @@ export default function CreateRoomPage() {
   // const router = useRouter();
   const [user, setUser] = useState<SupabaseUser>(null!);
 
-  const handleCheckboxChange = (userId: string, checked: boolean) => {
+  const handleCheckboxChange = (userId: SupabaseUser, checked: boolean) => {
     setSelectedUserIds((prev) =>
       checked ? [...prev, userId] : prev.filter((id) => id !== userId)
     );
@@ -54,7 +54,7 @@ export default function CreateRoomPage() {
   const handleCreateRoom = async () => {
     setCreatingLoading(true);
     try {
-      const roomId = await createRoom([user?.id ?? "", ...selectedUserIds], user?.id ?? "", groupName);
+      const roomId = await createRoom([user, ...selectedUserIds], user?.id ?? "", groupName);
       await globalStore.setItem('lumiroom-room', roomId)
       // router.push(`/togethere/${roomId}`);
       window.location.href = `/${PROJECT_NAME}`
@@ -154,8 +154,8 @@ export default function CreateRoomPage() {
                   renderItem={(contact) => (
                     <List.Item style={{ padding: '8px 12px' }}>
                       <Checkbox
-                        checked={selectedUserIds.includes(contact.id)}
-                        onChange={(e) => handleCheckboxChange(contact.id, e.target.checked)}
+                        checked={selectedUserIds.includes(contact)}
+                        onChange={(e) => handleCheckboxChange(contact, e.target.checked)}
                       >
                         {contact.username as string}
                       </Checkbox>

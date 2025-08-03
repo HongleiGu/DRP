@@ -7,6 +7,7 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
+
   rabbitmq:
     image: rabbitmq:4.0-management
     container_name: rabbitmq
@@ -16,6 +17,17 @@ services:
     volumes:
       - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
 
+  backend:
+    build:
+      context: ./backend/lumiroom           # ← inside the Docker context
+      dockerfile: Dockerfile
+    container_name: lumiroom-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+      - rabbitmq
+    restart: unless-stopped
 
 volumes:
   redis_data:

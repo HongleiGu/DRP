@@ -37,6 +37,11 @@ public class MessageController {
       this.roomService = roomService;
     }
 
+    @GetMapping("/ping")
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("springboot is running");
+    }
+
     /**
      * Sends a message to a specific user within a room.
      *

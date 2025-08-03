@@ -1,11 +1,14 @@
 "use client" 
 // supabase is safe to run on the client side, plus electron does not support server components
 
-import { CalendarEntry, Direction, Message, PlayerData, RoomEntry, SupabaseUser, TVState } from '@/types/datatypes';
+import { CalendarEntry, Direction, Group, Message, PlayerData, RoomEntry, SupabaseUser, TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
 import { VideoElement } from '@/components/PlayList';
 import { v4 as uuidv4 } from 'uuid';
 import globalStore from '@/store';
+import { formatDate, STORAGE_PATH } from './utils';
+import path from 'path';
+import { appendJsonl } from './json';
 // import { useGlobalStore } from '@/store';
 
 const DEFAULT_VIDEO = "loWA5o1RdTY"
@@ -30,22 +33,22 @@ export const getRoom = async (roomId: string): Promise<RoomEntry[]> => {
 };
 
 export async function createRoom(
-  users: string[],
+  users: SupabaseUser[],
   creator_id: string,
-  roomName: string = 'groupchat'
-): Promise<string> {
-  const roomId = await createChatRoom(users, creator_id, roomName)
-  await createTVRoom(roomId)
-  return roomId;
+  groupName: string = 'groupchat'
+): Promise<Group> {
+  const group = await createChatRoom(users, creator_id, groupName)
+  await createTVRoom(group.id)
+  return group;
 }
 
 // create a chat room with multiple users
 // we assume the user is already authenticated
 export const createChatRoom = async (
-  users: string[],
+  users: SupabaseUser[],
   creator_id: string,
   roomName: string = 'groupchat'
-): Promise<string> => {
+): Promise<Group> => {
   // const user = useGlobalStore.getState().user
   const user = await globalStore.getItem('lumiroom-user') as SupabaseUser
   if (!user) {
@@ -56,10 +59,10 @@ export const createChatRoom = async (
   const room_id = uuidv4();
 
   // Build rows for all members
-  const rows = users.map((memberId) => ({
+  const rows = users.map((member) => ({
     name: roomName,
     creator_id,
-    member_id: memberId,
+    member_id: member.id,
     last_read_at: new Date().toISOString(), // same timestamp for all rows
     room_id
   }));
@@ -75,11 +78,32 @@ export const createChatRoom = async (
       details: error.details,
     });
     throw error;
-  }
-
-  return room_id; // return the shared room id
+  }  
+// export interface Group {
+//   id: string;
+//   name: string;
+//   last_message: Message | null;
+//   unread: number;
+//   created_at: string;
+//   creator_id: string;
+//   members: SupabaseUser[];
+// }
+  const group = {
+    id: room_id,
+    name: roomName,
+    last_message: null,
+    unread: 0,
+    created_at: formatDate(),
+    creator_id,
+    members: users
+  } as Group
+  const groupPath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
+  await appendJsonl(groupPath, group)
+  
+  return group
 };
 
+// this does not need to store to local, actually considering removing TV
 export async function createTVRoom(roomId: string): Promise<void> {
   const { error } = await supabase
     .from('tv_channel')
