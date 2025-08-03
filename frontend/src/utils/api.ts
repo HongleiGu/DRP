@@ -47,7 +47,7 @@ export const createChatRoom = async (
   roomName: string = 'groupchat'
 ): Promise<string> => {
   // const user = useGlobalStore.getState().user
-  const user = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+  const user = await globalStore.getItem('lumiroom-user') as SupabaseUser
   if (!user) {
     throw new Error('You must be signed in to create a room');
   }

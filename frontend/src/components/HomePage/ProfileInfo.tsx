@@ -12,13 +12,15 @@ import { LoadingSpinner } from "../Lumiroom/LoadingSpinner"
 const { Title, Text } = Typography
 
 export default function ProfileInfo() {
-  // const { user } = useGlobalStore.getState();
-  // const user = JSON.parse(globalStore.getItem('lumiroom-user') ?? "") as SupabaseUser
   const [user, setUser] = useState<SupabaseUser>(null!)
 
   useEffect(() => {
     const helper = async() => {
-      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
+      if (!u || !u.id) {
+        window.location.href = "/auth"
+        return;
+      }
       setUser(u)
     }
     helper()

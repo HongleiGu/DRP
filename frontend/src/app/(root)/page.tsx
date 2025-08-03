@@ -39,13 +39,13 @@ export default function HomePage() {
 
   useEffect(() => {
     const helper = async () => {
-      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
-      setUser(u)
+      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
       if (isClient && !u) {
         window.location.href = "/auth"
         // router.push("/auth");
+        return
       }
-      console.log(window.electronApi)
+      if (u) setUser(u)
     }
     helper()
   }, [isClient]);

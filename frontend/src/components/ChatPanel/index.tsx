@@ -12,7 +12,7 @@ import { PROJECT_NAME, STORAGE_PATH } from "@/utils/utils";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { v4 as uuidv4 } from 'uuid';
 import { LumiAvatar } from "../LumiAvatar";
-import { createFile, existsFile } from "@/utils/electronApi";
+import fileService from "@/utils/fileService";
 import path from "path"
 import { appendJsonl, parseJsonlToTypedObjects } from "@/utils/json";
 import globalStore from "@/store";
@@ -103,9 +103,9 @@ export default function ChatPanel({
 
   useEffect(() => {
     const helper = async () => {
-      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
-  
-      if (!u?.id) {
+      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
+
+      if (!u || !u?.id) {
         message.error("User invalid");
         // router.push("/");
         window.location.href = "/"
@@ -149,8 +149,8 @@ export default function ChatPanel({
         // write to local files
         // If the storagePath/{roomId}.jsonl file does not exist, create it
         const filePath = path.join(STORAGE_PATH, userId, chatroomId + ".jsonl");
-        if (!(await existsFile(filePath))) {
-          await createFile(filePath)
+        if (!(await fileService.existsFile(filePath))) {
+          await fileService.createFile(filePath)
         }
         // Append the message to the file
         appendJsonl(filePath, theMessage)
@@ -348,7 +348,7 @@ export default function ChatPanel({
 
   return (
     <Card
-      title="Chat Room"
+      title="Chat Group"
       extra={
         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Badge status="success" />
@@ -443,7 +443,7 @@ export default function ChatPanel({
       {footer}
 
       <Modal
-        title="Room Invitation"
+        title="Group Invitation"
         open={isInviteModalVisible}
         onOk={handleAcceptInvite}
         onCancel={handleDeclineInvite}

@@ -1,7 +1,7 @@
 // store.ts
-export interface GlobalStore {
-  getItem(key: string): Promise<string | undefined>;
-  setItem(key: string, value: string): Promise<void>;
+export interface globalStore {
+  getItem<T>(key: string): Promise<T | undefined>;
+  setItem<T>(key: string, value: T): Promise<void>;
   removeItem(key: string): Promise<void>;
 }
 
@@ -11,7 +11,7 @@ const isElectron = () => {
          typeof window.electronApi.storeGet === 'function';
 };
 
-const electronStore: GlobalStore = {
+const electronStore: globalStore = {
   async getItem<T>(key: string): Promise<T | undefined> {
     return await window.electronApi.storeGet(key);
   },
@@ -25,7 +25,7 @@ const electronStore: GlobalStore = {
   },
 };
 
-const webStore: GlobalStore = {
+const webStore: globalStore = {
   async getItem<T>(key: string): Promise<T | undefined> {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : undefined;
@@ -40,6 +40,6 @@ const webStore: GlobalStore = {
   },
 };
 
-const globalStore: GlobalStore = isElectron() ? electronStore : webStore;
+const globalStore: globalStore = isElectron() ? electronStore : webStore;
 
 export default globalStore;

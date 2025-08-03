@@ -124,15 +124,14 @@ export default function Television({
   // Initialize YouTube Player
   useEffect(() => {
     const helper = async () => {
-      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
-      setUser(u)
-      if (!u?.id) {
+      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
+      if (!u || !u?.id) {
         message.error("User invalid");
         // router.push("/");
         window.location.href = "/"
         return;
       }
-
+      setUser(u)
       setUserId(u.id);
       setUsername(u.username);
       setSendEmojis((prev) => ({

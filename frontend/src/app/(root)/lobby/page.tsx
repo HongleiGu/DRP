@@ -29,7 +29,7 @@ export default function CreateRoomPage() {
 
   useEffect(() => {
     const fetchContacts = async () => {
-      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
       if (!u) {
         message.error('Please log in to create a room');
         window.location.href = "/"
@@ -187,7 +187,7 @@ export default function CreateRoomPage() {
               disabled={selectedUserIds.length === 0 || groupName.trim() === ''}
               onClick={handleCreateRoom}
             >
-              🚀 Create Room
+              🚀 Create Group
             </Button>
           </Space>
         </Card>

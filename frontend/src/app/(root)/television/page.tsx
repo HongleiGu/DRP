@@ -20,8 +20,8 @@ export default function RoomPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
-        const roomId = await globalStore.getItem('lumiroom-room')
+        const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
+        const roomId = await globalStore.getItem<string>('lumiroom-room')
         setIsLoading(true);
 
         if (!u || !u.id) {

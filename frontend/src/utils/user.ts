@@ -71,7 +71,7 @@ export async function verifyOtp(otp: string, user: SupabaseUser, password: strin
   }
 
 
-  globalStore.setItem('lumiroom-user', JSON.stringify(supabaseuser))
+  globalStore.setItem<SupabaseUser>('lumiroom-user', supabaseuser)
 
 
   return { data, error: null };
@@ -108,7 +108,7 @@ export async function signIn({
 
   if (error) throw error;
 
-  globalStore.setItem('lumiroom-user', JSON.stringify(userProfile))
+  globalStore.setItem<SupabaseUser>('lumiroom-user', userProfile)
 
   // useGlobalStore.setState({ user: userProfile });
 
@@ -184,11 +184,11 @@ export async function fetchUserByUsername(username: string): Promise<SupabaseUse
   return data as SupabaseUser;
 }
 
-export async function getCurrentUserProfile(): Promise<SupabaseUser> {
-  // should attempt to directly fetch the user profile from the store
-  return JSON.parse(await globalStore.getItem("lumiroom-user") ?? "")
-  // useGlobalStore.getState().user as SupabaseUser
-}
+// export async function getCurrentUserProfile(): Promise<SupabaseUser> {
+//   // should attempt to directly fetch the user profile from the store
+//   return await globalStore.getItem<SupabaseUser>("lumiroom-user")
+//   // useGlobalStore.getState().user as SupabaseUser
+// }
 
 export async function updateUserProfile(
   updates: Partial<SupabaseUser>

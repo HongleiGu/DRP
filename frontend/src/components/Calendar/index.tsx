@@ -86,7 +86,7 @@ export default function FestivalCalendar({
 
   useEffect(() => {
     const helper = async () => {
-      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
+      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
       if (!u) {
         messageApi.error("you have not logged in yet")
         window.location.href = "/"

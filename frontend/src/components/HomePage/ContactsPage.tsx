@@ -2,8 +2,8 @@
 
 import { useStompClient } from "@/hooks/useStompClient";
 import globalStore from "@/store";
-import { Message, Room, SupabaseUser } from "@/types/datatypes";
-import { createFile, existsFile } from "@/utils/electronApi";
+import { Message, Group, SupabaseUser } from "@/types/datatypes";
+import fileService from "@/utils/fileService";
 import {
   appendJsonl,
   deleteJsonlById,
@@ -28,9 +28,13 @@ export function ContactsPage() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const u = JSON.parse(
-        (await globalStore.getItem("lumiroom-user")) ?? "{}"
-      ) as SupabaseUser;
+      const u = await globalStore.getItem<SupabaseUser>("lumiroom-user");
+      if (!u || !u.id) {
+        if (!u || !u.id) {
+          window.location.href = "/auth"
+          return;
+        }
+      }
       setUser(u);
     };
     fetchUser();
@@ -43,8 +47,8 @@ export function ContactsPage() {
       const filePath = path.join(STORAGE_PATH, user.id, "contacts.jsonl");
       const pendingFilePath = path.join(STORAGE_PATH, user.id, "pending.jsonl");
 
-      if (!(await existsFile(filePath))) await createFile(filePath);
-      if (!(await existsFile(pendingFilePath))) await createFile(pendingFilePath);
+      if (!(await fileService.existsFile(filePath))) await fileService.createFile(filePath);
+      if (!(await fileService.existsFile(pendingFilePath))) await fileService.createFile(pendingFilePath);
 
       const all = await parseJsonlToTypedObjects<SupabaseUser>(filePath);
       const pending = await parseJsonlToTypedObjects<{user: SupabaseUser, last_msg: Message}>(pendingFilePath);
@@ -85,16 +89,17 @@ export function ContactsPage() {
     await deleteJsonlById(pendingFilePath, u.id);
     await appendJsonl(filePath, u);
 
-    const group: Room = {
+    const group: Group = {
       id: u.id,
       name: u.username,
       last_message: msg,
       unread: 0,
       created_at: formatDate(),
       creator_id: user.id,
+      members: [user, u]
     };
     await appendJsonl(
-      path.join(STORAGE_PATH, user.id, "rooms.jsonl"),
+      path.join(STORAGE_PATH, user.id, "groups.jsonl"),
       group
     );
   };

@@ -29,9 +29,6 @@ export default function Game({
   const [showButtonCalendar, setShowButtonCalendar] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
   const gameRef = useRef<Engine | null>(null);
-  // const params = useParams<{ id: string }>()
-  // const { user } = useGlobalStore.getState();
-  // const user = JSON.parse(globalStore.getItem('lumiroom-user') ?? "") as SupabaseUser
   const [user, setUser] = useState<SupabaseUser>(null!)
   const isInCalendarAreaRef = useRef(false);
   const hasPromptedCalendarRef = useRef(false);
@@ -42,18 +39,18 @@ export default function Game({
     let game: ex.Engine;
     const helper = async () => {
       if (!canvasRef.current) return;
-      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
-      setUser(u)
+      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
       if (!u?.id) {
         alert("you have not logged in yet");
         router.push("/");
         return;
       }
-      if (!u?.username) {
+      if (!u?.onboarding_complete) {
         alert("you are not onboard yet");
         router.push("/onboarding");
         return;
       }
+      setUser(u)
       await resetPlayerToDefault(
         u?.id,
         u?.username as string,

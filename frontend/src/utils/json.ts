@@ -1,14 +1,15 @@
 import { ElectronResponse } from "@/types/datatypes";
-import { createFile, existsFile, readFile, writeFile } from "./electronApi";
+// import { createFile, existsFile, readFile, writeFile } from "./fileService/ElectronFileService";
+import fileService from "./fileService";
 
 /**
  * Append a single object as a new line (JSONL format) to the specified file.
  */
 export async function appendJsonl(filePath: string, data: object): Promise<ElectronResponse> {
   try {
-    const originalContent = await readFile(filePath).catch(() => '');
+    const originalContent = await fileService.readFile(filePath).catch(() => '');
     const newContent = originalContent + JSON.stringify(data) + '\n';
-    await writeFile(filePath, newContent);
+    await fileService.writeFile(filePath, newContent);
     return { success: true };
   } catch (error) {
     return { success: false, error: (error as Error).message };
@@ -20,9 +21,9 @@ export async function appendJsonl(filePath: string, data: object): Promise<Elect
  */
 export async function appendJsonls(filePath: string, data: object[]): Promise<ElectronResponse> {
   try {
-    const originalContent = await readFile(filePath).catch(() => '');
+    const originalContent = await fileService.readFile(filePath).catch(() => '');
     const newContent = originalContent + (data.map(it => JSON.stringify(it)).join("\n")) + '\n';
-    await writeFile(filePath, newContent);
+    await fileService.writeFile(filePath, newContent);
     return { success: true };
   } catch (error) {
     return { success: false, error: (error as Error).message };
@@ -34,7 +35,7 @@ export async function appendJsonls(filePath: string, data: object[]): Promise<El
  */
 export async function deleteJsonlById(filePath: string, id: string): Promise<ElectronResponse> {
   try {
-    const content = await readFile(filePath);
+    const content = await fileService.readFile(filePath);
     const lines = content.split('\n').filter(line => line.trim() !== '');
 
     let found = false;
@@ -51,7 +52,7 @@ export async function deleteJsonlById(filePath: string, id: string): Promise<Ele
       }
     });
 
-    await writeFile(filePath, updatedLines.join('\n') + '\n');
+    await fileService.writeFile(filePath, updatedLines.join('\n') + '\n');
     return { success: true };
   } catch (error) {
     return { success: false, error: (error as Error).message };
@@ -63,11 +64,11 @@ export async function deleteJsonlById(filePath: string, id: string): Promise<Ele
  */
 export async function parseJsonlToTypedObjects<T>(filePath: string): Promise<T[]> {
   try {
-    if (!(await existsFile(filePath))) {
-      await createFile(filePath)
+    if (!(await fileService.existsFile(filePath))) {
+      await fileService.createFile(filePath)
       return []
     }
-    const content = await readFile(filePath);
+    const content = await fileService.readFile(filePath);
     const lines = content.split('\n').filter(line => line.trim() !== '');
 
     return lines.map(line => JSON.parse(line) as T);
@@ -82,7 +83,7 @@ export async function parseJsonlToTypedObjects<T>(filePath: string): Promise<T[]
  */
 export async function replaceJsonlById(filePath: string, updatedObj: { id: string }): Promise<ElectronResponse> {
   try {
-    const content = await readFile(filePath);
+    const content = await fileService.readFile(filePath);
     const lines = content.split('\n').filter(line => line.trim() !== '');
 
     let replaced = false;
@@ -103,7 +104,7 @@ export async function replaceJsonlById(filePath: string, updatedObj: { id: strin
       return { success: false, error: `No entry with id "${updatedObj.id}" found` };
     }
 
-    await writeFile(filePath, updatedLines.join('\n') + '\n');
+    await fileService.writeFile(filePath, updatedLines.join('\n') + '\n');
     return { success: true };
   } catch (error) {
     return { success: false, error: (error as Error).message };

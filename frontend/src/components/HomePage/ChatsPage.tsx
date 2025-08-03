@@ -3,12 +3,12 @@ import { Input, Avatar, Typography, List, Button, Popover } from "antd";
 // import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
-import { Message, Room, SupabaseUser } from "@/types/datatypes";
+import { Message, Group, SupabaseUser } from "@/types/datatypes";
 import '@/app/antd.css';
 import { formatDate, PROJECT_NAME, STORAGE_PATH, veryOldDate } from "@/utils/utils";
 import globalStore from "@/store";
 import path from "path";
-import { createFile, existsFile, writeFile } from "@/utils/electronApi";
+import fileService from "@/utils/fileService";
 import { appendJsonl, appendJsonls, parseJsonlToTypedObjects, replaceJsonlById } from "@/utils/json";
 import { useStompClient } from "@/hooks/useStompClient";
 import { deleteMessage, getMessages } from "@/utils/messages";
@@ -19,7 +19,7 @@ export function ChatsPage() {
   const [isMounted, setIsMounted] = useState<boolean>(false);
   // const router = useRouter();
   const [searchText, setSearchText] = useState<string>("");
-  const [groupChats, setGroupChats] = useState<Room[]>([]);
+  const [groupChats, setGroupChats] = useState<Group[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [user, setUser] = useState<SupabaseUser>(null!)
 
@@ -29,11 +29,12 @@ export function ChatsPage() {
 
   useEffect(() => {
     const helper = async () => {
-      const u = JSON.parse(await globalStore.getItem('lumiroom-user') ?? "{}") as SupabaseUser
-      setUser(u)
+      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
       if (!u || !u.id) {
         window.location.href = "/auth"
+        return;
       }
+      setUser(u)
     }
     helper()
   }, [isMounted])
@@ -48,8 +49,8 @@ export function ChatsPage() {
       // TODO: room creation, metadata type invite / create
       if (msg.metadata && msg.metadata.scope != "public") {
         const receivedRoomId: string = msg.speaker
-        const targetRoomEntry: Room = groupChats.filter((it: Room) => it.id === receivedRoomId)[0]
-        const alteredRoomEntry: Room = {
+        const targetRoomEntry: Group = groupChats.filter((it: Group) => it.id === receivedRoomId)[0]
+        const alteredRoomEntry: Group = {
           ...targetRoomEntry,
           unread: Number(targetRoomEntry.unread) + 1, // BUG: unsure why but the unread is a number but behaves like a string, 3 + 1 = 31
           last_message: msg
@@ -63,8 +64,8 @@ export function ChatsPage() {
         await replaceJsonlById(filePath, alteredRoomEntry)
       } else {
         const receivedRoomId: string = msg.chat_room_id
-        const targetRoomEntry: Room = groupChats.filter((it: Room) => it.id === receivedRoomId)[0]
-        const alteredRoomEntry: Room = {
+        const targetRoomEntry: Group = groupChats.filter((it: Group) => it.id === receivedRoomId)[0]
+        const alteredRoomEntry: Group = {
           ...targetRoomEntry,
           unread: Number(targetRoomEntry.unread) + 1, // BUG: unsure why but the unread is a number but behaves like a string, 3 + 1 = 31
           last_message: msg
@@ -84,10 +85,10 @@ export function ChatsPage() {
     try {
       // file path should be ./storage/{userId}/groups.jsonl
       const filePath = path.join(STORAGE_PATH, user.id,  "groups.jsonl");
-      if (!(await existsFile(filePath))) {
-        await createFile(filePath)
+      if (!(await fileService.existsFile(filePath))) {
+        await fileService.createFile(filePath)
       }
-      const groups = await parseJsonlToTypedObjects<Room>(filePath)
+      const groups = await parseJsonlToTypedObjects<Group>(filePath)
       // const groups = await getGroups(user.id);
       return groups;
     } catch (error) {
@@ -99,7 +100,7 @@ export function ChatsPage() {
   // merge the local groups with those from redis
   // we can reasonably assume the messages in redis is sorted by time
   // TODO: currently the room creation logic is unhandled
-  const fetchFromRedis = async (): Promise<Room[]> => {
+  const fetchFromRedis = async (): Promise<Group[]> => {
     try {
       const returnGroupsChats = groupChats;
       const messages: Message[] = await getMessages(user.id); // assumes user.id is present
@@ -139,7 +140,7 @@ export function ChatsPage() {
             unread: 0,
             created_at: formatDate(),
             creator_id: speaker,
-          } as Room
+          } as Group
           // I think no need to append as a final write
           returnGroupsChats.push(tempRoom);
           await appendJsonl(groupPath, tempRoom);
@@ -154,7 +155,7 @@ export function ChatsPage() {
         const latest = sorted[sorted.length - 1];
 
         // Update local group entry
-        const updatedRoom: Room = {
+        const updatedRoom: Group = {
           ...localRoom,
           last_message: latest,
           unread: localRoom.unread + sorted.length,
@@ -180,12 +181,12 @@ export function ChatsPage() {
     const helper = async () => {
       setLoading(true);
 
-      const localGroups: Room[] = await fetchGroups();
-      const redisGroups: Room[] = await fetchFromRedis(); // returns updated Rooms from Redis
+      const localGroups: Group[] = await fetchGroups();
+      const redisGroups: Group[] = await fetchFromRedis(); // returns updated Rooms from Redis
       console.log("groups", localGroups, redisGroups)
 
       // Build map from localGroups
-      const roomMap: Record<string, Room> = {};
+      const roomMap: Record<string, Group> = {};
       for (const room of localGroups) {
         roomMap[room.id] = room;
       }
@@ -214,7 +215,7 @@ export function ChatsPage() {
       const mergedGroups = Object.values(roomMap);
       setGroupChats(mergedGroups);
       const groupPath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
-      await writeFile(groupPath, mergedGroups.map(it => JSON.stringify(it)).join("\n") + "\n")
+      await fileService.writeFile(groupPath, mergedGroups.map(it => JSON.stringify(it)).join("\n") + "\n")
       setLoading(false);
     };
 
@@ -233,7 +234,7 @@ export function ChatsPage() {
     }
   }, [isMounted]);
 
-  const handleRoomClick = useCallback((chat: Room) => {
+  const handleRoomClick = useCallback((chat: Group) => {
     if (isMounted) {
       // useGlobalStore.setState({ roomId: chat.id });
       globalStore.setItem('lumiroom-room', chat.id)

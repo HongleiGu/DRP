@@ -20,7 +20,7 @@ export interface Message {
 }
 
 
-// export interface Room {
+// export interface Group {
 //   id: string;
 //   name?: string;
 //   created_at: string;
@@ -131,13 +131,14 @@ export interface RoomEntry {
   room_id: string;
 }
 
-export interface Room {
+export interface Group {
   id: string;
   name: string;
   last_message: Message | null;
   unread: number;
   created_at: string;
-  creator_id: string
+  creator_id: string;
+  members: SupabaseUser[];
 }
 
 export interface ElectronResponse {
@@ -165,7 +166,7 @@ export interface SignInArgs {
 }
 
 // store/types.ts
-export interface GlobalStore {
+export interface globalStore {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
   removeItem(key: string): void;
