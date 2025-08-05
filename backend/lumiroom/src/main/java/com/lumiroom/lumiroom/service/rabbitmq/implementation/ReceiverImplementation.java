@@ -1,7 +1,8 @@
-package com.lumiroom.lumiroom.service.receiver;
+package com.lumiroom.lumiroom.service.rabbitmq.implementation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lumiroom.lumiroom.model.Message;
+import com.lumiroom.lumiroom.service.rabbitmq.Receiver;
 import com.lumiroom.lumiroom.ws.WebSocketAckTracker;
 import com.lumiroom.lumiroom.ws.WebSocketDispatcher;
 import com.rabbitmq.client.Channel;
@@ -17,7 +18,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @Profile("receiver")
-public class Receiver {
+public class ReceiverImplementation implements Receiver{
 
     @Autowired
     ObjectMapper mapper;
@@ -27,7 +28,7 @@ public class Receiver {
     private final WebSocketDispatcher dispatcher;
     private final WebSocketAckTracker ackTracker;
 
-    public Receiver(WebSocketDispatcher dispatcher, WebSocketAckTracker ackTracker) {
+    public ReceiverImplementation(WebSocketDispatcher dispatcher, WebSocketAckTracker ackTracker) {
         this.dispatcher = dispatcher;
         this.ackTracker = ackTracker;
     }

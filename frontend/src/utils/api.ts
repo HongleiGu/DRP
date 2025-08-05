@@ -1,6 +1,6 @@
 "use client" 
 // supabase is safe to run on the client side, plus electron does not support server components
-
+// this should be abandoned
 import { CalendarEntry, Direction, Group, Message, PlayerData, RoomEntry, SupabaseUser, TVState } from '@/types/datatypes';
 import { supabase } from '@/lib/supabase';
 import { VideoElement } from '@/components/PlayList';

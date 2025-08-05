@@ -2,108 +2,65 @@ import { Message } from '@/types/datatypes';
 
 const BASE_URL = process.env.SPRINGBOOT_URL || 'http://localhost:8080/api/message';
 
+async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+  const res = await fetch(input, { credentials: 'include', ...init });
+
+  const response = (await res.json()) as { code: number; msg: string; data?: T };
+
+  if (response.code !== 200) {
+    throw new Error(response.msg || 'API error');
+  }
+
+  return response.data as T;
+}
+
 /**
  * Sends a chat message to the API.
- *
- * @param message - The message object to send.
- * @param userId - The user ID to attach as a query parameter.
- * @returns A promise resolving to the server's response.
  */
-export async function sendMessage(message: Message, userId: string): Promise<Response> {
-  const response = await fetch(`http://localhost:8080/api/message?userId=${encodeURIComponent(userId)}`, {
+export async function sendMessage(message: Message, userId: string): Promise<string> {
+  return fetchJson<string>(`${BASE_URL}?userId=${encodeURIComponent(userId)}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      // JSESSIONID is assumed to be managed by the browser or manually set in cookies
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(message),
-    credentials: 'include', // includes cookies like JSESSIONID
   });
-
-  return response;
 }
 
 /**
- * GET /api/message/getMessage?userId={userId}&roomId={chatRoomId}
- * 
- * this only loads from the redis server
+ * GET /getMessage?userId={userId}&roomId={chatRoomId}
  */
 export async function getMessage(userId: string, chatRoomId: string): Promise<Message[]> {
-  if (!chatRoomId) {
-    throw new Error('Invalid chat room ID');
-  }
+  if (!chatRoomId) throw new Error('Invalid chat room ID');
 
-  const res = await fetch(`${BASE_URL}/getMessage?userId=${userId}&roomId=${chatRoomId}`);
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to get messages: ${errorText}`);
-  }
-
-  const response: Message[] = await res.json();
-  return response;
+  return fetchJson<Message[]>(`${BASE_URL}/getMessage?userId=${userId}&roomId=${chatRoomId}`);
 }
 
 /**
- * GET /api/message/getMessages?userId={userId}
- * 
- * this only loads from the redis server, regardless of the room
+ * GET /getMessages?userId={userId}
  */
 export async function getMessages(userId: string): Promise<Message[]> {
-  if (!userId) {
-    throw new Error('Invalid user ID');
-  }
+  if (!userId) throw new Error('Invalid user ID');
 
-  const res = await fetch(`${BASE_URL}/getMessages?userId=${userId}`);
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to get messages: ${errorText}`);
-  }
-
-  const response: Message[] = await res.json();
-  return response;
+  return fetchJson<Message[]>(`${BASE_URL}/getMessages?userId=${userId}`);
 }
 
 /**
- * DELETE /api/message/deleteMessage?userId={userId}&roomId={chatRoomId}
+ * DELETE /deleteMessage?userId={userId}&roomId={chatRoomId}
  */
 export async function deleteMessage(userId: string, chatRoomId: string): Promise<string> {
-  if (!chatRoomId || !userId) {
-    throw new Error('Missing chat room or user ID');
-  }
+  if (!chatRoomId || !userId) throw new Error('Missing chat room or user ID');
 
-  const res = await fetch(`${BASE_URL}/deleteMessage?userId=${userId}&roomId=${chatRoomId}`, {
+  return fetchJson<string>(`${BASE_URL}/deleteMessage?userId=${userId}&roomId=${chatRoomId}`, {
     method: 'DELETE',
   });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to delete message: ${errorText}`);
-  }
-
-  const message = await res.text(); // Assumes backend returns plain string in body
-  return message;
 }
 
-
 /**
- * DELETE /api/message/deleteMessage?userId={userId}
+ * DELETE /deleteMessage?userId={userId}
  */
 export async function deleteMessages(userId: string): Promise<string> {
-  if (!userId) {
-    throw new Error('Missing user ID');
-  }
+  if (!userId) throw new Error('Missing user ID');
 
-  const res = await fetch(`${BASE_URL}/deleteMessage?userId=${userId}`, {
+  return fetchJson<string>(`${BASE_URL}/deleteMessage?userId=${userId}`, {
     method: 'DELETE',
   });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to delete message: ${errorText}`);
-  }
-
-  const message = await res.text(); // Assumes backend returns plain string in body
-  return message;
 }

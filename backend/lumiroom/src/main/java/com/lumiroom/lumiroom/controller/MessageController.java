@@ -2,19 +2,17 @@
 package com.lumiroom.lumiroom.controller;
 
 import com.lumiroom.lumiroom.model.Message;
+import com.lumiroom.lumiroom.model.Result;
 import com.lumiroom.lumiroom.model.RoomMember;
-import com.lumiroom.lumiroom.service.RedisService;
-import com.lumiroom.lumiroom.service.RoomService;
-import com.lumiroom.lumiroom.service.sender.Sender;
+import com.lumiroom.lumiroom.service.auth.RoomService;
+import com.lumiroom.lumiroom.service.messages.RedisService;
+import com.lumiroom.lumiroom.service.rabbitmq.Sender;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 /**
@@ -38,8 +36,8 @@ public class MessageController {
     }
 
     @GetMapping("/ping")
-    public ResponseEntity<String> ping() {
-        return ResponseEntity.ok("springboot is running");
+    public Result<String> ping() {
+        return Result.success("springboot is running");
     }
 
     /**
@@ -50,71 +48,75 @@ public class MessageController {
      * @param messageRequest the message content
      */
     @PostMapping(params = {"userId"})
-    public ResponseEntity<String> sendToUser(
+    public Result<String> sendToUser(
             @RequestParam String userId,
             @RequestBody Message messageRequest) {
 
         String routingKey = String.format("*.%s.msg", userId);
         sender.send(routingKey, messageRequest);
-        return ResponseEntity.ok("Message sent to user " + userId);
+        return Result.success("Message sent to user " + userId);
     }
 
     /**
      * Sends a message to all users in a room.
      * Simulates DB fetch with a static list of userIds.
+     * this needs to ensure ACID or else there might be partial sending
      *
      * @param roomId        the room ID
      * @param messageRequest the message content
      */
     @PostMapping(params = "roomId")
-    public ResponseEntity<String> sendToRoom(
+    public Result<String> sendToRoom(
             @RequestParam String roomId,
             @RequestBody Message messageRequest) {
+        try {
+            List<RoomMember> users = roomService.getRoomMembers(roomId);
 
-        List<RoomMember> users = roomService.getRoomMembers(roomId);
+            // if the room is empty, return a 404
+            if (users == null || users.isEmpty()) {
+                return Result
+                    .error("No members found in room " + roomId);
+            }
+            
+            for (RoomMember userId : users) {
+                String routingKey = String.format("%s.%s.msg", roomId, userId.getMemberId());
+                sender.send(routingKey, messageRequest);
+            }
 
-        // if the room is empty, return a 404
-        if (users == null || users.isEmpty()) {
-            return ResponseEntity
-                .status(404)
-                .body("No members found in room " + roomId);
+            return Result.success("Message sent to room " + roomId);
+        } catch (Exception e) {
+            return Result
+                    .error("A server side error occured" + e.getMessage());
         }
-        
-        for (RoomMember userId : users) {
-            String routingKey = String.format("%s.%s.msg", roomId, userId.getMemberId());
-            sender.send(routingKey, messageRequest);
-        }
-
-        return ResponseEntity.ok("Message sent to room " + roomId);
     }
 
     @GetMapping("/getMessages")
-    public ResponseEntity<List<Message>> getMessages(@RequestParam String userId) {
-        return ResponseEntity.ok(redisService.getMessages(userId));
+    public Result<List<Message>> getMessages(@RequestParam String userId) {
+        return Result.success(redisService.getMessages(userId));
     }
 
     @GetMapping("/getMessage")
-    public ResponseEntity<List<Message>> getMessage(@RequestParam String userId, @RequestParam String roomId) {
-        return ResponseEntity.ok(redisService.getMessages(userId, roomId));
+    public Result<List<Message>> getMessage(@RequestParam String userId, @RequestParam String roomId) {
+        return Result.success(redisService.getMessages(userId, roomId));
     }
     
     @DeleteMapping("/deleteMessages")
-    public ResponseEntity<String> deleteMessages(@RequestParam String userId) {
+    public Result<String> deleteMessages(@RequestParam String userId) {
         try {
             redisService.deleteMessages(userId);
-            return ResponseEntity.ok("Deleted");
+            return Result.success("Deleted");
         } catch (Error e) {
-            return ResponseEntity.status(500).body("Failed");
+            return Result.error("Delete Failed");
         }
     }
 
     @DeleteMapping("/deleteMessage")
-    public ResponseEntity<String> deleteMessage(@RequestParam String userId, @RequestParam String roomId) {
+    public Result<String> deleteMessage(@RequestParam String userId, @RequestParam String roomId) {
         try {
             redisService.deleteMessages(userId, roomId);
-            return ResponseEntity.ok("Deleted");
+            return Result.success("Deleted");
         } catch (Error e) {
-            return ResponseEntity.status(500).body("Failed");
+            return Result.error("Delete Failed");
         }
     }
 }

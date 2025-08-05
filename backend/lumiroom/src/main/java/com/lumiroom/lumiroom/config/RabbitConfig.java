@@ -8,8 +8,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-import com.lumiroom.lumiroom.service.receiver.Receiver;
-import com.lumiroom.lumiroom.service.sender.Sender;
+import com.lumiroom.lumiroom.service.rabbitmq.Receiver;
+import com.lumiroom.lumiroom.service.rabbitmq.Sender;
+import com.lumiroom.lumiroom.service.rabbitmq.implementation.ReceiverImplementation;
+import com.lumiroom.lumiroom.service.rabbitmq.implementation.SenderImplementation;
 import com.lumiroom.lumiroom.ws.WebSocketAckTracker;
 import com.lumiroom.lumiroom.ws.WebSocketDispatcher;
 
@@ -27,7 +29,7 @@ public class RabbitConfig {
     @Profile("sender")
     @Bean
     public Sender sender(RabbitTemplate rabbitTemplate, TopicExchange topicExchange) {
-        return new Sender(rabbitTemplate, topicExchange);
+        return new SenderImplementation(rabbitTemplate, topicExchange);
     }
 
     @Profile("receiver")
@@ -48,7 +50,7 @@ public class RabbitConfig {
 
         @Bean
         public Receiver receiver(WebSocketDispatcher dispatcher, WebSocketAckTracker ackTracker) {
-            return new Receiver(dispatcher, ackTracker);
+            return new ReceiverImplementation(dispatcher, ackTracker);
         }
     }
 

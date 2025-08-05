@@ -171,3 +171,9 @@ export interface globalStore {
   setItem(key: string, value: string): void;
   removeItem(key: string): void;
 }
+
+export interface Response {
+  code: number;
+  msg: string;
+  data?: unknown; // not even certain this exists
+}

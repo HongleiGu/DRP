@@ -2,11 +2,13 @@ package com.lumiroom.lumiroom.controller;
 
 import java.security.Principal;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
 import com.lumiroom.lumiroom.model.AckPayload;
 import com.lumiroom.lumiroom.ws.WebSocketAckTracker;
 
+@Profile("websocket")
 @Controller
 public class WebSocketController {
 

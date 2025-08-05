@@ -1,4 +1,4 @@
-package com.lumiroom.lumiroom.service;
+package com.lumiroom.lumiroom.service.messages.implementation;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -8,20 +8,21 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lumiroom.lumiroom.model.Message;
+import com.lumiroom.lumiroom.service.messages.RedisService;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.ArrayList;
 
 @Service
-public class RedisService {
+public class RedisServiceImplementation implements RedisService {
 
     @Autowired
     ObjectMapper mapper;
 
     private final StringRedisTemplate redisTemplate;
 
-    public RedisService(StringRedisTemplate redisTemplate) {
+    public RedisServiceImplementation(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 

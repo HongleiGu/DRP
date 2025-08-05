@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lumiroom.lumiroom.mapper.UserOtpMapper">
+
+  <insert id="insertOtp" parameterType="com.lumiroom.lumiroom.model.UserOtp">
+    INSERT INTO user_otps (email, otp, created_at, expires_at)
+    VALUES (#{email}, #{otp}, #{createdAt}, #{expiresAt})
+  </insert>
+
+  <select id="findValidOtp" resultType="com.lumiroom.lumiroom.model.UserOtp">
+    SELECT * FROM user_otps
+    WHERE email = #{email}
+      AND otp = #{otp}
+      AND expires_at > NOW()
+    LIMIT 1
+  </select>
+
+  <delete id="deleteOtp" parameterType="long">
+    DELETE FROM user_otps WHERE id = #{id}
+  </delete>
+
+  <delete id="deleteExpiredOtps">
+    DELETE FROM user_otps WHERE NOW() >= expires_at
+  </delete>
+
+</mapper>
