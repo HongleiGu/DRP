@@ -5,10 +5,34 @@
 
 <mapper namespace="com.lumiroom.lumiroom.mapper.RoomMapper">
 
-  <select id="getMembersByRoomId" parameterType="string" resultType="com.lumiroom.lumiroom.model.RoomMember">
+  <select id="getMembersByRoomId" parameterType="string" resultType="string">
     SELECT member_id
-    FROM public.rooms
-    WHERE room_id::text = #{roomId}
+    FROM room_users
+    WHERE room_id = #{roomId}::uuid
   </select>
 
+  <select id="getRoom" parameterType="string" resultType="string">
+    SELECT id
+    FROM rooms
+    WHERE id = #{roomId}::uuid
+  </select>
+
+  <!-- createRoom --> 
+
+  <select id="createRoom" parameterType="com.lumiroom.lumiroom.model.messages.RoomCreationRequest" resultType="string">
+    INSERT INTO rooms (name, creator_id)
+    VALUES (#{roomName}, #{creatorId}::uuid)
+    RETURNING id
+  </select>
+
+  <!-- insertUsersToRoom --> 
+
+  <!-- we add a check here to ensure the database is not corrupted -->
+  <insert id="insertUsersToRoom">
+    INSERT INTO room_users (member_id, room_id)
+    SELECT #{userId}::uuid, #{roomId}::uuid
+    WHERE EXISTS (
+      SELECT 1 FROM users WHERE id = #{userId}::uuid
+    )
+  </insert>
 </mapper>

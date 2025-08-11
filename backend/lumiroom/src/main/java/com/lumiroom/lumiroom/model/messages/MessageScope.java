@@ -1,10 +1,11 @@
-package com.lumiroom.lumiroom.model.enums;
+package com.lumiroom.lumiroom.model.messages;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Represents whether a message is public (room-based) or personal (direct to user).
+ * Represents whether a message is public (room-based) or personal (direct to
+ * user).
  */
 public enum MessageScope {
     PERSONAL("personal"),

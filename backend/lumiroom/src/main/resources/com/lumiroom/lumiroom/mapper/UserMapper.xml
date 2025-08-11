@@ -5,15 +5,22 @@
 
 <mapper namespace="com.lumiroom.lumiroom.mapper.UserMapper">
 
-  <select id="findByUsernameOrEmail" resultType="com.lumiroom.lumiroom.model.User" parameterType="String">
+  <select id="findUserByUsernameOrEmail" resultType="com.lumiroom.lumiroom.model.commons.User" parameterType="String">
     SELECT id, username, onboarding_complete, avatar_id, created_at, email, password_hash
     FROM users
     WHERE username = #{identifier} OR email = #{identifier}
     LIMIT 1
   </select>
 
-  <insert id="insertUser" parameterType="com.lumiroom.lumiroom.model.User" 
-        useGeneratedKeys="false">
+  <select id="findUserById" resultType="com.lumiroom.lumiroom.model.commons.User" parameterType="String">
+    SELECT id, username, onboarding_complete, avatar_id, created_at, email, password_hash
+    FROM users
+    WHERE id = #{id}::uuid
+    LIMIT 1
+  </select>
+
+  <!-- this needs to return something, insert cannot return a model class -->
+  <select id="insertUser" parameterType="com.lumiroom.lumiroom.model.commons.User"> 
     INSERT INTO users (
       username, onboarding_complete, avatar_id, email, password_hash
     )
@@ -22,6 +29,6 @@
     )
     RETURNING 
       id, username, onboarding_complete, avatar_id, created_at, email, password_hash
-  </insert>
+  </select>
 
 </mapper>

@@ -1,6 +1,6 @@
 package com.lumiroom.lumiroom.model.auth;
 
-import com.lumiroom.lumiroom.model.User;
+import com.lumiroom.lumiroom.model.commons.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

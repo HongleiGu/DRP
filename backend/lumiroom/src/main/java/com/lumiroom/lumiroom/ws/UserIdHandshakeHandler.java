@@ -18,7 +18,7 @@ public class UserIdHandshakeHandler extends DefaultHandshakeHandler {
     protected Principal determineUser(ServerHttpRequest request,
                                       WebSocketHandler wsHandler,
                                       Map<String, Object> attributes) {
-        // Example: extract userId from query param: ws://localhost:8080/ws?userId=abc-123
+        // Example: extract userId from query param: ws://localhost:8080/ws/messages?userId=abc-123
         String userId = Optional.ofNullable(request.getURI().getQuery())
                 .flatMap(query -> Arrays.stream(query.split("&"))
                         .filter(q -> q.startsWith("userId="))

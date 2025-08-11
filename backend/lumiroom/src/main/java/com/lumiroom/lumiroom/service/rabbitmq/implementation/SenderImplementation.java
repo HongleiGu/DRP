@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Profile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lumiroom.lumiroom.model.Message;
+import com.lumiroom.lumiroom.model.messages.Message;
 import com.lumiroom.lumiroom.service.rabbitmq.Sender;
 
 /**
@@ -16,27 +16,27 @@ import com.lumiroom.lumiroom.service.rabbitmq.Sender;
 @Profile("sender")
 public class SenderImplementation implements Sender {
 
-    @Autowired
-    ObjectMapper mapper;
+  @Autowired
+  ObjectMapper mapper;
 
-    private final RabbitTemplate rabbitTemplate;
-    private final TopicExchange exchange;
+  private final RabbitTemplate rabbitTemplate;
+  private final TopicExchange exchange;
 
-    public SenderImplementation(RabbitTemplate amqpTemplate, TopicExchange exchange) {
-        this.rabbitTemplate = amqpTemplate;
-        this.exchange = exchange;
+  public SenderImplementation(RabbitTemplate amqpTemplate, TopicExchange exchange) {
+    this.rabbitTemplate = amqpTemplate;
+    this.exchange = exchange;
+  }
+
+  public void send(String routingKey, Message message) {
+    String jsonMessage;
+    try {
+      jsonMessage = mapper.writeValueAsString(message);
+    } catch (JsonProcessingException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return;
     }
-
-    public void send(String routingKey, Message message) {
-      String jsonMessage;
-      try {
-        jsonMessage = mapper.writeValueAsString(message);
-      } catch (JsonProcessingException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-        return;
-      }
-      rabbitTemplate.convertAndSend(exchange.getName(), routingKey, jsonMessage);
-      System.out.println("📤 Sent: '" + message + "' to '" + routingKey + "'");
-    }
+    rabbitTemplate.convertAndSend(exchange.getName(), routingKey, jsonMessage);
+    System.out.println("📤 Sent: '" + message + "' to '" + routingKey + "'");
+  }
 }

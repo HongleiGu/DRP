@@ -3,7 +3,7 @@ package com.lumiroom.lumiroom.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.lumiroom.lumiroom.model.UserOtp;
+import com.lumiroom.lumiroom.model.auth.UserOtp;
 
 @Mapper
 public interface UserOtpMapper {

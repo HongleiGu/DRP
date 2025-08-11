@@ -5,12 +5,12 @@
 
 <mapper namespace="com.lumiroom.lumiroom.mapper.UserOtpMapper">
 
-  <insert id="insertOtp" parameterType="com.lumiroom.lumiroom.model.UserOtp">
-    INSERT INTO user_otps (email, otp, created_at, expires_at)
-    VALUES (#{email}, #{otp}, #{createdAt}, #{expiresAt})
+  <insert id="insertOtp" parameterType="com.lumiroom.lumiroom.model.auth.UserOtp">
+    INSERT INTO user_otps (email, password, username, otp, created_at, expires_at)
+    VALUES (#{email}, #{password}, #{username}, #{otp}, #{createdAt}, #{expiresAt})
   </insert>
 
-  <select id="findValidOtp" resultType="com.lumiroom.lumiroom.model.UserOtp">
+  <select id="findValidOtp" resultType="com.lumiroom.lumiroom.model.auth.UserOtp">
     SELECT * FROM user_otps
     WHERE email = #{email}
       AND otp = #{otp}
@@ -18,8 +18,8 @@
     LIMIT 1
   </select>
 
-  <delete id="deleteOtp" parameterType="long">
-    DELETE FROM user_otps WHERE id = #{id}
+  <delete id="deleteOtp" parameterType="string">
+    DELETE FROM user_otps WHERE id::text = #{id}
   </delete>
 
   <delete id="deleteExpiredOtps">

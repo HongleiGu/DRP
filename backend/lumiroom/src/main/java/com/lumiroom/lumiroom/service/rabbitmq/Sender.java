@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Profile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lumiroom.lumiroom.model.Message;
+import com.lumiroom.lumiroom.model.messages.Message;
 
 /**
  * Sends messages to the topic exchange using keys like roomId.userId.suffix.
@@ -16,8 +16,9 @@ import com.lumiroom.lumiroom.model.Message;
 public interface Sender {
   /**
    * send a message
+   * 
    * @param routingKey
    * @param message
    */
-    public void send(String routingKey, Message message);
+  public void send(String routingKey, Message message);
 }

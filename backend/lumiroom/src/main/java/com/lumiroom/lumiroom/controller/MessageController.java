@@ -1,11 +1,15 @@
 // src/main/java/com/example/controller/MessageController.java
 package com.lumiroom.lumiroom.controller;
 
-import com.lumiroom.lumiroom.model.Message;
-import com.lumiroom.lumiroom.model.Result;
-import com.lumiroom.lumiroom.model.RoomMember;
-import com.lumiroom.lumiroom.service.auth.RoomService;
+import com.lumiroom.lumiroom.model.commons.Result;
+import com.lumiroom.lumiroom.model.commons.User;
+import com.lumiroom.lumiroom.model.game.PlayerData;
+import com.lumiroom.lumiroom.model.messages.Message;
+import com.lumiroom.lumiroom.model.messages.RoomCreationRequest;
+import com.lumiroom.lumiroom.service.auth.AuthService;
+import com.lumiroom.lumiroom.service.game.GameService;
 import com.lumiroom.lumiroom.service.messages.RedisService;
+import com.lumiroom.lumiroom.service.messages.RoomService;
 import com.lumiroom.lumiroom.service.rabbitmq.Sender;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +17,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 
 /**
  * Provides REST APIs for sending messages to users or rooms.
@@ -23,16 +26,19 @@ import java.util.List;
 @RequestMapping("/api/message")
 public class MessageController {
 
-    
     private final Sender sender;
     private final RoomService roomService;
+    private final GameService gameService;
+    private final AuthService authService;
 
     @Autowired
     private RedisService redisService;
 
-    public MessageController(Sender sender, RoomService roomService) {
-      this.sender = sender;
-      this.roomService = roomService;
+    public MessageController(Sender sender, RoomService roomService, GameService gameService, AuthService authService) {
+        this.sender = sender;
+        this.roomService = roomService;
+        this.gameService = gameService;
+        this.authService = authService;
     }
 
     @GetMapping("/ping")
@@ -43,11 +49,11 @@ public class MessageController {
     /**
      * Sends a message to a specific user within a room.
      *
-     * @param userId        the target user UUID
-     * @param roomId        the room ID
+     * @param userId         the target user UUID
+     * @param roomId         the room ID
      * @param messageRequest the message content
      */
-    @PostMapping(params = {"userId"})
+    @PostMapping(params = { "userId" })
     public Result<String> sendToUser(
             @RequestParam String userId,
             @RequestBody Message messageRequest) {
@@ -62,7 +68,7 @@ public class MessageController {
      * Simulates DB fetch with a static list of userIds.
      * this needs to ensure ACID or else there might be partial sending
      *
-     * @param roomId        the room ID
+     * @param roomId         the room ID
      * @param messageRequest the message content
      */
     @PostMapping(params = "roomId")
@@ -70,21 +76,21 @@ public class MessageController {
             @RequestParam String roomId,
             @RequestBody Message messageRequest) {
         try {
-            List<RoomMember> users = roomService.getRoomMembers(roomId);
+            List<String> users = roomService.getRoomMembers(roomId);
 
             // if the room is empty, return a 404
             if (users == null || users.isEmpty()) {
                 return Result
-                    .error("No members found in room " + roomId);
+                        .error("No members found in room " + roomId);
             }
-            
-            for (RoomMember userId : users) {
-                String routingKey = String.format("%s.%s.msg", roomId, userId.getMemberId());
+
+            for (String userId : users) {
+                String routingKey = String.format("%s.%s.msg", roomId, userId);
                 sender.send(routingKey, messageRequest);
             }
 
             return Result.success("Message sent to room " + roomId);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return Result
                     .error("A server side error occured" + e.getMessage());
         }
@@ -99,13 +105,13 @@ public class MessageController {
     public Result<List<Message>> getMessage(@RequestParam String userId, @RequestParam String roomId) {
         return Result.success(redisService.getMessages(userId, roomId));
     }
-    
+
     @DeleteMapping("/deleteMessages")
     public Result<String> deleteMessages(@RequestParam String userId) {
         try {
             redisService.deleteMessages(userId);
             return Result.success("Deleted");
-        } catch (Error e) {
+        } catch (Throwable e) {
             return Result.error("Delete Failed");
         }
     }
@@ -115,8 +121,47 @@ public class MessageController {
         try {
             redisService.deleteMessages(userId, roomId);
             return Result.success("Deleted");
-        } catch (Error e) {
+        } catch (Throwable e) {
             return Result.error("Delete Failed");
+        }
+    }
+
+    @GetMapping("/checkRoom")
+    public Result<Boolean> checkRoom(@RequestParam String roomId) {
+        try {
+            String id = roomService.getRoom(roomId);
+            List<String> members = roomService.getRoomMembers(roomId);
+            if (members.size() == 0 && id == null) {
+                return Result.success(false, "the room does not exist");
+            } else if (members.size() == 0 && id != null) {
+                return Result.success(true, "the room exists, but there are no members in it");
+            }
+            return Result.success(true, "the room exists");
+        } catch (Throwable e) {
+            return Result.error(500, "an error occured when check room: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/createRoom")
+    public Result<String> createRoom(@RequestBody RoomCreationRequest req) {
+        try {
+            return Result.success(
+                    roomService.createRoom(req),
+                    "room creation success");
+        } catch (Throwable e) {
+            return Result.error("room creation failed due to: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/insertUserToRoom")
+    public Result<String> insertUsersToRoom(@RequestParam String userId, @RequestParam String roomId) {
+        try {
+            roomService.insertUserToRoom(userId, roomId);
+            User user = authService.findUserById(userId);
+            gameService.updatePlayerData(user, roomId, 200, 300);
+            return Result.success("successfully inserted users to room", "successfully inserted users to room");
+        } catch (Throwable e) {
+            return Result.error("inserting user to room failed due to: " + e.getMessage());
         }
     }
 }

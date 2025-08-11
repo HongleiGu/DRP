@@ -1,4 +1,4 @@
-package com.lumiroom.lumiroom.model;
+package com.lumiroom.lumiroom.model.ws;
 
 import lombok.Data;
 import lombok.Getter;

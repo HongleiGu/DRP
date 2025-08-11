@@ -1,8 +1,16 @@
 package com.lumiroom.lumiroom.service.auth;
 
-import com.lumiroom.lumiroom.model.User;
+import com.lumiroom.lumiroom.model.auth.UserOtp;
+import com.lumiroom.lumiroom.model.commons.User;
 
 public interface AuthService {
-  public User authenticate(String identifier, String password);
-  public User signup(String username, String email, String password);
+  User authenticate(String identifier, String password);
+
+  User signup(String username, String email, String password);
+
+  User signupFromOtp(UserOtp otp);
+
+  User findUserByUsernameOrEmail(String identifier);
+
+  User findUserById(String id);
 }

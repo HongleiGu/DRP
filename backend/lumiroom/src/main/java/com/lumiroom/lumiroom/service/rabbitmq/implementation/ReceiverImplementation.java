@@ -1,7 +1,7 @@
 package com.lumiroom.lumiroom.service.rabbitmq.implementation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lumiroom.lumiroom.model.Message;
+import com.lumiroom.lumiroom.model.messages.Message;
 import com.lumiroom.lumiroom.service.rabbitmq.Receiver;
 import com.lumiroom.lumiroom.ws.WebSocketAckTracker;
 import com.lumiroom.lumiroom.ws.WebSocketDispatcher;
@@ -18,7 +18,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @Profile("receiver")
-public class ReceiverImplementation implements Receiver{
+public class ReceiverImplementation implements Receiver {
 
     @Autowired
     ObjectMapper mapper;
@@ -35,15 +35,15 @@ public class ReceiverImplementation implements Receiver{
 
     @RabbitListener(queues = "#{userQueue.name}", ackMode = "MANUAL")
     public void receive(
-        String msg,
-        @Header("amqp_receivedRoutingKey") String routingKey,
-        @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag,
-        Channel channel
-    ) {
+            String msg,
+            @Header("amqp_receivedRoutingKey") String routingKey,
+            @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag,
+            Channel channel) {
         try {
             Message message = mapper.readValue(msg, Message.class);
             String[] parts = routingKey.split("\\.");
-            if (parts.length < 2) throw new IllegalArgumentException("Invalid routing key: " + routingKey);
+            if (parts.length < 2)
+                throw new IllegalArgumentException("Invalid routing key: " + routingKey);
 
             String roomId = parts[0];
             String userId = parts[1];
@@ -51,10 +51,10 @@ public class ReceiverImplementation implements Receiver{
             System.out.println("📬 [Message to USER " + userId + " in ROOM " + roomId + "] " +
                     message.getChatMessage() + " from " + message.getSpeakerName());
 
-            dispatcher.sendToUser(userId, message);
+            dispatcher.sendMessageToUser(userId, message);
 
             // Await WebSocket frontend ACK
-            String ackKey = userId + ":" + message.getId();
+            String ackKey = "message:" + userId + ":" + message.getId();
             CompletableFuture<Boolean> future = ackTracker.waitForAck(ackKey, ACK_TIMEOUT);
 
             future.whenComplete((success, error) -> {
@@ -69,18 +69,15 @@ public class ReceiverImplementation implements Receiver{
                         // Example:
                         // redisTemplate.opsForList().leftPush("nack:messages", message);
                     }
-                } catch (Exception ex) {
+                } catch (Throwable ex) {
                     ex.printStackTrace();
                 }
             });
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             try {
                 channel.basicNack(deliveryTag, false, false);
-
-                // TODO: Push failed-to-parse or fatal error message to Redis
-                // Optional: capture the raw `msg` or details for diagnosis
             } catch (Exception nackEx) {
                 nackEx.printStackTrace();
             }

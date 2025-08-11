@@ -1,33 +1,48 @@
 package com.lumiroom.lumiroom.service.auth.implementation;
 
 import com.lumiroom.lumiroom.service.auth.UserOtpService;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.lumiroom.lumiroom.mapper.UserOtpMapper;
-import com.lumiroom.lumiroom.model.UserOtp;
+import com.lumiroom.lumiroom.model.auth.SignupRequest;
+import com.lumiroom.lumiroom.model.auth.UserOtp;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
+@Slf4j
 @Service
 public class UserOtpServiceImplementation implements UserOtpService {
 
     private final UserOtpMapper otpMapper;
+    private final PasswordEncoder encoder;
 
-    public UserOtpServiceImplementation(UserOtpMapper otpMapper) {
+    public UserOtpServiceImplementation(UserOtpMapper otpMapper, PasswordEncoder encoder) {
         this.otpMapper = otpMapper;
+        this.encoder = encoder;
     }
 
-    public void saveOtp(String email, String otp) {
-        UserOtp userOtp = new UserOtp(otp, email);
+    public void saveOtp(SignupRequest request, String otp) {
+        UserOtp userOtp = new UserOtp(otp, new SignupRequest(
+                request.getUsername(),
+                request.getEmail(),
+                encoder.encode(request.getPassword())));
         otpMapper.insertOtp(userOtp);
     }
 
-    public boolean verifyOtp(String email, String otp) {
+    public UserOtp verifyOtp(String email, String otp) {
         UserOtp userOtp = otpMapper.findValidOtp(email, otp);
-        if (userOtp != null) {
-            otpMapper.deleteOtp(userOtp.getId());
-            return true;
-        }
-        return false;
+        return userOtp;
+        // if (userOtp != null) {
+        // otpMapper.deleteOtp(userOtp.getId());
+        // return userOtp;
+        // }
+        // return null;
+    }
+
+    public void deleteOtp(UserOtp otp) {
+        otpMapper.deleteOtp(otp.getId());
     }
 
     public void cleanupExpiredOtps() {

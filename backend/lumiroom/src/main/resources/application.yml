@@ -24,6 +24,26 @@ spring:
     - auth
   jackson:
     property-naming-strategy: SNAKE_CASE
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: hongleigu19@gmail.com
+    password: vemfvlcmsrjtpljs
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+logging:
+  level:
+    root: INFO
 mybatis:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+email:
+  sender: ${spring.mail.username}

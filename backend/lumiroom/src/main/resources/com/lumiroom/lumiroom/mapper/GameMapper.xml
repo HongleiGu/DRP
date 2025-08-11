@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lumiroom.lumiroom.mapper.GameMapper">
+
+  <select id="getPlayersInRoom" parameterType="string" resultType="com.lumiroom.lumiroom.model.game.PlayerData">
+    SELECT *
+    FROM players
+    WHERE room_id = #{roomId}::uuid
+  </select>
+
+  <insert id="updatePlayerData" parameterType="com.lumiroom.lumiroom.model.game.PlayerData">
+    INSERT INTO players
+      (user_id, name, room_id, x, y, direction, avatarId, last_updated)
+    VALUES
+      (#{userId}::uuid, #{name}, #{roomId}::uuid, #{x}, #{y}, #{direction}, #{avatarId}, now())
+    ON CONFLICT (user_id, room_id) DO UPDATE
+    SET
+      name = EXCLUDED.name,
+      x = EXCLUDED.x,
+      y = EXCLUDED.y,
+      direction = EXCLUDED.direction,
+      avatarId = EXCLUDED.avatarId,
+      last_updated = now()
+  </insert>
+
+</mapper>

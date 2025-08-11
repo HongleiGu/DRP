@@ -1,4 +1,4 @@
-package com.lumiroom.lumiroom.model;
+package com.lumiroom.lumiroom.model.commons;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

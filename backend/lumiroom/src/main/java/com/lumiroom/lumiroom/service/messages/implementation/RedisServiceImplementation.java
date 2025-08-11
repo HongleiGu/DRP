@@ -7,7 +7,7 @@ import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lumiroom.lumiroom.model.Message;
+import com.lumiroom.lumiroom.model.messages.Message;
 import com.lumiroom.lumiroom.service.messages.RedisService;
 
 import java.time.Duration;
@@ -33,9 +33,9 @@ public class RedisServiceImplementation implements RedisService {
     public List<Message> getMessages(String userId) {
         String pattern = "message:" + userId + ":*";
         ScanOptions scanOpts = ScanOptions.scanOptions()
-            .match(pattern)
-            .count(1000)
-            .build();
+                .match(pattern)
+                .count(1000)
+                .build();
 
         List<Message> messages = new ArrayList<>();
         Cursor<String> cursor = null;
@@ -56,7 +56,8 @@ public class RedisServiceImplementation implements RedisService {
                 }
             }
         } finally {
-            if (cursor != null) cursor.close();
+            if (cursor != null)
+                cursor.close();
         }
 
         return messages;
@@ -76,7 +77,8 @@ public class RedisServiceImplementation implements RedisService {
         List<String> rawMessages = redisTemplate.opsForList().range(key, 0, -1);
 
         List<Message> messages = new ArrayList<>();
-        if (rawMessages == null) return messages;
+        if (rawMessages == null)
+            return messages;
 
         for (String str : rawMessages) {
             try {
@@ -100,9 +102,9 @@ public class RedisServiceImplementation implements RedisService {
     public void deleteMessages(String userId) {
         String pattern = "message:" + userId + ":*";
         ScanOptions scanOpts = ScanOptions.scanOptions()
-            .match(pattern)
-            .count(1000)
-            .build();
+                .match(pattern)
+                .count(1000)
+                .build();
 
         Cursor<String> cursor = null;
 
@@ -113,7 +115,8 @@ public class RedisServiceImplementation implements RedisService {
                 redisTemplate.delete(key);
             }
         } finally {
-            if (cursor != null) cursor.close();
+            if (cursor != null)
+                cursor.close();
         }
     }
 
