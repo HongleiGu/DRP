@@ -27,6 +27,7 @@ public class EmailController {
         }
     }
 
+    // endpoint for testing otp sending utilities
     @PostMapping("/sendTestOtp")
     public String sendTestOtp(@RequestParam String to, @RequestParam String otp) {
         try {

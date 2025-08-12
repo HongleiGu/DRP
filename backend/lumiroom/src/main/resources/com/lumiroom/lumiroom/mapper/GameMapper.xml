@@ -18,11 +18,11 @@
       (#{userId}::uuid, #{name}, #{roomId}::uuid, #{x}, #{y}, #{direction}, #{avatarId}, now())
     ON CONFLICT (user_id, room_id) DO UPDATE
     SET
-      name = EXCLUDED.name,
-      x = EXCLUDED.x,
-      y = EXCLUDED.y,
-      direction = EXCLUDED.direction,
-      avatarId = EXCLUDED.avatarId,
+      name = COALESCE(EXCLUDED.name, players.name),
+      x = COALESCE(EXCLUDED.x, players.x),
+      y = COALESCE(EXCLUDED.y, players.y),
+      direction = COALESCE(EXCLUDED.direction, players.direction),
+      avatarId = COALESCE(EXCLUDED.avatarId, players.avatarId),
       last_updated = now()
   </insert>
 

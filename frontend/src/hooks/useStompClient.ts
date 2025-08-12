@@ -36,7 +36,7 @@ export const useStompClient = ({ userId, onMessage }: UseStompClientOptions) => 
 
             // Send ACK back over STOMP instead of fetch
             stompClient.publish({
-              destination: "/app/ack", // maps to @MessageMapping("/ack")
+              destination: "/app/messsages/ack", // maps to @MessageMapping("/messages/ack")
               body: JSON.stringify({
                 messageId: payload.id,
                 success: true, // or whatever structure your backend expects
@@ -62,7 +62,7 @@ export const useStompClient = ({ userId, onMessage }: UseStompClientOptions) => 
     };
   }, [userId, onMessage]);
 };
- 
+
 export function getStompClient() {
   return stompClientRef;
 }

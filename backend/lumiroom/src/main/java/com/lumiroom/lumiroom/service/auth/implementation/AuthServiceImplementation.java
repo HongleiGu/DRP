@@ -21,6 +21,7 @@ public class AuthServiceImplementation implements AuthService {
 
   public User authenticate(String identifier, String password) {
     User user = userMapper.findUserByUsernameOrEmail(identifier);
+    System.out.println(user);
     if (user != null && passwordEncoder.matches(password, user.getPasswordHash())) {
       return user;
     }
@@ -44,5 +45,9 @@ public class AuthServiceImplementation implements AuthService {
 
   public User findUserById(String id) {
     return userMapper.findUserById(id);
+  }
+
+  public User updateUserProfile(User user) {
+    return userMapper.updateUserProfile(user);
   }
 }

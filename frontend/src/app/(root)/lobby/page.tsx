@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { Layout, Typography, Card, Input, Button, List, Checkbox, Space, Divider, message, Spin } from 'antd';
-import { createRoom, getContacts } from '@/utils/api';
+import { createRoom } from '@/utils/api';
 import { SupabaseUser } from '@/types/datatypes';
 import globalStore from '@/store';
-import { PROJECT_NAME } from '@/utils/utils';
+import { PROJECT_NAME, STORAGE_PATH } from '@/utils/utils';
+import path from 'path';
+import fileService from '@/utils/fileService';
+import { parseJsonlToTypedObjects } from '@/utils/json';
 // import { useRouter } from 'next/navigation';
 // import { useGlobalStore } from '@/store';
 
@@ -39,8 +42,10 @@ export default function CreateRoomPage() {
       setUser(u);
       setContactsLoading(true);
       try {
-        const c = await getContacts(user.id);
-        setContactList(c);
+        const filePath = path.join(STORAGE_PATH, user.id, "contacts.jsonl");
+        if (!(await fileService.existsFile(filePath))) await fileService.createFile(filePath);
+        const all = await parseJsonlToTypedObjects<SupabaseUser>(filePath);
+        setContactList(all);
       } catch (err) {
         message.error('Failed to load contacts');
         console.error(err);

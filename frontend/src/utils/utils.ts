@@ -159,3 +159,17 @@ export const placeholderId = '00000000-0000-0000-0000-000000000000';  // Static 
 export const STORAGE_PATH = process.env.STORAGE_PATH || "D:/Desktop/study/projects/DRP/storage";
 
 export const veryOldDate = "1970-01-01T00:00:00.000Z";
+
+export const BASE_URL = process.env.SPRINGBOOT_URL || 'http://localhost:8080';
+
+export async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+  const res = await fetch(input, { credentials: 'include', ...init });
+
+  const response = (await res.json()) as { code: number; msg: string; data?: T };
+
+  if (response.code !== 200) {
+    throw new Error(response.msg || 'API error:' + response.msg);
+  }
+
+  return response.data as T;
+}

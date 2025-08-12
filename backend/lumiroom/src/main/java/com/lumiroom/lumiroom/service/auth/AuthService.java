@@ -13,4 +13,8 @@ public interface AuthService {
   User findUserByUsernameOrEmail(String identifier);
 
   User findUserById(String id);
+
+  // this will combine the details in the frontend, we get a complete User object
+  // to be updated
+  User updateUserProfile(User updated);
 }

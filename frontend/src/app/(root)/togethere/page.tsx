@@ -3,15 +3,11 @@
 import ChatRoom from '@/components/ChatRoom';
 import GateLoadingCSS from '@/components/GateLoading';
 import globalStore from '@/store';
-// import { useGlobalStore } from '@/store';
-// import { PlayList } from '@/components/PlayList';
-import { RoomEntry, SupabaseUser } from '@/types/datatypes';
-import { getRoom } from '@/utils/api';
-// import { useRouter } from 'next/navigation';
+import { SupabaseUser } from '@/types/datatypes';
+import { checkRoom } from '@/utils/messages';
 import { useEffect, useState } from 'react';
 
 export default function RoomPage() {
-  const [room, setRoom] = useState<RoomEntry[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   // const router = useRouter();
   // const [user, setUser] = useState<SupabaseUser>(null!)
@@ -38,8 +34,9 @@ export default function RoomPage() {
         // setUser(u)
         setRoomId(roomId)
         
-        const roomData = await getRoom(roomId!);
-        setRoom(roomData);
+        if (await checkRoom(roomId!)) {
+          throw new Error("the room does not exist")
+        }
       } catch (error) {
         console.error('Error loading room:', error);
         // router.push(`/`);
@@ -54,11 +51,6 @@ export default function RoomPage() {
 
   if (isLoading) {
     return <GateLoadingCSS/>
-  }
-
-  if (!room) {
-    // router.push(`/`);
-    window.location.href = "/"
   }
 
   return (

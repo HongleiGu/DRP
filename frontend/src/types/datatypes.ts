@@ -20,15 +20,6 @@ export interface Message {
 }
 
 
-// export interface Group {
-//   id: string;
-//   name?: string;
-//   created_at: string;
-//   creator_id: string;
-// }
-
-// not necessarily data types, but useful
-
 // Define a type for scene callbacks
 export type SceneCallbacks = {
     showInteractButtonTV?: (show: boolean) => void;
@@ -120,16 +111,6 @@ export interface SupabaseUser {
   email: string; // since supabase only supports email/password auth, this is required
 }
 
-// this is only used to check if the room exists or not, wrap in type to prevent errors
-export interface RoomEntry {
-  id: string;
-  created_at: string;
-  name: string;
-  creator_id: string;
-  member_id: string;
-  last_read_at: string;
-  room_id: string;
-}
 
 export interface Group {
   id: string;

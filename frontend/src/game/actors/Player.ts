@@ -1,15 +1,11 @@
 import * as ex from 'excalibur';
 import { Resources } from '../config/resources';
 import { Config } from '../config/config';
-import { updateSupabasePlayerState } from '@/utils/api';
-import { UPDATE_INTERVAL } from '@/utils/utils';
 
 export class Player extends ex.Actor {
     private label?: ex.Label; // Reference to the label
     public userId: string;
-    private lastUpdateTime: number = 0;
-    private lastSentPosition: ex.Vector = ex.vec(0, 0);
-    private currentDirection: 'up' | 'down' | 'left' | 'right' = 'down';
+    public currentDirection: 'up' | 'down' | 'left' | 'right' = 'down';
     public roomId: string;
     public name: string;
     public avatarId: string;
@@ -101,15 +97,6 @@ export class Player extends ex.Actor {
             this.graphics.use(`${direction}-walk`);
         } else {
             this.graphics.use(`${this.currentDirection}-idle`);
-        }
-
-        const now = Date.now();
-        const distanceMoved = this.pos.distance(this.lastSentPosition);
-
-        if (now - this.lastUpdateTime > UPDATE_INTERVAL && distanceMoved > 0.5) {
-            this.lastUpdateTime = now;
-            this.lastSentPosition = this.pos.clone();
-            updateSupabasePlayerState(this.userId, this.pos.x, this.pos.y, this.name, this.currentDirection, this.roomId);
         }
     }
 }

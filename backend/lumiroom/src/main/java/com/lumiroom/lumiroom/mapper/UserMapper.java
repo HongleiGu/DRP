@@ -20,4 +20,6 @@ public interface UserMapper {
      * @return
      */
     User insertUser(User user);
+
+    User updateUserProfile(User user);
 }

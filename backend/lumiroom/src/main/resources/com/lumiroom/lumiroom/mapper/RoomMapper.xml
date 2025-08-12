@@ -35,4 +35,5 @@
       SELECT 1 FROM users WHERE id = #{userId}::uuid
     )
   </insert>
+
 </mapper>

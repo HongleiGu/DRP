@@ -1,39 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { Suspense,  useRef,  useState } from "react";
+import { Suspense, useState } from "react";
 import { Button} from "antd";
 import ChatPanel from "../ChatPanel";
 import { GameStateProvider } from "@/game/state/GameState";
 import dynamic from "next/dynamic";
 // import { useRouter } from "next/navigation";
 
-const HUD = dynamic(() => import('@/components/Lumiroom/UI/Overlay/HUD'), { ssr: false });
+// const HUD = dynamic(() => import('@/components/Lumiroom/UI/Overlay/HUD'), { ssr: false }); // if later we need some overlay
 const Game = dynamic(() => import('@/components/Lumiroom'), {
   ssr: false,
   loading: () => <div className="text-center p-8">Joining lumiroom...</div>,
 });
 
-// const { Content } = Layout;
-
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
-  // const router = useRouter();
-  const sendMessage = useRef<((msg: any) => void) | null>(null);
-  const receiveMessage = useRef<((msg: any) => void) | null>(null);
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
-  let theReceiver: any = null;
-
-  const addReceiver = (receiver: any) => {
-    theReceiver = receiver;
-  };
-
-  const handleSend = (theMessage: string) => {
-    if (theReceiver) {
-      theReceiver({
-        chat_message: theMessage,
-        created_at: new Date().toISOString()
-      });
-    }
-  };
 
   return (
     <div style={{ display: "flex", flexDirection: "row", height: '100vh', width: '100vw', position: 'fixed' }}>
@@ -46,8 +25,6 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
         }}>
           <ChatPanel
             chatroomId={chatroomId}
-            onMount={(sendFn) => (sendMessage.current = sendFn)}
-            receiveMessage={(msg) => receiveMessage.current?.(msg)}
           />
         </div>
       )}
@@ -59,10 +36,8 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       }}>
         <GameStateProvider>
           <Suspense fallback={<div className="text-center p-8">Initializing game engine...</div>}>
-            <HUD />
+            {/* <HUD /> */}
             <Game 
-              sendMessage={handleSend} 
-              addReceiver={addReceiver}
               chatPanelVisible={chatPanelVisible}
               setChatPanelVisible={setChatPanelVisible}
               chatroomId={chatroomId} 
