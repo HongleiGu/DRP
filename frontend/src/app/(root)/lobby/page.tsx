@@ -42,7 +42,8 @@ export default function CreateRoomPage() {
       setUser(u);
       setContactsLoading(true);
       try {
-        const filePath = path.join(STORAGE_PATH, user.id, "contacts.jsonl");
+        console.log(u)
+        const filePath = path.join(STORAGE_PATH, u.id, "contacts.jsonl");
         if (!(await fileService.existsFile(filePath))) await fileService.createFile(filePath);
         const all = await parseJsonlToTypedObjects<SupabaseUser>(filePath);
         setContactList(all);

@@ -175,7 +175,7 @@ public class AuthController {
    *         </ul>
    */
   @PostMapping("/verifyOtp")
-  public Result<User> verifyOtp(@RequestBody OtpVerificationRequest request) {
+  public Result<AuthResponse> verifyOtp(@RequestBody OtpVerificationRequest request) {
     try {
       UserOtp otp = otpService.verifyOtp(request.getEmail(), request.getOtp());
       if (otp == null) {
@@ -183,7 +183,14 @@ public class AuthController {
       }
       User user = authService.signupFromOtp(otp);
       otpService.deleteOtp(otp);
-      return Result.success(user);
+      Map<String, Object> claims = new HashMap<>();
+      claims.put("id", user.getId());
+      claims.put("username", user.getUsername());
+      claims.put("email", user.getEmail());
+
+      String token = JwtUtils.generateJwt(claims);
+
+      return Result.success(new AuthResponse(user, token), "login success");
     } catch (Throwable e) {
       return Result.error(500, "otp verified but cannot signup due to error: " + e.getMessage());
     }
@@ -223,6 +230,17 @@ public class AuthController {
       return Result.success(updatedUser, "profile updated successfully");
     } catch (Throwable e) {
       return Result.error(500, "An error occured when updating user profile" + e.getMessage());
+    }
+  }
+
+  // please dont move this elsewhere, this controller is the only one that escapes
+  // AuthInterceptor and therefore does not need the Authorization header
+  @PostMapping("/validateJWT")
+  public Result<Boolean> validateJWT(@RequestBody String jwt) {
+    try {
+      return Result.success(JwtUtils.isExpired(jwt), "Jwt checked");
+    } catch (Throwable e) {
+      return Result.error("failed to parse jwt, is the token semantically valid?");
     }
   }
 }

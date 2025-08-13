@@ -20,13 +20,13 @@ import globalStore from "@/store";
 import { signOut } from "@/utils/user";
 import { LoadingSpinner } from "@/components/Lumiroom/LoadingSpinner";
 import { SupabaseUser } from "@/types/datatypes";
+import { validateJWT } from "@/utils/api";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
 
 export default function HomePage() {
-  const [isClient, setIsClient] = useState(false);
   const [user, setUser] = useState<SupabaseUser>(null!);
   // const router = useRouter();
   const [activeTab, setActiveTab] = useState<"chats" | "contacts" | "profile">(
@@ -34,23 +34,24 @@ export default function HomePage() {
   );
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
     const helper = async () => {
-      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
-      if (isClient && !u) {
+      const jwt = await globalStore.getItem<string>('jwt-token')
+      if (!jwt || !await validateJWT(jwt)) {
+        console.log("jwt is missing")
         window.location.href = "/auth"
-        // router.push("/auth");
+        return
+      } 
+      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
+      if (!u) {
+        window.location.href = "/auth"
         return
       }
       if (u) setUser(u)
     }
     helper()
-  }, [isClient]);
+  }, []);
 
-  if (!isClient || !user) {
+  if (!user) {
     return <LoadingSpinner />;
   }
 

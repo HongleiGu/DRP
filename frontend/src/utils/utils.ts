@@ -21,6 +21,7 @@ export function convertKeysToCamelCase<T extends object>(obj: T): {
   }, {} as any); // Use 'any' to avoid type errors
 }
 
+import globalStore from '@/store';
 import { z } from 'zod';
 
 // Zod schema for UUID validation
@@ -163,12 +164,32 @@ export const veryOldDate = "1970-01-01T00:00:00.000Z";
 export const BASE_URL = process.env.SPRINGBOOT_URL || 'http://localhost:8080';
 
 export async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, { credentials: 'include', ...init });
+  // Convert input to string if it's a Request object
+  const url = typeof input === "string" ? input : input.url;
+
+  // Skip JWT check for auth endpoints
+  let token: string = "";
+  if (!url.startsWith(`${BASE_URL}/api/auth`)) {
+    token = await globalStore.getItem<string>("jwt-token") ?? "";
+    if (!token) {
+      throw new Error("you have not logged in yet");
+      // optionally: window.location.href = "/auth"
+    }
+  }
+
+  const headers = new Headers(init?.headers || {});
+  if (token) headers.set("Authorization", token);
+
+  const res = await fetch(input, {
+    credentials: "include",
+    ...init,
+    headers,
+  });
 
   const response = (await res.json()) as { code: number; msg: string; data?: T };
 
   if (response.code !== 200) {
-    throw new Error(response.msg || 'API error:' + response.msg);
+    throw new Error(response.msg || "API error:" + response.msg);
   }
 
   return response.data as T;

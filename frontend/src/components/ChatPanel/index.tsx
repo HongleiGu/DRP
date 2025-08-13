@@ -123,7 +123,7 @@ export default function ChatPanel({
       }
     }
     helper()
-  }, [chatroomId, loadMessages, loadLocalMessages, user]);
+  }, [chatroomId, loadMessages, loadLocalMessages, user, userId]);
 
   const send = useCallback(
     async (theMessage: Message) => {

@@ -2,7 +2,7 @@
 
 // import { supabase } from '@/lib/supabase'
 import globalStore from '@/store';
-import { SupabaseUser } from '@/types/datatypes'
+import { AuthResponse, SupabaseUser } from '@/types/datatypes'
 import { BASE_URL, fetchJson } from './utils';
 
 // this sends the OTP, since OTP is only used for auth, we ask the function to take username and password as well
@@ -18,8 +18,8 @@ export async function requestOtp(email: string, username: string, password: stri
   })
 }
 
-export async function verifyOtp(otp: string, email: string): Promise<SupabaseUser> {
-  const user = await fetchJson<SupabaseUser>(`${BASE_URL}/api/auth/verifyOtp`, {
+export async function verifyOtp(otp: string, email: string): Promise<AuthResponse> {
+  return await fetchJson<AuthResponse>(`${BASE_URL}/api/auth/verifyOtp`, {
     method: "POST",
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -27,8 +27,6 @@ export async function verifyOtp(otp: string, email: string): Promise<SupabaseUse
       email
     })
   })
-  await globalStore.setItem<SupabaseUser>('lumiroom-user', user)
-  return user;
 }
 
 // can either sign in with password or email

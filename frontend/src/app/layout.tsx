@@ -17,9 +17,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="stylesheet" href="./styles.css" />
-      </head>
       <body className={`antialiased`} style={{ margin: 0 }}>
         <AntdRegistry>
           <ConfigProvider

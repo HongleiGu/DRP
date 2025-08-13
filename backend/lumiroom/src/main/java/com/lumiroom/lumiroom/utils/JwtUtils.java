@@ -35,4 +35,14 @@ public class JwtUtils {
       return null;
     }
   }
+
+  public static boolean isExpired(String jwt) {
+    Claims claims = parseJwt(jwt);
+    if (claims == null) {
+      return true; // treat parsing errors as expired/invalid
+    }
+    Date expiration = claims.getExpiration();
+    return expiration == null || expiration.before(new Date()); // maybe expiration cannot be null, but writing it down
+                                                                // for safety check
+  }
 }

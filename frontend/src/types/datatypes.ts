@@ -158,3 +158,8 @@ export interface Response {
   msg: string;
   data?: unknown; // not even certain this exists
 }
+
+export interface AuthResponse {
+  user: SupabaseUser,
+  token: string
+}
