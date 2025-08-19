@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-// import { useRouter } from "next/navigation";
+import { usePathname, useRouter} from "next/navigation";
+import { useEffect, useState } from "react";
 import { Layout, Typography, Popover, Button, Avatar } from "antd";
 import {
   WechatOutlined,
@@ -13,20 +13,21 @@ import {
 import "@/app/globals.css";
 import "@/app/antd.css";
 
-import { ChatsPage } from "@/components/HomePage/ChatsPage";
-import { ContactsPage } from "@/components/HomePage/ContactsPage";
-import { ProfilePage } from "@/components/HomePage/ProfilePage";
+import ChatsPage from "@/components/HomePage/ChatsPage";
+import ContactsPage from "@/components/HomePage/ContactsPage";
+import ProfilePage from "@/components/HomePage/ProfilePage";
 import globalStore from "@/store";
 import { signOut } from "@/utils/user";
-import { LoadingSpinner } from "@/components/Lumiroom/LoadingSpinner";
+import { LoadingSpinner } from "@/components/Echospace/LoadingSpinner";
 import { SupabaseUser } from "@/types/datatypes";
 import { validateJWT } from "@/utils/api";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
-
 export default function HomePage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<SupabaseUser>(null!);
   // const router = useRouter();
   const [activeTab, setActiveTab] = useState<"chats" | "contacts" | "profile">(
@@ -34,22 +35,45 @@ export default function HomePage() {
   );
 
   useEffect(() => {
+    if (pathname !== "/") return;
+
     const helper = async () => {
-      const jwt = await globalStore.getItem<string>('jwt-token')
-      if (!jwt || !await validateJWT(jwt)) {
-        console.log("jwt is missing")
-        window.location.href = "/auth"
-        return
-      } 
-      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
-      if (!u) {
-        window.location.href = "/auth"
-        return
+      console.log("Helper started");
+
+      const jwt = await globalStore.getItem<string>('jwt-token');
+      console.log("JWT:", jwt);
+
+      if (!jwt) {
+        console.log("No JWT found, redirecting...");
+        router.push("/auth");
+        return;
       }
-      if (u) setUser(u)
-    }
-    helper()
-  }, []);
+
+      const valid = await validateJWT(jwt);
+      console.log("JWT valid?", valid);
+
+      if (!valid) {
+        console.log("Invalid JWT, redirecting...");
+        router.push("/auth");
+        return;
+      }
+
+      const u = await globalStore.getItem<SupabaseUser>('echospace-user');
+      console.log("User from store:", u);
+
+      if (!u) {
+        console.log("No user found, redirecting...");
+        router.push("/auth");
+        return;
+      }
+
+      setUser(u);
+      console.log("User set:", u);
+    };
+
+    helper();
+  }, [router, pathname]);
+
 
   if (!user) {
     return <LoadingSpinner />;
@@ -63,8 +87,7 @@ export default function HomePage() {
           icon={<LogoutOutlined />}
           onClick={() => {
             signOut();
-            window.location.href = "/auth"
-            // router.push("/auth");
+            router.push("/auth");
           }}
         >
           Sign out
@@ -75,8 +98,7 @@ export default function HomePage() {
           icon={<LoginOutlined />}
           onClick={() => 
             {
-              window.location.href = "/auth"
-              // router.push("/auth")
+              router.push("/auth")
             }
           }
         >
@@ -114,9 +136,9 @@ export default function HomePage() {
       </Header>
 
       <Content className="flex-1 overflow-auto bg-white">
-        {activeTab === "chats" && <ChatsPage />}
-        {activeTab === "contacts" && <ContactsPage />}
-        {activeTab === "profile" && <ProfilePage />}
+        {activeTab === "chats" && <ChatsPage user={user}/>}
+        {activeTab === "contacts" && <ContactsPage user={user}/>}
+        {activeTab === "profile" && <ProfilePage user={user}/>}
       </Content>
 
       <div className="fixed bottom-0 w-full bg-white shadow-inner z-50">

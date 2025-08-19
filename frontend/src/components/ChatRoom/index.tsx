@@ -1,18 +1,20 @@
 import { Suspense, useState } from "react";
 import { Button} from "antd";
 import ChatPanel from "../ChatPanel";
-import { GameStateProvider } from "@/game/state/GameState";
+// import { GameStateProvider } from "@/game/state/GameState";
 import dynamic from "next/dynamic";
-// import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-// const HUD = dynamic(() => import('@/components/Lumiroom/UI/Overlay/HUD'), { ssr: false }); // if later we need some overlay
-const Game = dynamic(() => import('@/components/Lumiroom'), {
+// const HUD = dynamic(() => import('@/components/Echospace/UI/Overlay/HUD'), { ssr: false }); // if later we need some overlay
+const Game = dynamic(() => import('@/components/Echospace'), {
   ssr: false,
-  loading: () => <div className="text-center p-8">Joining lumiroom...</div>,
+  loading: () => <div className="text-center p-8">Joining echospace...</div>,
 });
 
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
+
+  const router = useRouter();
 
   return (
     <div style={{ display: "flex", flexDirection: "row", height: '100vh', width: '100vw', position: 'fixed' }}>
@@ -34,7 +36,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
           flex: 7,
           backgroundColor: '#fff'
       }}>
-        <GameStateProvider>
+        {/* <GameStateProvider> */}
           <Suspense fallback={<div className="text-center p-8">Initializing game engine...</div>}>
             {/* <HUD /> */}
             <Game 
@@ -43,15 +45,14 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
               chatroomId={chatroomId} 
             />
           </Suspense>
-        </GameStateProvider>
+        {/* </GameStateProvider> */}
       </div>
 
       {/* Chat Panel Toggle Button */}
       <Button
         type="primary"
         onClick={() => {
-            window.location.href = "/lobby"
-            // router.push(`/lobby`)
+            router.push(`/lobby`)
           }
         }
         style={{

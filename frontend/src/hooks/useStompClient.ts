@@ -9,7 +9,7 @@ interface UseStompClientOptions {
   onMessage: (message: Message) => Promise<void>;
 }
 
-const wsUrl = process.env.WEBSOCKET_URL || "http://localhost:8080/";
+const wsUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:8080/";
 
 let stompClientRef: Client | null = null;
 

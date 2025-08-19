@@ -1,7 +1,7 @@
 "use client";
 
 import { useStompClient } from "@/hooks/useStompClient";
-import globalStore from "@/store";
+// import globalStore from "@/store";
 import { Message, Group, SupabaseUser } from "@/types/datatypes";
 import fileService from "@/utils/fileService";
 import {
@@ -11,34 +11,36 @@ import {
 } from "@/utils/json";
 import { formatDate, STORAGE_PATH } from "@/utils/utils";
 import { Avatar, Button, Card, Empty, List, Spin, Typography } from "antd";
+// import { usePathname, useRouter } from "next/navigation";
 import path from "path";
 import { useEffect, useState } from "react";
 
 const { Title, Text } = Typography;
 const PENDING_KEY = "__pending__";
 
-export function ContactsPage() {
-  const [user, setUser] = useState<SupabaseUser>(null!);
+export default function ContactsPage({user}: {user: SupabaseUser}) {
+  // const [user, setUser] = useState<SupabaseUser>(null!);
   const [contactsList, setContactList] = useState<SupabaseUser[]>([]);
   const [pendingList, setPendingList] = useState<
     { user: SupabaseUser; last_msg: Message | null }[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // const router = useRouter();
+  // const pathname = usePathname();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const u = await globalStore.getItem<SupabaseUser>("lumiroom-user");
-      if (!u || !u.id) {
-        if (!u || !u.id) {
-          window.location.href = "/auth"
-          return;
-        }
-      }
-      setUser(u);
-    };
-    fetchUser();
-  }, []);
+  // useEffect(() => {
+  //   if (pathname !== "/") return;
+  //   const fetchUser = async () => {
+  //     const u = await globalStore.getItem<SupabaseUser>("echospace-user");
+  //     if (!u || !u.id) {
+  //       router.push("/auth")
+  //       return;
+  //     }
+  //     setUser(u);
+  //   };
+  //   fetchUser();
+  // }, [router, pathname]);
 
   useEffect(() => {
     const fetchContacts = async () => {

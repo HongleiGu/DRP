@@ -24,13 +24,13 @@ export default function Game({
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<Engine | null>(null);
-  const [user, setUser] = useState<SupabaseUser>(null!)
+  const [, setUser] = useState<SupabaseUser>(null!)
 
   useEffect(() => {
     let game: ex.Engine;
     const helper = async () => {
       if (!canvasRef.current) return;
-      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
+      const u = await globalStore.getItem<SupabaseUser>('echospace-user')
       if (!u?.id) {
         alert("you have not logged in yet");
         router.push("/");
@@ -108,7 +108,7 @@ export default function Game({
       game.stop();
       gameRef.current = null;
     };
-  }, [])
+  }, [chatroomId, router]);
 
   return (
     <div className="relative w-full h-full">

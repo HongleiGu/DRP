@@ -32,5 +32,8 @@ declare module 'next' {
 declare global {
   interface Window {
     electronApi: ElectronApi;
+    Capacitor?: {
+      isNativePlatform?: () => boolean;
+    };
   }
 }

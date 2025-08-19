@@ -5,30 +5,31 @@ import GateLoadingCSS from '@/components/GateLoading';
 import globalStore from '@/store';
 import { SupabaseUser } from '@/types/datatypes';
 import { checkRoom } from '@/utils/messages';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function RoomPage() {
   const [isLoading, setIsLoading] = useState(true);
-  // const router = useRouter();
+  const router = useRouter();
+  const pathname = usePathname();
   // const [user, setUser] = useState<SupabaseUser>(null!)
   const [roomId, setRoomId] = useState<string>("")
 
   useEffect(() => {
+    if (pathname !== "/togethere") return;
     const loadData = async () => {
       try {
-        const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
-        const roomId = await globalStore.getItem<string>('lumiroom-room')
+        const u = await globalStore.getItem<SupabaseUser>('echospace-user')
+        const roomId = await globalStore.getItem<string>('echospace-room')
         console.log(u, roomId)
         setIsLoading(true);
 
         if (!u || !u.id) {
-          window.location.href = "/"
-          // router.push("/");
+          router.push("/");
           return
         }
         if (!roomId) {
-          window.location.href = "/"
-          // router.push(`/`);
+          router.push(`/`);
           return
         }
         // setUser(u)
@@ -39,15 +40,14 @@ export default function RoomPage() {
         }
       } catch (error) {
         console.error('Error loading room:', error);
-        // router.push(`/`);
-        window.location.href = "/"
+        router.push(`/`);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadData();
-  }, []);
+  }, [router, pathname]);
 
   if (isLoading) {
     return <GateLoadingCSS/>

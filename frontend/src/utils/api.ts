@@ -2,7 +2,6 @@
 import { Direction, Group, Message, PlayerData, SupabaseUser } from '@/types/datatypes';
 import globalStore from '@/store';
 import { BASE_URL, fetchJson, formatDate } from './utils';
-import { sendMessage } from './messages';
 
 export async function createRoom(
   users: SupabaseUser[],
@@ -10,7 +9,7 @@ export async function createRoom(
   groupName: string = 'groupchat',
   last_message: Message | null = null
 ): Promise<Group> {
-  const user = await globalStore.getItem('lumiroom-user') as SupabaseUser
+  const user = await globalStore.getItem('echospace-user') as SupabaseUser
   if (!user) {
     throw new Error('You must be signed in to create a room');
   }

@@ -1,0 +1,6 @@
+package com.echospace;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+}

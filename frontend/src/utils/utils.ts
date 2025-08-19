@@ -1,3 +1,8 @@
+import globalStore from '@/store';
+import { CapacitorHttp } from '@capacitor/core';
+import { z } from 'zod';
+import { isCapacitor } from './env';
+
 // Function to convert snake_case to camelCase
 function toCamelCase(snakeCase: string): string {
   return snakeCase.replace(/(_\w)/g, (matches) => matches[1].toUpperCase());
@@ -20,9 +25,6 @@ export function convertKeysToCamelCase<T extends object>(obj: T): {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }, {} as any); // Use 'any' to avoid type errors
 }
-
-import globalStore from '@/store';
-import { z } from 'zod';
 
 // Zod schema for UUID validation
 const uuidSchema = z.string().uuid();
@@ -161,36 +163,62 @@ export const STORAGE_PATH = process.env.STORAGE_PATH || "D:/Desktop/study/projec
 
 export const veryOldDate = "1970-01-01T00:00:00.000Z";
 
-export const BASE_URL = process.env.SPRINGBOOT_URL || 'http://localhost:8080';
+export const BASE_URL = process.env.NEXT_PUBLIC_SPRINGBOOT_URL || 'http://localhost:8080';
+
+export interface FetchOptions extends RequestInit {
+  skipAuth?: boolean; // skip JWT token injection
+}
 
 export async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  // Convert input to string if it's a Request object
-  const url = typeof input === "string" ? input : input.url;
+  const url = typeof input === 'string' ? input : input.url;
+  console.log('[fetchJson] fetching', url, init);
 
-  // Skip JWT check for auth endpoints
-  let token: string = "";
+  // Always check for JWT (skip for auth endpoints)
+  let token: string = '';
   if (!url.startsWith(`${BASE_URL}/api/auth`)) {
-    token = await globalStore.getItem<string>("jwt-token") ?? "";
-    if (!token) {
-      throw new Error("you have not logged in yet");
-      // optionally: window.location.href = "/auth"
+    token = (await globalStore.getItem<string>('jwt-token')) ?? '';
+    if (!token) throw new Error('you have not logged in yet');
+  }
+
+  // Build headers
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+  if (token) headers['Authorization'] = token;
+
+  try {
+    if (isCapacitor()) {
+      // ✅ Native Capacitor HTTP request
+      const response = await CapacitorHttp.request({
+        url,
+        method: (init?.method || 'GET').toUpperCase(),
+        headers,
+        data: init?.body ? JSON.parse(init.body as string) : undefined,
+      });
+
+      if (response.status !== 200) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+
+      const payload = response.data as { code: number; msg: string; data?: T };
+      if (payload.code !== 200) {
+        throw new Error(payload.msg || `API error: ${payload.code}`);
+      }
+      return payload.data as T;
+    } else {
+      // ✅ Browser/Electron fetch
+      const res = await fetch(url, { ...init, headers });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+      const payload = (await res.json()) as { code: number; msg: string; data?: T };
+      if (payload.code !== 200) {
+        throw new Error(payload.msg || `API error: ${payload.code}`);
+      }
+      return payload.data as T;
     }
+  } catch (err) {
+    console.error('[fetchJson] Failed:', err);
+    throw err;
   }
-
-  const headers = new Headers(init?.headers || {});
-  if (token) headers.set("Authorization", token);
-
-  const res = await fetch(input, {
-    credentials: "include",
-    ...init,
-    headers,
-  });
-
-  const response = (await res.json()) as { code: number; msg: string; data?: T };
-
-  if (response.code !== 200) {
-    throw new Error(response.msg || "API error:" + response.msg);
-  }
-
-  return response.data as T;
 }

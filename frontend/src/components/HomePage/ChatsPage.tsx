@@ -12,32 +12,35 @@ import fileService from "@/utils/fileService";
 import { appendJsonl, appendJsonls, parseJsonlToTypedObjects, replaceJsonlById } from "@/utils/json";
 import { useStompClient } from "@/hooks/useStompClient";
 import { deleteMessage, getMessages } from "@/utils/messages";
+import { useRouter } from "next/navigation"
 
 const { Text } = Typography;
 
-export function ChatsPage() {
+export default function ChatsPage({user}: {user: SupabaseUser}) {
   const [isMounted, setIsMounted] = useState<boolean>(false);
-  // const router = useRouter();
+  const router = useRouter();
   const [searchText, setSearchText] = useState<string>("");
   const [groupChats, setGroupChats] = useState<Group[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [user, setUser] = useState<SupabaseUser>(null!)
+  // const [user, setUser] = useState<SupabaseUser>(null!)
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  useEffect(() => {
-    const helper = async () => {
-      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
-      if (!u || !u.id) {
-        window.location.href = "/auth"
-        return;
-      }
-      setUser(u)
-    }
-    helper()
-  }, [isMounted])
+  // no need to do this again, the root pages fetches for us
+  // useEffect(() => {
+  //   const helper = async () => {
+  //     const u = await globalStore.getItem<SupabaseUser>('echospace-user')
+  //     console.log("got user", user);
+  //     if (!u || !u.id) {
+  //       router.push("/auth");
+  //       return;
+  //     }
+  //     setUser(u)
+  //   }
+  //   helper()
+  // }, [isMounted, router])
 
   // here, if the message comes from a new room, we add it the the local storage
   useStompClient({
@@ -81,7 +84,7 @@ export function ChatsPage() {
     }
   })
 
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     try {
       // file path should be ./storage/{userId}/groups.jsonl
       const filePath = path.join(STORAGE_PATH, user.id,  "groups.jsonl");
@@ -95,12 +98,12 @@ export function ChatsPage() {
       console.error("Failed to fetch groups:", error);
       return []
     }
-  };
+  }, [user.id]);
 
   // merge the local groups with those from redis
   // we can reasonably assume the messages in redis is sorted by time
   // TODO: currently the room creation logic is unhandled
-  const fetchFromRedis = async (): Promise<Group[]> => {
+  const fetchFromRedis = useCallback(async (): Promise<Group[]> => {
     try {
       const returnGroupsChats = groupChats;
       const messages: Message[] = await getMessages(user.id); // assumes user.id is present
@@ -171,7 +174,7 @@ export function ChatsPage() {
       console.error("❌ Failed to fetch groups from Redis:", err);
       return groupChats;
     }
-  };
+  }, [groupChats, user.id]);
 
 
 
@@ -220,7 +223,7 @@ export function ChatsPage() {
     };
 
     helper();
-  }, [user, isMounted]);
+  }, [user, isMounted, fetchGroups, fetchFromRedis, router]);
 
 
   const filteredChats = groupChats.filter((chat) =>
@@ -229,19 +232,17 @@ export function ChatsPage() {
 
   const jumpToRoomCreation = useCallback(() => {
     if (isMounted) {
-      // router.push("/lobby");
-      window.location.href = "/lobby"
+      router.push("/lobby");
     }
-  }, [isMounted]);
+  }, [isMounted, router]);
 
-  const handleRoomClick = useCallback((chat: Group) => {
+  const handleRoomClick = useCallback(async (chat: Group) => {
     if (isMounted) {
       // useGlobalStore.setState({ roomId: chat.id });
-      globalStore.setItem('lumiroom-room', chat.id)
-      // router.push(`/togethere/`);
-      window.location.href = `${PROJECT_NAME}`
+      await globalStore.setItem('echospace-room', chat.id)
+      router.push(`/${PROJECT_NAME}/`);
     }
-  }, [isMounted]);
+  }, [isMounted, router]);
 
   if (!isMounted) {
     return (
@@ -284,7 +285,7 @@ export function ChatsPage() {
         renderItem={(chat) => (
           <List.Item
             className="cursor-pointer hover:bg-gray-50 px-4 py-3 border-b"
-            onClick={() => handleRoomClick(chat)}
+            onClick={async () => await handleRoomClick(chat)}
           >
             <List.Item.Meta
               avatar={

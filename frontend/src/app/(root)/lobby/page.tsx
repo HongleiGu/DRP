@@ -9,6 +9,7 @@ import { PROJECT_NAME, STORAGE_PATH } from '@/utils/utils';
 import path from 'path';
 import fileService from '@/utils/fileService';
 import { parseJsonlToTypedObjects } from '@/utils/json';
+import { usePathname, useRouter } from 'next/navigation';
 // import { useRouter } from 'next/navigation';
 // import { useGlobalStore } from '@/store';
 
@@ -16,12 +17,13 @@ const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 
 export default function CreateRoomPage() {
+  const pathname = usePathname();
   const [selectedUserIds, setSelectedUserIds] = useState<SupabaseUser[]>([]);
   const [groupName, setGroupName] = useState('');
   const [contactsList, setContactList] = useState<SupabaseUser[]>([]);
   const [contactsLoading, setContactsLoading] = useState<boolean>(true);
   const [creatingLoading, setCreatingLoading] = useState<boolean>(false);
-  // const router = useRouter();
+  const router = useRouter();
   const [user, setUser] = useState<SupabaseUser>(null!);
 
   const handleCheckboxChange = (userId: SupabaseUser, checked: boolean) => {
@@ -31,12 +33,12 @@ export default function CreateRoomPage() {
   };
 
   useEffect(() => {
+    if (pathname !== "/lobby") return;
     const fetchContacts = async () => {
-      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
+      const u = await globalStore.getItem<SupabaseUser>('echospace-user')
       if (!u) {
         message.error('Please log in to create a room');
-        window.location.href = "/"
-        // router.push('/');
+        router.push('/');
         return;
       }
       setUser(u);
@@ -55,15 +57,14 @@ export default function CreateRoomPage() {
       }
     };
     fetchContacts();
-  }, []);
+  }, [router, pathname]);
 
   const handleCreateRoom = async () => {
     setCreatingLoading(true);
     try {
       const roomId = await createRoom([user, ...selectedUserIds], user?.id ?? "", groupName);
-      await globalStore.setItem('lumiroom-room', roomId)
-      // router.push(`/togethere/${roomId}`);
-      window.location.href = `/${PROJECT_NAME}`
+      await globalStore.setItem('echospace-room', roomId)
+      router.push(`/${PROJECT_NAME}/`);
     } catch (err) {
       message.error('Failed to create room');
       console.error(err);

@@ -8,6 +8,7 @@ import { signIn, signOut, verifyOtp, requestOtp, checkUsername } from "@/utils/u
 import { SupabaseUser, SignInArgs } from "@/types/datatypes";
 import globalStore from "@/store";
 import { debounce } from "lodash";
+import { useRouter } from "next/navigation";
 
 const { Title } = Typography;
 
@@ -25,6 +26,8 @@ export default function AuthPage() {
   const [loginForm] = Form.useForm();
   const [registerForm] = Form.useForm();
   const [verifyForm] = Form.useForm();
+
+  const router = useRouter();
 
   const debouncedCheck = debounce(async (field: "username" | "email", value: string) => {
     if (!value) {
@@ -68,10 +71,10 @@ export default function AuthPage() {
     try {
       const data = await verifyOtp(values.token, email);
       if (!data || !data.user || !data.token) throw new Error("Verification returned invalid user data");
-      await globalStore.setItem<SupabaseUser>('lumiroom-user', data.user);
+      await globalStore.setItem<SupabaseUser>('echospace-user', data.user);
       await globalStore.setItem<string>('jwt-token', data.token);
-      console.log(user);
-      window.location.href = "/";
+      console.log("onVerify", user);
+      router.push("/");
     } catch (err) {
       if (err instanceof Error) setError(err.message || "Verification failed.");
       else setError("An unexpected error occurred.");
@@ -90,8 +93,9 @@ export default function AuthPage() {
       const resUser = await signIn({ identifier: emailToUse, password: values.password });
       if (resUser) {
         setUser(resUser);
-        await globalStore.setItem<SupabaseUser>('lumiroom-user', resUser);
-        window.location.href = "/";
+        await globalStore.setItem<SupabaseUser>('echospace-user', resUser);
+        console.log("onLogin");
+        router.push("/")
       } else setError("Invalid username/email or password");
     } catch (err) {
       if (err instanceof Error) setError(err.message || "Login failed.");
@@ -106,8 +110,7 @@ export default function AuthPage() {
     try {
       await signOut();
       setUser(null);
-      await globalStore.removeItem('lumiroom-user');
-      window.location.href = "/auth";
+      await globalStore.removeItem('echospace-user');
     } catch (err) {
       if (err instanceof Error) setError(err.message || "Logout failed.");
       else setError("An unexpected error occurred.");

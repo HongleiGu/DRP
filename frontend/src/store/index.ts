@@ -1,16 +1,15 @@
-// store.ts
+import { Preferences } from '@capacitor/preferences';
+
+import { isCapacitor, isElectron } from "@/utils/env";
+
 export interface globalStore {
   getItem<T>(key: string): Promise<T | undefined>;
   setItem<T>(key: string, value: T): Promise<void>;
   removeItem(key: string): Promise<void>;
+  clear?(): Promise<void>;
 }
 
-const isElectron = () => {
-  return typeof window !== 'undefined' &&
-         typeof window.electronApi !== 'undefined' &&
-         typeof window.electronApi.storeGet === 'function';
-};
-
+// Electron store
 const electronStore: globalStore = {
   async getItem<T>(key: string): Promise<T | undefined> {
     return await window.electronApi.storeGet(key);
@@ -25,21 +24,58 @@ const electronStore: globalStore = {
   },
 };
 
+// Capacitor store (Preferences API, the @capacitor/storage does not seem to be maintained, npm 3yr ago)
+const capacitorStore: globalStore = {
+  async getItem<T>(key: string): Promise<T | undefined> {
+    const { value } = await Preferences.get({ key });
+    console.log(value)
+    if (!value) return undefined;
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return undefined;
+    }
+  },
+  async setItem<T>(key: string, value: T): Promise<void> {
+    await Preferences.set({ key, value: JSON.stringify(value) });
+  },
+  async removeItem(key: string): Promise<void> {
+    await Preferences.remove({ key });
+  },
+  async clear(): Promise<void> {
+    await Preferences.clear();
+  },
+};
+
+// Web store
 const webStore: globalStore = {
   async getItem<T>(key: string): Promise<T | undefined> {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : undefined;
   },
-
   async setItem<T>(key: string, value: T): Promise<void> {
     localStorage.setItem(key, JSON.stringify(value));
   },
-
   async removeItem(key: string): Promise<void> {
     localStorage.removeItem(key);
   },
+  async clear(): Promise<void> {
+    localStorage.clear();
+  },
 };
 
-const globalStore: globalStore = isElectron() ? electronStore : webStore;
+// Select store based on platform
+const globalStore: globalStore =
+  isElectron()
+    ? electronStore
+    : isCapacitor()
+    ? capacitorStore
+    : webStore;
+
+console.log(
+  isElectron() ? 'electron' :
+  isCapacitor() ? 'capacitor' :
+  'web'
+);
 
 export default globalStore;

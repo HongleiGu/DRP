@@ -41,6 +41,7 @@ export async function signIn(
     password: string
   }
 ): Promise<SupabaseUser> {
+  console.log(BASE_URL)
   const {user, token} = await fetchJson<{user: SupabaseUser, token: string}>(`${BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: { 'Content-Type': 'application/json' },
@@ -50,15 +51,15 @@ export async function signIn(
     })
   })
 
-  await globalStore.setItem<SupabaseUser>('lumiroom-user', user)
+  await globalStore.setItem<SupabaseUser>('echospace-user', user)
   await globalStore.setItem<string>('jwt-token', token);
 
   return user;
 }
 
 export async function signOut(): Promise<void> {
-  globalStore.removeItem('lumiroom-user')
-  globalStore.removeItem('jwt-token')
+  await globalStore.removeItem('echospace-user')
+  await globalStore.removeItem('jwt-token')
 }
 
 export async function updateUserProfile(
@@ -69,7 +70,7 @@ export async function updateUserProfile(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates)
   })
-  await globalStore.setItem<SupabaseUser>('lumiroom-user', user);
+  await globalStore.setItem<SupabaseUser>('echospace-user', user);
   return user
 }
 

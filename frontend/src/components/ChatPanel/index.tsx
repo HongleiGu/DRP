@@ -4,7 +4,7 @@ import { Badge, Button, Input, List, Popover, message, Card } from "antd";
 import EmojiGrid from "../EmojiGrids";
 import { Message, MessageScope, MessageType, PlayerData, SupabaseUser } from "@/types/datatypes";
 import { sendMessage, deleteMessage, getMessage } from "@/utils/messages";
-import { STORAGE_PATH } from "@/utils/utils";
+import { PROJECT_NAME, STORAGE_PATH } from "@/utils/utils";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { v4 as uuidv4 } from 'uuid';
 import { LumiAvatar } from "../LumiAvatar";
@@ -13,6 +13,8 @@ import path from "path"
 import { appendJsonl, parseJsonlToTypedObjects } from "@/utils/json";
 import globalStore from "@/store";
 import { useStompClient } from "@/hooks/useStompClient";
+import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 interface ChatPanelProps {
   chatroomId: string;
@@ -31,9 +33,10 @@ export default function ChatPanel({
   const [members] = useState<PlayerData[]>([]);
   // const pathname = usePathname();
   const [user, setUser] = useState<SupabaseUser>(null!)
-  // const router = useRouter();
+  const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [, contextHolder] = message.useMessage();
+  const pathname = usePathname();
   // const [msgChannel, setMsgChannel] = useState<RealtimeChannel>(null!); // use websocket instead of supabase
   
   
@@ -89,29 +92,28 @@ export default function ChatPanel({
   });
 
   useEffect(() => {
+    if (pathname !== `/${PROJECT_NAME}`) return;
     const helper = async () => {
-      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
+      const u = await globalStore.getItem<SupabaseUser>('echospace-user')
 
       if (!u || !u?.id) {
         message.error("User invalid");
-        // router.push("/");
-        window.location.href = "/"
+        router.push("/");
         return;
       }
 
       setUserId(u.id);
 
-      if (u.username) {
-        setUsername(u.username);
-      } else {
-        message.warning("Username not set");
-        // router.push("/onboarding");
-        window.location.href = "/onboarding"
-      }
+      // if (u.username) {
+      setUsername(u.username);
+      // } else {
+      //   message.warning("Username not set");
+      //   router.push("/onboarding");
+      // }
       setUser(u)
     }
     helper()
-  }, []);
+  }, [router, pathname]);
 
   // Load messages from the Redis queue and local
   useEffect(() => {
