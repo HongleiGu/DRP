@@ -1,4 +1,4 @@
-# Lumiroom
+# Echospace
 (I have to say, the name is undetermined, it is just a random name after asking gpt)
 
 (but the following is the real tech docs)
@@ -48,3 +48,9 @@ flowchart LR
 docs TDB
 
 ## Message
+
+## WARNINGS FOR DEVELOPERS:
+1. electronStore store the data somewhere in AppData with the app's name, so C:/Users/<user>/AppData/.../<appname>, delete the Cache folder would reset everythin
+2. capacitor loads strangely, eg. if you have a / page and /auth page, loading /auth will also trigger the / useEffect, so if the useEffect involves redirecting, infinite loop, solution, check pathname, if no match return, (need to do this for every page for safety issues)
+3. try to use https instead of http, half complete, but I decided to give up on this matter
+4. going with render as it can deploy the stuff and gives ssl/https, it does not need nginx, but I'll keep it here

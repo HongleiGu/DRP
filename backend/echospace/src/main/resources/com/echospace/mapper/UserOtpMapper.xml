@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.echospace.mapper.UserOtpMapper">
+
+  <insert id="insertOtp" parameterType="com.echospace.model.auth.UserOtp">
+    INSERT INTO user_otps (email, password, username, otp, created_at, expires_at)
+    VALUES (#{email}, #{password}, #{username}, #{otp}, #{createdAt}, #{expiresAt})
+  </insert>
+
+  <select id="findValidOtp" resultType="com.echospace.model.auth.UserOtp">
+    SELECT * FROM user_otps
+    WHERE email = #{email}
+      AND otp = #{otp}
+      AND expires_at > NOW()
+    LIMIT 1
+  </select>
+
+  <delete id="deleteOtp" parameterType="string">
+    DELETE FROM user_otps WHERE id::text = #{id}
+  </delete>
+
+  <delete id="deleteExpiredOtps">
+    DELETE FROM user_otps WHERE NOW() >= expires_at
+  </delete>
+
+</mapper>

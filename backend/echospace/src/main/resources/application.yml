@@ -1,0 +1,71 @@
+# this file is used to configure the Echospace backend application, only working in docker-compose environment
+
+spring:
+  application:
+    name: echospace
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:redis}
+      port: ${SPRING_REDIS_PORT:6379}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/echospace}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+  security:
+    user:
+      name: user
+      password: 123
+  # profiles: # removed all profiles to avoid confusion, this is useless
+    # active: sender,receiver,auth
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: hongleigu19@gmail.com
+    password: vemfvlcmsrjtpljs
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+logging:
+  level:
+    root: INFO
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+email:
+  sender: ${spring.mail.username}
+
+server:
+  address: 0.0.0.0
+  port: 8080
+  forward-headers-strategy: framework
+  # ssl: # render gives ssl, so we dont need these here, however, this is kept for future use
+  #   enabled: true
+  #   key-store-type: PKCS12
+  #   key-store: classpath:keystore.p12   # we'll generate this from your PEM
+  #   key-store-password: echospace       # choose a password
+  #   key-alias: echospace                # alias for the key inside keystore
+

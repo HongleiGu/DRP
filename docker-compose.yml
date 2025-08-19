@@ -7,41 +7,95 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
+    networks:
+      - echospace-network
 
   rabbitmq:
-    image: rabbitmq:4.0-management
+    image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"    # AMQP port
-      - "15672:15672"  # Management UI port
+      - "5672:5672"
+      - "15672:15672"
     volumes:
       - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
-
-  # backend:
-  #   build:
-  #     context: ./backend/lumiroom           # ← inside the Docker context
-  #     dockerfile: Dockerfile
-  #   container_name: lumiroom-backend
-  #   ports:
-  #     - "8080:8080"
-  #   depends_on:
-  #     - redis
-  #     - rabbitmq
-  #   restart: unless-stopped
+    restart: unless-stopped
+    networks:
+      - echospace-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   postgres:
     image: postgres:15
-    container_name: lumiroom-postgres
-    restart: unless-stopped
-    ports:
-      - "5432:5432"
+    container_name: postgres
     environment:
-      POSTGRES_DB: lumiroom
+      POSTGRES_DB: echospace
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - echospace-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend/echospace
+      dockerfile: Dockerfile
+    container_name: echospace-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/echospace
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+    restart: unless-stopped
+    networks:
+      - echospace-network
+
+  # nginx:
+  #   image: nginx:latest
+  #   container_name: echospace-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/certs:/etc/nginx/certs:ro
+  #   depends_on:
+  #     - backend
+  #   restart: unless-stopped
+  #   networks:
+  #     - echospace-network
 
 volumes:
   redis_data:
   pgdata:
+
+networks:
+  echospace-network:
+    driver: bridge
