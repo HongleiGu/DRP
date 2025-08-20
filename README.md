@@ -1,4 +1,4 @@
-# Echospace
+# Lumiroom
 (I have to say, the name is undetermined, it is just a random name after asking gpt)
 
 (but the following is the real tech docs)

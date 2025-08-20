@@ -32,7 +32,7 @@ export default function ContactsPage({user}: {user: SupabaseUser}) {
   // useEffect(() => {
   //   if (pathname !== "/") return;
   //   const fetchUser = async () => {
-  //     const u = await globalStore.getItem<SupabaseUser>("echospace-user");
+  //     const u = await globalStore.getItem<SupabaseUser>("lumiroom-user");
   //     if (!u || !u.id) {
   //       router.push("/auth")
   //       return;

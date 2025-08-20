@@ -18,7 +18,7 @@ import ContactsPage from "@/components/HomePage/ContactsPage";
 import ProfilePage from "@/components/HomePage/ProfilePage";
 import globalStore from "@/store";
 import { signOut } from "@/utils/user";
-import { LoadingSpinner } from "@/components/Echospace/LoadingSpinner";
+import { LoadingSpinner } from "@/components/Lumiroom/LoadingSpinner";
 import { SupabaseUser } from "@/types/datatypes";
 import { validateJWT } from "@/utils/api";
 
@@ -58,7 +58,7 @@ export default function HomePage() {
         return;
       }
 
-      const u = await globalStore.getItem<SupabaseUser>('echospace-user');
+      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user');
       console.log("User from store:", u);
 
       if (!u) {

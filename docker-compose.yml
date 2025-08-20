@@ -8,7 +8,7 @@ services:
       - redis_data:/data
     restart: unless-stopped
     networks:
-      - echospace-network
+      - lumiroom-network
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -20,7 +20,7 @@ services:
       - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     restart: unless-stopped
     networks:
-      - echospace-network
+      - lumiroom-network
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 5s
@@ -32,7 +32,7 @@ services:
     image: postgres:15
     container_name: postgres
     environment:
-      POSTGRES_DB: echospace
+      POSTGRES_DB: lumiroom
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
@@ -41,7 +41,7 @@ services:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
-      - echospace-network
+      - lumiroom-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -51,9 +51,9 @@ services:
 
   backend:
     build:
-      context: ./backend/echospace
+      context: ./backend/lumiroom
       dockerfile: Dockerfile
-    container_name: echospace-backend
+    container_name: lumiroom-backend
     ports:
       - "8080:8080"
     depends_on:
@@ -64,7 +64,7 @@ services:
       redis:
         condition: service_started
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/echospace
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lumiroom
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_REDIS_HOST: redis
@@ -75,11 +75,11 @@ services:
       SPRING_RABBITMQ_PASSWORD: guest
     restart: unless-stopped
     networks:
-      - echospace-network
+      - lumiroom-network
 
   # nginx:
   #   image: nginx:latest
-  #   container_name: echospace-nginx
+  #   container_name: lumiroom-nginx
   #   ports:
   #     - "80:80"
   #     - "443:443"
@@ -90,12 +90,12 @@ services:
   #     - backend
   #   restart: unless-stopped
   #   networks:
-  #     - echospace-network
+  #     - lumiroom-network
 
 volumes:
   redis_data:
   pgdata:
 
 networks:
-  echospace-network:
+  lumiroom-network:
     driver: bridge

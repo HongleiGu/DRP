@@ -8,4 +8,4 @@ openssl pkcs12 -in keystore.p12 -nocerts -nodes -out private-key.pem
 openssl pkcs12 -in keystore.p12 -nokeys -out certificate.pem
 
 # change password and alias
-openssl pkcs12 -export -in certificate.pem -inkey private-key.pem -out keystore.p12 -name echospace -passout pass:echospace    
+openssl pkcs12 -export -in certificate.pem -inkey private-key.pem -out keystore.p12 -name lumiroom -passout pass:lumiroom    

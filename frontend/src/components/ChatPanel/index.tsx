@@ -94,7 +94,7 @@ export default function ChatPanel({
   useEffect(() => {
     if (pathname !== `/${PROJECT_NAME}`) return;
     const helper = async () => {
-      const u = await globalStore.getItem<SupabaseUser>('echospace-user')
+      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
 
       if (!u || !u?.id) {
         message.error("User invalid");

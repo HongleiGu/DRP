@@ -5,10 +5,10 @@ import ChatPanel from "../ChatPanel";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 
-// const HUD = dynamic(() => import('@/components/Echospace/UI/Overlay/HUD'), { ssr: false }); // if later we need some overlay
-const Game = dynamic(() => import('@/components/Echospace'), {
+// const HUD = dynamic(() => import('@/components/Lumiroom/UI/Overlay/HUD'), { ssr: false }); // if later we need some overlay
+const Game = dynamic(() => import('@/components/Lumiroom'), {
   ssr: false,
-  loading: () => <div className="text-center p-8">Joining echospace...</div>,
+  loading: () => <div className="text-center p-8">Joining lumiroom...</div>,
 });
 
 export default function ChatRoom({ chatroomId }: { chatroomId: string }) {

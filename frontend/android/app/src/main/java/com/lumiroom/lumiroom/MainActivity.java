@@ -1,4 +1,4 @@
-package com.echospace;
+package com.lumiroom;
 
 import com.getcapacitor.BridgeActivity;
 

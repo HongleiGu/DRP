@@ -3,12 +3,12 @@ services:
   - type: web
     name: backend
     env: docker
-    dockerfilePath: ./backend/echospace/Dockerfile
+    dockerfilePath: ./backend/lumiroom/Dockerfile
     plan: standard
     instanceCount: 1
     envVars:
       - key: SPRING_DATASOURCE_URL
-        value: jdbc:postgresql://postgres:5432/echospace
+        value: jdbc:postgresql://postgres:5432/lumiroom
       - key: SPRING_DATASOURCE_USERNAME
         value: postgres
       - key: SPRING_DATASOURCE_PASSWORD
@@ -33,7 +33,7 @@ services:
   - type: postgres
     name: postgres
     plan: starter
-    databaseName: echospace
+    databaseName: lumiroom
     user: postgres
     password: postgres
 

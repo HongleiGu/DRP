@@ -19,8 +19,8 @@ export default function RoomPage() {
     if (pathname !== "/togethere") return;
     const loadData = async () => {
       try {
-        const u = await globalStore.getItem<SupabaseUser>('echospace-user')
-        const roomId = await globalStore.getItem<string>('echospace-room')
+        const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
+        const roomId = await globalStore.getItem<string>('lumiroom-room')
         console.log(u, roomId)
         setIsLoading(true);
 

@@ -71,7 +71,7 @@ export default function AuthPage() {
     try {
       const data = await verifyOtp(values.token, email);
       if (!data || !data.user || !data.token) throw new Error("Verification returned invalid user data");
-      await globalStore.setItem<SupabaseUser>('echospace-user', data.user);
+      await globalStore.setItem<SupabaseUser>('lumiroom-user', data.user);
       await globalStore.setItem<string>('jwt-token', data.token);
       console.log("onVerify", user);
       router.push("/");
@@ -93,7 +93,7 @@ export default function AuthPage() {
       const resUser = await signIn({ identifier: emailToUse, password: values.password });
       if (resUser) {
         setUser(resUser);
-        await globalStore.setItem<SupabaseUser>('echospace-user', resUser);
+        await globalStore.setItem<SupabaseUser>('lumiroom-user', resUser);
         console.log("onLogin");
         router.push("/")
       } else setError("Invalid username/email or password");
@@ -110,7 +110,7 @@ export default function AuthPage() {
     try {
       await signOut();
       setUser(null);
-      await globalStore.removeItem('echospace-user');
+      await globalStore.removeItem('lumiroom-user');
     } catch (err) {
       if (err instanceof Error) setError(err.message || "Logout failed.");
       else setError("An unexpected error occurred.");

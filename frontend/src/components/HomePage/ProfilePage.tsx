@@ -6,7 +6,7 @@ import { LeftOutlined, RightOutlined } from "@ant-design/icons"
 import { LumiAvatar } from "../LumiAvatar"
 // import globalStore from "@/store"
 import { SupabaseUser } from "@/types/datatypes"
-import { LoadingSpinner } from "../Echospace/LoadingSpinner"
+import { LoadingSpinner } from "../Lumiroom/LoadingSpinner"
 import { updateUserProfile } from "@/utils/user"
 // import { usePathname, useRouter } from "next/navigation"
 
@@ -22,7 +22,7 @@ export default function ProfilePage({user}: {user: SupabaseUser}) {
   // useEffect(() => {
   //   if (pathname !== "/") return;
   //   const helper = async () => {
-  //     const u = await globalStore.getItem<SupabaseUser>("echospace-user")
+  //     const u = await globalStore.getItem<SupabaseUser>("lumiroom-user")
   //     if (!u || !u.id) {
   //       router.push("/auth")
   //       return

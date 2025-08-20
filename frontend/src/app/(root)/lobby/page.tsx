@@ -35,7 +35,7 @@ export default function CreateRoomPage() {
   useEffect(() => {
     if (pathname !== "/lobby") return;
     const fetchContacts = async () => {
-      const u = await globalStore.getItem<SupabaseUser>('echospace-user')
+      const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
       if (!u) {
         message.error('Please log in to create a room');
         router.push('/');
@@ -63,7 +63,7 @@ export default function CreateRoomPage() {
     setCreatingLoading(true);
     try {
       const roomId = await createRoom([user, ...selectedUserIds], user?.id ?? "", groupName);
-      await globalStore.setItem('echospace-room', roomId)
+      await globalStore.setItem('lumiroom-room', roomId)
       router.push(`/${PROJECT_NAME}/`);
     } catch (err) {
       message.error('Failed to create room');

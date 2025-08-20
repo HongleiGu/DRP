@@ -31,7 +31,7 @@ export default function ChatsPage({user}: {user: SupabaseUser}) {
   // no need to do this again, the root pages fetches for us
   // useEffect(() => {
   //   const helper = async () => {
-  //     const u = await globalStore.getItem<SupabaseUser>('echospace-user')
+  //     const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
   //     console.log("got user", user);
   //     if (!u || !u.id) {
   //       router.push("/auth");
@@ -239,7 +239,7 @@ export default function ChatsPage({user}: {user: SupabaseUser}) {
   const handleRoomClick = useCallback(async (chat: Group) => {
     if (isMounted) {
       // useGlobalStore.setState({ roomId: chat.id });
-      await globalStore.setItem('echospace-room', chat.id)
+      await globalStore.setItem('lumiroom-room', chat.id)
       router.push(`/${PROJECT_NAME}/`);
     }
   }, [isMounted, router]);

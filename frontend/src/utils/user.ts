@@ -51,14 +51,14 @@ export async function signIn(
     })
   })
 
-  await globalStore.setItem<SupabaseUser>('echospace-user', user)
+  await globalStore.setItem<SupabaseUser>('lumiroom-user', user)
   await globalStore.setItem<string>('jwt-token', token);
 
   return user;
 }
 
 export async function signOut(): Promise<void> {
-  await globalStore.removeItem('echospace-user')
+  await globalStore.removeItem('lumiroom-user')
   await globalStore.removeItem('jwt-token')
 }
 
@@ -70,7 +70,7 @@ export async function updateUserProfile(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates)
   })
-  await globalStore.setItem<SupabaseUser>('echospace-user', user);
+  await globalStore.setItem<SupabaseUser>('lumiroom-user', user);
   return user
 }
 
