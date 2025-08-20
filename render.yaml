@@ -1,19 +1,45 @@
-# render.yaml - deploys Spring Boot with Docker Compose, Maven build in subdirectory
-
+# render.yaml
 services:
   - type: web
-    name: echospace-backend
+    name: backend
     env: docker
+    dockerfilePath: ./backend/echospace/Dockerfile
+    plan: standard
+    instanceCount: 1
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://postgres:5432/echospace
+      - key: SPRING_DATASOURCE_USERNAME
+        value: postgres
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: postgres
+      - key: SPRING_REDIS_HOST
+        value: redis
+      - key: SPRING_REDIS_PORT
+        value: 6379
+      - key: SPRING_RABBITMQ_HOST
+        value: rabbitmq
+      - key: SPRING_RABBITMQ_PORT
+        value: 5672
+      - key: SPRING_RABBITMQ_USERNAME
+        value: guest
+      - key: SPRING_RABBITMQ_PASSWORD
+        value: guest
+
+  - type: redis
+    name: redis
     plan: free
-    repo: https://github.com/yourusername/echospace
-    branch: main
-    buildCommand: |
-      # Navigate to backend folder and build Spring Boot
-      cd backend/echospace
-      mvn clean package
-      # Go back to repo root and build Docker images
-      cd ../../
-      docker-compose build
-    startCommand: |
-      docker-compose up --remove-orphans
-    autoDeploy: true
+
+  - type: postgres
+    name: postgres
+    plan: starter
+    databaseName: echospace
+    user: postgres
+    password: postgres
+
+  - type: worker
+    name: rabbitmq
+    env: docker
+    dockerfilePath: ./rabbitmq/Dockerfile
+    plan: starter
+    instanceCount: 1
