@@ -1,5 +1,5 @@
 # Build stage
-FROM maven:3.9.2-eclipse-temurin-21 AS build
+FROM maven:3.9.2-jdk-21 AS build
 WORKDIR /app
 COPY backend/lumiroom/ .      
 # copies pom.xml + src + all files
