@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lumiroom.mapper.UserMapper">
+
+  <select id="findUserByUsernameOrEmail" resultType="com.lumiroom.model.commons.User" parameterType="String">
+    SELECT id, username, onboarding_complete, avatar_id, created_at, email, password_hash
+    FROM users
+    WHERE username = #{identifier} OR email = #{identifier}
+    LIMIT 1
+  </select>
+
+  <select id="findUserById" resultType="com.lumiroom.model.commons.User" parameterType="String">
+    SELECT id, username, onboarding_complete, avatar_id, created_at, email, password_hash
+    FROM users
+    WHERE id = #{id}::uuid
+    LIMIT 1
+  </select>
+
+  <!-- this needs to return something, insert cannot return a model class -->
+  <select id="insertUser" parameterType="com.lumiroom.model.commons.User"> 
+    INSERT INTO users (
+      username, onboarding_complete, avatar_id, email, password_hash
+    )
+    VALUES (
+      #{username}, #{onboardingComplete}, #{avatarId}, #{email}, #{passwordHash}
+    )
+    RETURNING 
+      id, username, onboarding_complete, avatar_id, created_at, email, password_hash
+  </select>
+
+  <insert id="updatePlayerData" parameterType="com.lumiroom.model.game.PlayerData">
+    INSERT INTO players
+      (user_id, name, room_id, x, y, direction, avatarId, last_updated)
+    VALUES
+      (#{userId}::uuid, #{name}, #{roomId}::uuid, #{x}, #{y}, #{direction}, #{avatarId}, now())
+    ON CONFLICT (user_id, room_id) DO UPDATE
+    SET
+      name = COALESCE(EXCLUDED.name, players.name),
+      x = COALESCE(EXCLUDED.x, players.x),
+      y = COALESCE(EXCLUDED.y, players.y),
+      direction = COALESCE(EXCLUDED.direction, players.direction),
+      avatarId = COALESCE(EXCLUDED.avatarId, players.avatarId),
+      last_updated = now()
+  </insert>
+
+  <!-- still the returning stuff, need to return something so the tag -->
+  <select id="updateUserProfile"
+    parameterType="com.lumiroom.model.commons.User"
+    resultType="com.lumiroom.model.commons.User">
+    UPDATE users
+    <set>
+      <if test="username != null">username = #{username},</if>
+      <if test="onboardingComplete != null">onboarding_complete = #{onboardingComplete},</if>
+      <if test="avatarId != null">avatar_id = #{avatarId},</if>
+      <if test="email != null">email = #{email},</if>
+      <if test="passwordHash != null">password_hash = #{passwordHash},</if>
+    </set>
+    WHERE id = #{id}::uuid
+    RETURNING *
+  </select>
+
+</mapper>
