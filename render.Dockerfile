@@ -1,8 +1,15 @@
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
-# Copy pre-built JAR from repo root
-COPY lumiroom-0.0.1-SNAPSHOT.jar app.jar
+# Copy everything needed for Maven wrapper build
+COPY backend/lumiroom/ .
 
+# Ensure wrapper script is executable
+RUN chmod +x mvnw
+
+# Build the JAR
+RUN ./mvnw clean package -DskipTests
+
+# Run the app
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "target/lumiroom-0.0.1-SNAPSHOT.jar"]
