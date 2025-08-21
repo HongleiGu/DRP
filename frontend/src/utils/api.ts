@@ -14,7 +14,7 @@ export async function createRoom(
     throw new Error('You must be signed in to create a room');
   }
   // create a room and request the roomId
-  const roomId = await fetchJson<string>(`${BASE_URL}/api/message?userId=${encodeURIComponent(creator_id)}`, {
+  const roomId = await fetchJson<string>(`${BASE_URL}/api/createRoom`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -174,7 +174,7 @@ export default function ChatsPage({user}: {user: SupabaseUser}) {
       console.error("❌ Failed to fetch groups from Redis:", err);
       return groupChats;
     }
-  }, [groupChats, user.id]);
+  }, [user.id]);
 
 
 
@@ -223,7 +223,7 @@ export default function ChatsPage({user}: {user: SupabaseUser}) {
     };
 
     helper();
-  }, [user, isMounted, fetchGroups, fetchFromRedis, router]);
+  }, [user, isMounted]);
 
 
   const filteredChats = groupChats.filter((chat) =>

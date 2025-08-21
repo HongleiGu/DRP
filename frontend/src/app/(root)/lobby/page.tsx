@@ -62,6 +62,7 @@ export default function CreateRoomPage() {
   const handleCreateRoom = async () => {
     setCreatingLoading(true);
     try {
+      console.log([user, ...selectedUserIds], user?.id ?? "", groupName)
       const roomId = await createRoom([user, ...selectedUserIds], user?.id ?? "", groupName);
       await globalStore.setItem('lumiroom-room', roomId)
       router.push(`/${PROJECT_NAME}/`);

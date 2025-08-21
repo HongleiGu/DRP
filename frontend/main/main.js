@@ -2,7 +2,6 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import https from 'https';
 import express from 'express';
 import Store from 'electron-store';
 
@@ -15,7 +14,7 @@ app.disableHardwareAcceleration(); // Optional
 const store = new Store({ name: 'app-store' });
 let server;
 
-// Start HTTPS server
+// Start HTTP server (HTTPS disabled)
 async function startServer() {
   return new Promise((resolve, reject) => {
     const expressApp = express();
@@ -39,7 +38,8 @@ async function startServer() {
 
     const port = 3000;
 
-    // HTTPS options
+    // HTTPS options (commented out)
+    /*
     const httpsOptions = {
       key: fs.readFileSync(path.join(__dirname, 'key.pem')),
       cert: fs.readFileSync(path.join(__dirname, 'cert.pem')),
@@ -50,6 +50,13 @@ async function startServer() {
         console.log(`HTTPS Static server running at https://localhost:${port}`);
         resolve(port);
       });
+    */
+
+    // Use plain HTTP instead
+    server = expressApp.listen(port, () => {
+      console.log(`HTTP Static server running at http://localhost:${port}`);
+      resolve(port);
+    });
 
     server.on('error', reject);
   });
@@ -69,10 +76,11 @@ async function createWindow() {
     },
   });
 
-  win.loadURL(`https://localhost:${port}`);
+  win.loadURL(`http://localhost:${port}`); // Use HTTP
 }
 
-// Accept self-signed certs for dev
+// Remove certificate-error handler (not needed anymore)
+/*
 app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
   if (url.startsWith('https://localhost')) {
     event.preventDefault();
@@ -81,6 +89,7 @@ app.on('certificate-error', (event, webContents, url, error, certificate, callba
     callback(false);
   }
 });
+*/
 
 app.whenReady().then(createWindow);
 
@@ -90,6 +99,11 @@ app.on('window-all-closed', () => {
 });
 
 app.on('unhandledRejection', e => console.error(e));
+
+/* ------------------- ipcMain Handlers ------------------- */
+
+// ...keep all your ipcMain handlers as-is
+
 
 /* ------------------- ipcMain Handlers ------------------- */
 

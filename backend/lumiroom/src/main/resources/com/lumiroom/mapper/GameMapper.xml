@@ -13,7 +13,7 @@
 
   <insert id="updatePlayerData" parameterType="com.lumiroom.model.game.PlayerData">
     INSERT INTO players
-      (user_id, name, room_id, x, y, direction, avatarId, last_updated)
+      (user_id, name, room_id, x, y, direction, avatar_id, last_updated)
     VALUES
       (#{userId}::uuid, #{name}, #{roomId}::uuid, #{x}, #{y}, #{direction}, #{avatarId}, now())
     ON CONFLICT (user_id, room_id) DO UPDATE
@@ -22,7 +22,7 @@
       x = COALESCE(EXCLUDED.x, players.x),
       y = COALESCE(EXCLUDED.y, players.y),
       direction = COALESCE(EXCLUDED.direction, players.direction),
-      avatarId = COALESCE(EXCLUDED.avatarId, players.avatarId),
+      avatar_id = COALESCE(EXCLUDED.avatar_id, players.avatar_id),
       last_updated = now()
   </insert>
 
