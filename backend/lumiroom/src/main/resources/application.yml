@@ -60,12 +60,12 @@ email:
 
 server:
   address: 0.0.0.0
-  port: ${PORT:8080}
+  port: 8443
   forward-headers-strategy: framework
-  # ssl: # render gives ssl, so we dont need these here, however, this is kept for future use
-  #   enabled: true
-  #   key-store-type: PKCS12
-  #   key-store: classpath:keystore.p12   # we'll generate this from your PEM
-  #   key-store-password: lumiroom       # choose a password
-  #   key-alias: lumiroom                # alias for the key inside keystore
+  ssl: # render gives ssl, so we dont need these here, however, this is kept for future use
+    enabled: true
+    key-store-type: PKCS12
+    key-store: classpath:keystore.p12   # we'll generate this from your PEM
+    key-store-password: lumiroom       # choose a password
+    key-alias: lumiroom                # alias for the key inside keystore
 
