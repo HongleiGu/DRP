@@ -60,7 +60,7 @@ email:
 
 server:
   address: 0.0.0.0
-  port: 8443
+  port: 8080
   forward-headers-strategy: framework
   # ssl: # render gives ssl, so we dont need these here, however, this is kept for future use
   #   enabled: true
