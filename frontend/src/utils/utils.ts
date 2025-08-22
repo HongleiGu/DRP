@@ -159,15 +159,15 @@ export const formatDate = (): string => {
 
 export const placeholderId = '00000000-0000-0000-0000-000000000000';  // Static UUID for placeholder
 
-export const STORAGE_PATH = process.env.STORAGE_PATH || "D:/Desktop/study/projects/DRP/storage";
+export const STORAGE_PATH = (process.env.NODE_ENV === 'development' && window?.process?.type === 'renderer' ? process.env.NEXT_PUBLIC_STORAGE_PATH_DEV : process.env.NEXT_PUBLIC_STORAGE_PATH_PROD) || './storage';
 
 export const veryOldDate = "1970-01-01T00:00:00.000Z";
 
-export const BASE_URL = process.env.NEXT_PUBLIC_SPRINGBOOT_URL || 'http://localhost:8080';
+export const BASE_URL = process.env.NEXT_PUBLIC_SPRINGBOOT_URL || 'http://localhost:8080/';
 
-export interface FetchOptions extends RequestInit {
-  skipAuth?: boolean; // skip JWT token injection
-}
+// export interface FetchOptions extends RequestInit {
+//   skipAuth?: boolean; // skip JWT token injection
+// }
 
 export async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const url = typeof input === 'string' ? input : input.url;
@@ -175,7 +175,7 @@ export async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Prom
 
   // Always check for JWT (skip for auth endpoints)
   let token: string = '';
-  if (!url.startsWith(`${BASE_URL}/api/auth`)) {
+  if (!url.startsWith(`${BASE_URL}api/auth`)) {
     token = (await globalStore.getItem<string>('jwt-token')) ?? '';
     if (!token) throw new Error('you have not logged in yet');
   }

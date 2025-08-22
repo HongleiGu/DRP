@@ -14,7 +14,7 @@ export async function createRoom(
     throw new Error('You must be signed in to create a room');
   }
   // create a room and request the roomId
-  const roomId = await fetchJson<string>(`${BASE_URL}/api/createRoom`, {
+  const roomId = await fetchJson<string>(`${BASE_URL}api/createRoom`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -23,7 +23,7 @@ export async function createRoom(
       }),
     });
   // insert the invited users in the room
-  await fetchJson<string>(`${BASE_URL}/api/message/insertUsersToRoomBatched`, {
+  await fetchJson<string>(`${BASE_URL}api/message/insertUsersToRoomBatched`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
@@ -47,7 +47,7 @@ export async function createRoom(
 }
 
 export async function getPlayers(roomId: string): Promise<PlayerData[]> {
-  return await fetchJson<PlayerData[]>(`${BASE_URL}/api/game/getPlayers`, {
+  return await fetchJson<PlayerData[]>(`${BASE_URL}api/game/getPlayers`, {
     method: "POST",
     headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -57,7 +57,7 @@ export async function getPlayers(roomId: string): Promise<PlayerData[]> {
 }
 
 export async function resetPlayerToDefault(userId: string, roomId: string, name: string | null = null, avatarId: string | null = null): Promise<void> {
-  await fetchJson<string>(`${BASE_URL}/api/game/updatePlayerPosition`, {
+  await fetchJson<string>(`${BASE_URL}api/game/updatePlayerPosition`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
@@ -79,7 +79,7 @@ export async function updatePlayerPosition(userId: string, roomId: string, {x,y,
   direction: Direction
 }) {
   // 
-  await fetchJson<string>(`${BASE_URL}/api/game/updatePlayerPosition`, {
+  await fetchJson<string>(`${BASE_URL}api/game/updatePlayerPosition`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
@@ -96,7 +96,7 @@ export async function updatePlayerPosition(userId: string, roomId: string, {x,y,
 }
 
 export async function validateJWT(token: string): Promise<boolean> {
-  return await fetchJson<boolean>(`${BASE_URL}/api/auth/validateJWT`, {
+  return await fetchJson<boolean>(`${BASE_URL}api/auth/validateJWT`, {
     method: "POST",
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({

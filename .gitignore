@@ -43,3 +43,5 @@
 
 # ─────────── Clerk ───────────
 /frontend/.clerk/
+
+/nginx/certs
