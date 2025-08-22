@@ -18,7 +18,7 @@ export const useStompClient = ({ userId, onMessage }: UseStompClientOptions) => 
   useEffect(() => {
     if (!userId) return;
 
-    const socket = new SockJS(`${wsUrl}ws?userId=${userId}`);
+    const socket = new SockJS(`${wsUrl}ws/messages?userId=${userId}`);
 
     const stompClient = new Client({
       webSocketFactory: () => socket,

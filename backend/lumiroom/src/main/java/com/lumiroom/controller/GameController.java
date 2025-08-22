@@ -55,7 +55,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author Honglei Gu
  * @since 1.0
  */
-@Controller
+@RestController
 @RequestMapping("/api/game")
 public class GameController {
 
