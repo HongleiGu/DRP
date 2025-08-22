@@ -57,7 +57,7 @@ export async function getPlayers(roomId: string): Promise<PlayerData[]> {
 }
 
 export async function resetPlayerToDefault(userId: string, roomId: string, name: string | null = null, avatarId: string | null = null): Promise<void> {
-  await fetchJson<string>(`${BASE_URL}api/game/updatePlayerPosition`, {
+  await fetchJson<string>(`${BASE_URL}api/game/updatePlayerData`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
@@ -79,7 +79,7 @@ export async function updatePlayerPosition(userId: string, roomId: string, {x,y,
   direction: Direction
 }) {
   // 
-  await fetchJson<string>(`${BASE_URL}api/game/updatePlayerPosition`, {
+  await fetchJson<string>(`${BASE_URL}api/game/updatePlayerData`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({

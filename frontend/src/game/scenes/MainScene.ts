@@ -71,7 +71,7 @@ export class MainScene extends Scene {
           direction: this.player.currentDirection
         };
         this.stompClient.publish({
-          destination: "/app/game/position",
+          destination: "/app/game/broadcastPosition",
           body: JSON.stringify(positionMessage),
         });
         this.lastBroadcast = now;

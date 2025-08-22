@@ -100,7 +100,7 @@ public class GameController {
    *                        <li>Position/state data for the player</li>
    *                        </ul>
    */
-  @MessageMapping("/updatePlayerPosition")
+  @MessageMapping("/broadcastPosition")
   public void updatePosition(@Payload PlayerData positionMessage) {
     String userId = positionMessage.getUserId();
     if (userId == null) {
