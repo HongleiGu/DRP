@@ -44,8 +44,8 @@ export default function Game({
       setUser(u)
       await resetPlayerToDefault(
         u?.id,
-        u?.username as string,
         chatroomId,
+        u?.username as string,
         u?.avatar_id.toString() ?? "0"
       );
 

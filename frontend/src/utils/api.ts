@@ -47,12 +47,9 @@ export async function createRoom(
 }
 
 export async function getPlayers(roomId: string): Promise<PlayerData[]> {
-  return await fetchJson<PlayerData[]>(`${BASE_URL}api/game/getPlayers`, {
-    method: "POST",
-    headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        room_id: roomId
-      }),
+  return await fetchJson<PlayerData[]>(`${BASE_URL}api/game/getPlayers?roomId=${roomId}`, {
+    method: "GET",
+    headers: { 'Content-Type': 'application/json' }
   })
 }
 

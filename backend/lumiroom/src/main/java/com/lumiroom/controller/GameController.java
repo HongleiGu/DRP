@@ -131,7 +131,7 @@ public class GameController {
    *         </ul>
    */
   @GetMapping("/getPlayers")
-  public Result<List<PlayerData>> getPlayersInRoom(@RequestBody String roomId) {
+  public Result<List<PlayerData>> getPlayersInRoom(@RequestParam String roomId) {
     try {
       return Result.success(gameService.getPlayersInRoom(roomId));
     } catch (Throwable e) {
