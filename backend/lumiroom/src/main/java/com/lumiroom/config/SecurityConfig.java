@@ -118,17 +118,4 @@ public class SecurityConfig implements WebMvcConfigurer {
     public OtpUtils otpUtils() {
         return new OtpUtils();
     }
-
-    /**
-     * Allows Cross-Origin Resource Sharing (CORS) for all endpoints.
-     *
-     */
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // Apply to all endpoints
-                .allowedOrigins("*") // Allow all origins
-                .allowedMethods("GET", "POST", "PUT", "DELETE") // Specify allowed methods
-                .allowedHeaders("*") // Allow all headers
-                .allowCredentials(true); // Allow cookies or credentials if necessary
-    }
 }
