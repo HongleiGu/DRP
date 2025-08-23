@@ -1,6 +1,6 @@
 "use client"
 
-import Image from "next/image";
+// import Image from "next/image";
 
 export function LumiAvatar(param: { avatarId: string | number }) {
     const avatarId = (typeof param.avatarId === "number") ? param.avatarId : Number.parseInt(param.avatarId)
@@ -14,7 +14,7 @@ export function LumiAvatar(param: { avatarId: string | number }) {
           paddingTop: "4px",
         }}
       >
-        <Image
+        <img
           src={`/game/assets/character-pack-full_version/sprite_split/character_${
             avatarId + 1
           }/character_${avatarId + 1}_frame16x20.png`}

@@ -4,7 +4,7 @@ import ChatRoom from '@/components/ChatRoom';
 import GateLoadingCSS from '@/components/GateLoading';
 import globalStore from '@/store';
 import { SupabaseUser } from '@/types/datatypes';
-import { checkRoom } from '@/utils/messages';
+import { checkRoom } from '@/utils/messaging/messages';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Badge, Button, Input, List, Popover, message, Card } from "antd";
 import EmojiGrid from "../EmojiGrids";
 import { Message, MessageScope, MessageType, PlayerData, SupabaseUser } from "@/types/datatypes";
-import { sendMessage, deleteMessage, getMessage } from "@/utils/messages";
+import { sendMessage, deleteMessage, getMessage } from "@/utils/messaging/messages";
 import { PROJECT_NAME, STORAGE_PATH } from "@/utils/utils";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { v4 as uuidv4 } from 'uuid';

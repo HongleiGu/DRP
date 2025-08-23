@@ -10,11 +10,12 @@ import {
 } from "@/utils/json";
 import { formatDate, STORAGE_PATH } from "@/utils/utils";
 import { PlusOutlined } from "@ant-design/icons";
-import { Avatar, Button, Card, Empty, List, Modal, Spin, Typography, Input } from "antd";
+import { Avatar, Button, Card, Empty, List, Modal, Spin, Typography, Input, Popover } from "antd";
 import path from "path";
-import { useEffect, useState } from "react";
-import { debounce } from "lodash";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { debounce, set } from "lodash";
 import { findUserByIdentifierBlur } from "@/utils/user";
+import { sendAcceptGreetings, sendGreetings } from "@/utils/messaging/templates";
 
 const { Title, Text } = Typography;
 const PENDING_KEY = "__pending__";
@@ -63,6 +64,7 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
     },
   });
 
+
   const addToPending = async (u: SupabaseUser, msg: Message) => {
     const filePath = path.join(STORAGE_PATH, user.id, `pending.jsonl`);
     if (!pendingList.find(it => it.user.id === u.id)) {
@@ -76,6 +78,8 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
     const pendingFilePath = path.join(STORAGE_PATH, user.id, "pending.jsonl");
 
     setPendingList(pendingList.filter(it => it.user.id !== u.id));
+
+    sendAcceptGreetings(user.id, user.username, u.id);
     await deleteJsonlById(pendingFilePath, u.id);
     await appendJsonl(filePath, u);
 
@@ -86,26 +90,30 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
       unread: 0,
       created_at: formatDate(),
       creator_id: user.id,
-      members: [user, u],
     };
     await appendJsonl(path.join(STORAGE_PATH, user.id, "groups.jsonl"), group);
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  // Debounced search function (ensures that search happens only after typing stops)
+  const handleSearch =
+    debounce(async (query: string) => {
+      console.log("Searching for:", query);
+      const users = await findUserByIdentifierBlur(query);
+      setSearchList(users.filter(u => u.id !== user.id)); // Exclude self
+    }, 100)
+
+    // Handle input change (trigger debounce search)
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value); // Update the query
+    handleSearch(value);  // Trigger the debounced search
   };
 
-  const handleSearch = debounce(async (query: string) => {
-    console.log("Searching for:", query);
-    const users = await findUserByIdentifierBlur(query);
-    setSearchList(users);
-  }, 300); // Debounce to handle search efficiently
-
-  const renderContactList = (func: null | (() => Promise<void>), values: SupabaseUser[]) => {
-    const items = [
-      ...values.map((c) => ({ key: c.id, user: c, label: c.username })),
-      { key: PENDING_KEY, label: "Pending Requests" },
-    ];
+  const renderContactList = (components: ((user: SupabaseUser) => ReactNode)[], values: SupabaseUser[], withPending: boolean = true) => {
+    let items: { key: string; user?: SupabaseUser; label: string; }[] = values.map((c) => ({ key: c.id, user: c, label: c.username }));
+    if (withPending) {
+      items.push({ key: PENDING_KEY, label: "Pending Requests", user: undefined });
+    }
 
     return (
       <List
@@ -146,7 +154,7 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
                     }
                     title={<Text>{item.user.username}</Text>}
                   />
-                  {func && <Button onClick={func} />}
+                  {components.map(it => it(item.user!))}
                 </>
               )}
             </List.Item>
@@ -193,9 +201,9 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
     );
   };
 
-  const renderContactDetail = () => {
-    const contactEntry = contactsList.find((c) => c.id === selectedId);
-    const contact = contactEntry;
+  const renderDetail = (contact: SupabaseUser | undefined) => {
+    // const contactEntry = contactsList.find((c) => c.id === selectedId);
+    // const contact = contactEntry;
     if (!contact) {
       return <Empty description="Select a contact to view details" />;
     }
@@ -217,29 +225,59 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
     );
   };
 
+  const detailPopOver: (user: SupabaseUser) => ReactNode 
+    = (user: SupabaseUser) => (
+    <Popover
+      content={renderDetail(user)}
+      title="Contact Details"
+      trigger="click"
+    >
+      <Button size="small" type="link">Details</Button>
+    </Popover>
+  )
+
+  const sendButton: (target: SupabaseUser) => ReactNode = (target: SupabaseUser) => (
+    <Button onClick={() => sendGreetings(user.id, user.username, target.id)}>Send Request</Button>
+  )
+
+
+  // Search contact modal
   const searchContactPanel = (
-    <Modal open={modalOpen} title="Add New Contact" onCancel={() => setModalOpen(false)} footer={null}>
-      <div className="flex gap-4">
+    <Modal
+      open={modalOpen}
+      title="Add New Contact"
+      onCancel={() => setModalOpen(false)}
+      footer={null}
+      className="w-full max-w-md mx-auto"
+      style={{ top: 20 }}
+    >
+      <div className="flex flex-col gap-6">
         {/* Search input */}
-        <Input
-          placeholder="Search Contacts"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          onBlur={() => handleSearch(searchQuery)}
-          allowClear
-        />
+        <div className="w-full">
+          <Input
+            placeholder="Search Contacts"
+            value={searchQuery}
+            onChange={handleChange}
+            allowClear
+            size="large"
+            style={{ borderRadius: 8 }}
+          />
+        </div>
 
         {/* Render contacts list based on the search query */}
-        <div className="flex-1">
+        <div className="w-full max-h-80 overflow-y-auto">
           {loading ? (
-            <Spin size="large" />
+            <div className="flex justify-center items-center py-10">
+              <Spin size="large" />
+            </div>
           ) : (
-            renderContactList(null, searchList)
+            renderContactList([detailPopOver, sendButton], searchList, false) // Your original approach to render contact list
           )}
         </div>
       </div>
     </Modal>
   );
+
 
   if (loading) {
     return (
@@ -261,12 +299,12 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
           <Title level={4} className="m-0">Contacts</Title>
           <Button type="primary" icon={<PlusOutlined />} shape="circle" size="large" onClick={() => {setModalOpen(true)}}/>
         </div>
-        {renderContactList(null, contactsList)}
+        {renderContactList([], contactsList)}
       </Card>
 
       {/* Right Panel */}
       <div className="flex-1">
-        {selectedId === PENDING_KEY ? renderPendingPanel() : renderContactDetail()}
+        {selectedId === PENDING_KEY ? renderPendingPanel() : renderDetail(contactsList.find(c => c.id === selectedId))}
       </div>
       {searchContactPanel}
     </div>

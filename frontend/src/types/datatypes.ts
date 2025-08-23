@@ -1,17 +1,15 @@
 "use client"
 
 export type MessageScope = "public" | "personal";
-export type MessageType = "message" | "invite" | "greeting";
+export type MessageType = "message" | "invite" | "greeting" | "accept greeting";
 
 export interface Message {
-  id?: string;  // UUID for unique message ID
+  id: string;  // UUID for unique message ID
   speaker: string;  // ID of the speaker
   speaker_name: string;  // Name of the speaker
   chat_message: string;  // The actual chat message
   created_at: string;  // Timestamp when the message was created
   chat_room_id: string;  // Unique ID for the chatroom
-  video_url?: string;  // URL of video (if any)
-  video_time?: number;  // Timestamp of video time (if any)
   metadata: {
     scope: MessageScope,
     type: MessageType,
@@ -29,29 +27,6 @@ export type SceneCallbacks = {
     // onGameEvent?: (event: string, data: any) => void;
 }
 
-export interface TVState {
-  room_id: string,
-  channel: string,
-  is_playing: boolean,
-  time: number; // the number of seconds in the video, only updated when paused, reload, seek
-}
-
-export interface CalendarEntry {
-  id?: number; // optional for inserts
-  room_id: string;
-  user_id: string;
-  date: string;
-  emoji: string;
-  content: string;
-  note?: string | null;
-  created_at?: string;
-  updated_at?: string;
-  reserved_time?: string;
-  video_id?: string;
-  timezone?: string;
-}
-
-
 export interface PlayerData {
   id: string; // useless
   user_id: string;
@@ -64,43 +39,6 @@ export interface PlayerData {
 }
 
 export type Direction = "up" | "down" | "right" | "left"
-
-// Type for the YouTube API response
-export interface YouTubeApiResponse {
-  items: {
-    snippet: {
-      title: string;
-      description: string;
-      categoryId: string;
-      thumbnails: {
-        default: { url: string };
-        medium: { url: string };
-        high: { url: string };
-        standard?: { url: string };
-      };
-      publishedAt: string;
-      channelTitle: string;
-    };
-  }[];
-  error?: {
-    message: string;
-    code: number;
-    errors: {
-      message: string;
-      domain: string;
-      reason: string;
-    }[];
-  };
-}
-
-export interface VideoInfo {
-  title: string;
-  description: string;
-  category: string;
-  thumbnails: YouTubeApiResponse['items'][0]['snippet']['thumbnails'];
-  publishedAt: string;
-  channelTitle: string;
-}
 
 export interface SupabaseUser {
   id: string;
@@ -119,7 +57,7 @@ export interface Group {
   unread: number;
   created_at: string;
   creator_id: string;
-  members: SupabaseUser[];
+  // members: SupabaseUser[]; // members should be fetched from backend for safety
 }
 
 export interface ElectronResponse {

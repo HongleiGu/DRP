@@ -18,8 +18,6 @@ public class Message {
   private final String chatMessage; // The actual chat message
   private final LocalDateTime createdAt; // Timestamp when the message was created
   private final String chatRoomId; // Unique ID for the chatroom
-  private final String videoUrl; // Optional: URL of video
-  private final Double videoTime; // Optional: Timestamp of video time
   private final MessageMetadata metadata;
 
   public static Message system(String chatMessage, String chatRoomId) {

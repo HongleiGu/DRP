@@ -1,5 +1,4 @@
-// hooks/useStompClient.ts
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import SockJS from "sockjs-client";
 import { Client, IMessage } from "@stomp/stompjs";
 import { Message } from "@/types/datatypes";
@@ -14,6 +13,8 @@ const wsUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:8080/";
 let stompClientRef: Client | null = null;
 
 export const useStompClient = ({ userId, onMessage }: UseStompClientOptions) => {
+
+  const memoizedOnMessage = useCallback(onMessage, [onMessage]);  // Memoizing onMessage to avoid re-creating it on every render
 
   useEffect(() => {
     if (!userId) return;
@@ -32,7 +33,7 @@ export const useStompClient = ({ userId, onMessage }: UseStompClientOptions) => 
           try {
             const payload: Message = JSON.parse(message.body);
             console.log("📨 Received:", payload);
-            await onMessage(payload);
+            await memoizedOnMessage(payload);  // Use the memoized function here
 
             // Send ACK back over STOMP instead of fetch
             stompClient.publish({
@@ -60,7 +61,8 @@ export const useStompClient = ({ userId, onMessage }: UseStompClientOptions) => 
     return () => {
       stompClient.deactivate();
     };
-  }, [userId, onMessage]);
+  }, []);  // Dependencies now include memoizedOnMessage
+
 };
 
 export function getStompClient() {

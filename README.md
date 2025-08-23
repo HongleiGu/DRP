@@ -49,6 +49,160 @@ docs TDB
 
 ## Message
 
+types (I'll use the ts version as it is shorter)
+
+```typescript
+export type MessageScope = "public" | "personal";
+export type MessageType = "message" | "invite" | "greeting";
+
+export interface Message {
+  id: string;  // UUID for unique message ID
+  speaker: string;  // ID of the speaker
+  speaker_name: string;  // Name of the speaker
+  chat_message: string;  // The actual chat message
+  created_at: string;  // Timestamp when the message was created
+  chat_room_id: string;  // Unique ID for the chatroom
+  metadata: {
+    scope: MessageScope,
+    type: MessageType,
+    data: unknown // not any as eslint unhappy, this should be any data, if taking all possible and future circumstances
+  }
+}
+```
+
+note, since uuid->string is kind of troublesome, currently done in all strings, will refactor afterward
+
+### normal messages
+
+just normal, nothing special
+
+```json
+{
+  "id": "91982580-564d-44f5-af94-95fe01de77eb",
+  "speaker": "dd1631e4-abf2-4514-9dbf-b7e2d641d0f9",
+  "speaker_name": "someone",
+  "chat_message": "hello",
+  "created_at": "1d7ef0b5-46d3-46a5-a794-e528931928c0",
+  "chat_room_id": "",
+  "metadata": {
+    "scope": "public",
+    "type": "message",
+    "data": {} // null
+  }
+}
+```
+
+- id: message uuid
+- speaker: speaker uuid
+- speaker_name: speaker name, so we dont need to fetch the users for every message
+- chat_message: the message
+- created_at: the time this is send
+- chat_room_id: room uuid
+- metadata
+  - scope: public, no need to hide this
+  - type: message
+  - data: empty, we use the speaker field to know who send this
+
+### greetings
+
+this is used to add personal contacts, the user should at least send his/her id to the other user, will consider whether add all the details or just include the id and fetch in database
+
+```json
+{
+  "id": "91982580-564d-44f5-af94-95fe01de77eb",
+  "speaker": "dd1631e4-abf2-4514-9dbf-b7e2d641d0f9",
+  "speaker_name": "someone",
+  "chat_message": "Hi Bob, I added you as a contact! Looking forward to connecting.",
+  "created_at": "2025-08-23T15:00:00Z",
+  "chat_room_id": "",
+  "metadata": {
+    "scope": "personal",
+    "type": "greeting",
+    "data": {} // null, since the speaker field contains this
+  }
+}
+```
+
+- id: message uuid
+- speaker: speaker uuid
+- speaker_name: speaker name, so we dont need to fetch the users for every message
+- chat_message: the message
+- created_at: the time this is send
+- chat_room_id: ""
+- metadata
+  - scope: personal, greetings are used to add contacts, so the message is personal
+  - type: greeting
+  - data: empty, we use the speaker field to know who send this
+
+#### accept greeting:
+
+this is used as to inform that the user accepts the greeting, this is the point where the contact is set
+
+```json
+{
+  "id": "91982580-564d-44f5-af94-95fe01de77eb",
+  "speaker": "dd1631e4-abf2-4514-9dbf-b7e2d641d0f9",
+  "speaker_name": "someone",
+  "chat_message": "Hi A, I accepted your invitation",
+  "created_at": "2025-08-23T15:00:00Z",
+  "chat_room_id": "", /// this does not matter,
+  "metadata": {
+    "scope": "personal",
+    "type": "accept greeting",
+    "data": {} // null, since the speaker field contains this
+  }
+}
+```
+
+- id: message uuid
+- speaker: speaker uuid
+- speaker_name: speaker name, so we dont need to fetch the users for every message
+- chat_message: the message
+- created_at: the time this is send
+- chat_room_id: ""
+- metadata
+  - scope: personal, greetings are used to add contacts, so the message is personal
+  - type: greeting
+  - data: empty, we use the speaker field to know who send this
+
+### invitation
+
+we separate this from the greetings, this is used, say, when user A creates a group with A,B,C, a messages is send to B,C(assume created by A), to inform they are invited in the group, and also, in the future, when one joins the group using some link, this should be send to the entire room
+
+```json
+{
+  "id": "91982580-564d-44f5-af94-95fe01de77eb",
+  "speaker": "dd1631e4-abf2-4514-9dbf-b7e2d641d0f9",
+  "speaker_name": "someone",
+  "chat_message": "You've been invited to the group 'Weekend Plans'. Join us here!",
+  "created_at": "2025-08-23T16:10:00Z",
+  "chat_room_id": "1d7ef0b5-46d3-46a5-a794-e528931928c0",
+  "metadata": {
+    "scope": "public",
+    "type": "invite",
+    "data": {
+      "creator_id": "dd1631e4-abf2-4514-9dbf-b7e2d641d0f9"
+    }
+  }
+}
+```
+
+- id: message uuid
+- speaker: speaker uuid
+- speaker_name: speaker name, so we dont need to fetch the users for every message
+- chat_message: the message
+- created_at: the time this is end
+- chat_room_id: room uuid
+- metadata
+  - scope: public, no need the hide this
+  - type: invite
+  - data: 
+    - creator_id: the creator of the group
+
+
+like wechat and whatsapp, I dont think we should wait for the other end to accept this invite
+
+
 ## WARNINGS FOR DEVELOPERS:
 1. electronStore store the data somewhere in AppData with the app's name, so C:/Users/<user>/AppData/.../<appname>, delete the Cache folder would reset everythin
 2. capacitor loads strangely, eg. if you have a / page and /auth page, loading /auth will also trigger the / useEffect, so if the useEffect involves redirecting, infinite loop, solution, check pathname, if no match return, (need to do this for every page for safety issues)

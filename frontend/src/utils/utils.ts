@@ -159,8 +159,13 @@ export const formatDate = (): string => {
 
 export const placeholderId = '00000000-0000-0000-0000-000000000000';  // Static UUID for placeholder
 
-export const STORAGE_PATH = (process.env.NODE_ENV === 'development' && window?.process?.type === 'renderer' ? process.env.NEXT_PUBLIC_STORAGE_PATH_DEV : process.env.NEXT_PUBLIC_STORAGE_PATH_PROD) || './storage';
+export const STORAGE_PATH = typeof window === 'undefined' 
+  ? "./storage" 
+  : (process.env.NODE_ENV === 'development' && window?.process?.type === 'renderer' 
+      ? process.env.NEXT_PUBLIC_STORAGE_PATH_DEV 
+      : process.env.NEXT_PUBLIC_STORAGE_PATH_PROD) || './storage';
 
+      
 export const veryOldDate = "1970-01-01T00:00:00.000Z";
 
 export const BASE_URL = process.env.NEXT_PUBLIC_SPRINGBOOT_URL || 'http://localhost:8080/';

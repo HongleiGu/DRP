@@ -1,11 +1,22 @@
 import { Message } from '@/types/datatypes';
-import { BASE_URL, fetchJson } from './utils';
+import { BASE_URL, fetchJson } from '../utils';
 
 /**
  * Sends a chat message to the API.
  */
 export async function sendMessage(message: Message, userId: string): Promise<string> {
   return fetchJson<string>(`${BASE_URL}api/message?userId=${userId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(message),
+  });
+}
+
+/**
+ * Sends a chat message to the API.
+ */
+export async function sendMessageToRoom(message: Message, roomId: string): Promise<string> {
+  return fetchJson<string>(`${BASE_URL}api/message?roomId=${roomId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(message),
@@ -57,3 +68,4 @@ export async function checkRoom(roomId: string): Promise<boolean> {
     method: 'GET',
   })
 }
+

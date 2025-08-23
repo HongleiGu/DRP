@@ -11,8 +11,9 @@ import path from "path";
 import fileService from "@/utils/fileService";
 import { appendJsonl, appendJsonls, parseJsonlToTypedObjects, replaceJsonlById } from "@/utils/json";
 import { useStompClient } from "@/hooks/useStompClient";
-import { deleteMessage, getMessages } from "@/utils/messages";
+import { deleteMessage, getMessages } from "@/utils/messaging/messages";
 import { useRouter } from "next/navigation"
+import { inviteMessage } from "@/utils/messaging/types";
 
 const { Text } = Typography;
 
@@ -42,15 +43,13 @@ export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (
   //   helper()
   // }, [isMounted, router])
 
-  // here, if the message comes from a new room, we add it the the local storage
   useStompClient({
     userId: user ? user.id : null,
     onMessage: async (msg: Message) => {
       console.log("📬 Got message in component:", msg);
       const filePath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
-      // we assume the room is created
-      // TODO: room creation, metadata type invite / create
-      if (msg.metadata && msg.metadata.scope != "public") {
+      if (msg.metadata && msg.metadata.scope == "public" && msg.metadata.type == "message") {
+        // normal messages
         const receivedRoomId: string = msg.speaker
         const targetRoomEntry: Group = groupChats.filter((it: Group) => it.id === receivedRoomId)[0]
         const alteredRoomEntry: Group = {
@@ -65,21 +64,23 @@ export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (
         )
         
         await replaceJsonlById(filePath, alteredRoomEntry)
-      } else {
+      } else if (msg.metadata && msg.metadata.scope == "public" && msg.metadata.type == "invite") {
+        const message = msg as inviteMessage
+        // if it is a invite message, we create this new room
         const receivedRoomId: string = msg.chat_room_id
-        const targetRoomEntry: Group = groupChats.filter((it: Group) => it.id === receivedRoomId)[0]
-        const alteredRoomEntry: Group = {
-          ...targetRoomEntry,
-          unread: Number(targetRoomEntry.unread) + 1, // BUG: unsure why but the unread is a number but behaves like a string, 3 + 1 = 31
-          last_message: msg
+        const newRoomEntry: Group = {
+          id: receivedRoomId,
+          name: `Room ${receivedRoomId.substring(0, 5)}`, // temporary name
+          last_message: msg,
+          unread: 1,
+          created_at: formatDate(),
+          creator_id: (msg.metadata.data as any).creator_id
         }
         setGroupChats(
-          groupChats.map(it => 
-            it.id === alteredRoomEntry.id ? alteredRoomEntry : it
-          )
+          [...groupChats, newRoomEntry]
         )
         
-        await replaceJsonlById(filePath, alteredRoomEntry)
+        await appendJsonl(filePath, newRoomEntry)
       }
     }
   })
