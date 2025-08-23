@@ -8,4 +8,4 @@ export const isElectron = () => {
 export const isCapacitor = () =>
   typeof window !== 'undefined' &&
   typeof window.Capacitor !== 'undefined' &&
-  window.Capacitor.isNativePlatform;
+  window.Capacitor.isNativePlatform? window.Capacitor.isNativePlatform() : false;
