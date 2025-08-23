@@ -4,6 +4,7 @@ import java.security.Principal;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import com.lumiroom.model.ws.AckPayload;
 import com.lumiroom.ws.WebSocketAckTracker;
@@ -47,6 +48,7 @@ import com.lumiroom.ws.WebSocketAckTracker;
  * @since 1.0
  */
 @Controller
+@CrossOrigin
 public class WebSocketController {
 
     private final WebSocketAckTracker ackTracker;

@@ -59,6 +59,7 @@ import java.util.List;
  * @since 1.0
  */
 @RestController
+@CrossOrigin
 @RequestMapping("/api/message")
 public class MessageController {
 

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import com.lumiroom.service.email.EmailService;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/api/email")
 public class EmailController {
 

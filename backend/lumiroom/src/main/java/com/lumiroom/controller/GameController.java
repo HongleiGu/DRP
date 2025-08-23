@@ -13,6 +13,7 @@ import com.lumiroom.model.game.PlayerData;
 import com.lumiroom.service.game.GameService;
 import com.lumiroom.service.messages.RoomService;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -56,6 +57,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @since 1.0
  */
 @RestController
+@CrossOrigin
 @RequestMapping("/api/game")
 public class GameController {
 
