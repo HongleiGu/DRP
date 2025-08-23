@@ -2,8 +2,8 @@ package com.lumiroom.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-
 import com.lumiroom.model.commons.User;
+import java.util.List;
 
 @Mapper
 public interface UserMapper {

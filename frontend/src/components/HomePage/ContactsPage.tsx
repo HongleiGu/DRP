@@ -21,6 +21,7 @@ const PENDING_KEY = "__pending__";
 
 export default function ContactsPage({ user }: { user: SupabaseUser }) {
   const [contactsList, setContactList] = useState<SupabaseUser[]>([]);
+  const [searchList, setSearchList] = useState<SupabaseUser[]>([]);
   const [pendingList, setPendingList] = useState<
     { user: SupabaseUser; last_msg: Message | null }[]
   >([]);
@@ -97,12 +98,12 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
   const handleSearch = debounce(async (query: string) => {
     console.log("Searching for:", query);
     const users = await findUserByIdentifierBlur(query);
-    setContactList(users);
+    setSearchList(users);
   }, 300); // Debounce to handle search efficiently
 
-  const renderContactList = (func: null | (() => Promise<void>)) => {
+  const renderContactList = (func: null | (() => Promise<void>), values: SupabaseUser[]) => {
     const items = [
-      ...contactsList.map((c) => ({ key: c.id, user: c, label: c.username })),
+      ...values.map((c) => ({ key: c.id, user: c, label: c.username })),
       { key: PENDING_KEY, label: "Pending Requests" },
     ];
 
@@ -233,7 +234,7 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
           {loading ? (
             <Spin size="large" />
           ) : (
-            renderContactList(null)
+            renderContactList(null, searchList)
           )}
         </div>
       </div>
@@ -258,9 +259,9 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
       >
         <div className="flex items-center justify-between mb-4">
           <Title level={4} className="m-0">Contacts</Title>
-          <Button type="primary" icon={<PlusOutlined />} shape="circle" size="large" onClick={() => {}}/>
+          <Button type="primary" icon={<PlusOutlined />} shape="circle" size="large" onClick={() => {setModalOpen(true)}}/>
         </div>
-        {renderContactList(null)}
+        {renderContactList(null, contactsList)}
       </Card>
 
       {/* Right Panel */}

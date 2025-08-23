@@ -1,5 +1,7 @@
 package com.lumiroom.service.auth.implementation;
 
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -49,5 +51,9 @@ public class AuthServiceImplementation implements AuthService {
 
   public User updateUserProfile(User user) {
     return userMapper.updateUserProfile(user);
+  }
+
+  public List<User> findUserByIdentifierBlur(String identifier) {
+    return userMapper.findUserByIdentifierBlur(identifier);
   }
 }

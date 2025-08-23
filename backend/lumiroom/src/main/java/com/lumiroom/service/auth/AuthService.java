@@ -1,5 +1,7 @@
 package com.lumiroom.service.auth;
 
+import java.util.List;
+
 import com.lumiroom.model.auth.UserOtp;
 import com.lumiroom.model.commons.User;
 
@@ -17,4 +19,6 @@ public interface AuthService {
   // this will combine the details in the frontend, we get a complete User object
   // to be updated
   User updateUserProfile(User updated);
+
+  List<User> findUserByIdentifierBlur(String identifier);
 }
