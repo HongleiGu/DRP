@@ -16,7 +16,7 @@ import { usePathname, useRouter } from 'next/navigation';
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 
-export default function CreateRoomPage() {
+export default function CreateRoomPage({user}: {user: SupabaseUser}) {
   const pathname = usePathname();
   const [selectedUserIds, setSelectedUserIds] = useState<SupabaseUser[]>([]);
   const [groupName, setGroupName] = useState('');
@@ -24,7 +24,6 @@ export default function CreateRoomPage() {
   const [contactsLoading, setContactsLoading] = useState<boolean>(true);
   const [creatingLoading, setCreatingLoading] = useState<boolean>(false);
   const router = useRouter();
-  const [user, setUser] = useState<SupabaseUser>(null!);
 
   const handleCheckboxChange = (userId: SupabaseUser, checked: boolean) => {
     setSelectedUserIds((prev) =>
@@ -33,7 +32,7 @@ export default function CreateRoomPage() {
   };
 
   useEffect(() => {
-    if (pathname !== "/lobby") return;
+    if (pathname !== "/") return;
     const fetchContacts = async () => {
       const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
       if (!u) {
@@ -41,10 +40,8 @@ export default function CreateRoomPage() {
         router.push('/');
         return;
       }
-      setUser(u);
       setContactsLoading(true);
       try {
-        console.log(u)
         const filePath = path.join(STORAGE_PATH, u.id, "contacts.jsonl");
         if (!(await fileService.existsFile(filePath))) await fileService.createFile(filePath);
         const all = await parseJsonlToTypedObjects<SupabaseUser>(filePath);
@@ -113,7 +110,7 @@ export default function CreateRoomPage() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Header
+      {/* <Header
         style={{
           background: '#001529',
           display: 'flex',
@@ -122,7 +119,7 @@ export default function CreateRoomPage() {
         }}
       >
         <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ Create a New Group</Text>
-      </Header>
+      </Header> */}
       <Content
         style={{
           display: 'flex',

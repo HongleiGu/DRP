@@ -5,8 +5,6 @@ import { useEffect, useState } from "react";
 import { Layout, Typography, Popover, Button, Avatar } from "antd";
 import {
   WechatOutlined,
-  ContactsOutlined,
-  UserOutlined,
   LogoutOutlined,
   LoginOutlined,
 } from "@ant-design/icons";
@@ -21,6 +19,7 @@ import { signOut } from "@/utils/user";
 import { LoadingSpinner } from "@/components/Lumiroom/LoadingSpinner";
 import { SupabaseUser } from "@/types/datatypes";
 import { validateJWT } from "@/utils/api";
+import LobbyPage from "@/components/HomePage/LobbyPage";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -30,7 +29,7 @@ export default function HomePage() {
   const pathname = usePathname();
   const [user, setUser] = useState<SupabaseUser>(null!);
   // const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"chats" | "contacts" | "profile">(
+  const [activeTab, setActiveTab] = useState<"chats" | "contacts" | "profile" | "lobby" >(
     "chats"
   );
 
@@ -136,9 +135,10 @@ export default function HomePage() {
       </Header>
 
       <Content className="flex-1 overflow-auto bg-white">
-        {activeTab === "chats" && <ChatsPage user={user}/>}
+        {activeTab === "chats" && <ChatsPage user={user} setTab={setActiveTab}/>}
         {activeTab === "contacts" && <ContactsPage user={user}/>}
         {activeTab === "profile" && <ProfilePage user={user}/>}
+        {activeTab === "lobby" && <LobbyPage user={user}/>}
       </Content>
 
       <div className="fixed bottom-0 w-full bg-white shadow-inner z-50">
@@ -149,7 +149,7 @@ export default function HomePage() {
             }`}
             onClick={() => setActiveTab("chats")}
           >
-            <WechatOutlined className="text-xl mb-1" />
+            <img src="/icon/白猫.svg" alt="Logo" width={20} height={20}/>
             <span className="text-sm">Chats</span>
           </button>
           <button
@@ -158,7 +158,7 @@ export default function HomePage() {
             }`}
             onClick={() => setActiveTab("contacts")}
           >
-            <ContactsOutlined className="text-xl mb-1" />
+            <img src="/icon/三花猫.svg" alt="Logo" width={20} height={20}/>
             <span className="text-sm">Contacts</span>
           </button>
           <button
@@ -167,8 +167,17 @@ export default function HomePage() {
             }`}
             onClick={() => setActiveTab("profile")}
           >
-            <UserOutlined className="text-xl mb-1" />
+            <img src="/icon/橘猫.svg" alt="Logo" width={20} height={20}/>
             <span className="text-sm">Me</span>
+          </button>
+          <button
+            className={`flex flex-col items-center py-2 flex-1 ${
+              activeTab === "profile" ? "text-blue-500" : "text-gray-500"
+            }`}
+            onClick={() => setActiveTab("lobby")}
+          >
+            <img src="/icon/蓝猫.svg" alt="Logo" width={20} height={20}/>
+            <span className="text-sm">Lobby</span>
           </button>
         </div>
       </div>

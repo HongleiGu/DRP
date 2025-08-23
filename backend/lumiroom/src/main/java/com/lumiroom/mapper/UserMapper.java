@@ -22,4 +22,6 @@ public interface UserMapper {
     User insertUser(User user);
 
     User updateUserProfile(User user);
+
+    List<User> findUserByIdentifierBlur(@Param("identifier") String identifier);
 }

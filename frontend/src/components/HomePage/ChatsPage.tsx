@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation"
 
 const { Text } = Typography;
 
-export default function ChatsPage({user}: {user: SupabaseUser}) {
+export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (tab: "chats" | "contacts" | "profile" | "lobby") => void}) {
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const router = useRouter();
   const [searchText, setSearchText] = useState<string>("");
@@ -232,7 +232,8 @@ export default function ChatsPage({user}: {user: SupabaseUser}) {
 
   const jumpToRoomCreation = useCallback(() => {
     if (isMounted) {
-      router.push("/lobby");
+      // router.push("/lobby");
+      setTab("lobby")
     }
   }, [isMounted, router]);
 

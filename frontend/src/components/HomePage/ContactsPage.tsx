@@ -1,7 +1,6 @@
 "use client";
 
 import { useStompClient } from "@/hooks/useStompClient";
-// import globalStore from "@/store";
 import { Message, Group, SupabaseUser } from "@/types/datatypes";
 import fileService from "@/utils/fileService";
 import {
@@ -10,37 +9,25 @@ import {
   parseJsonlToTypedObjects,
 } from "@/utils/json";
 import { formatDate, STORAGE_PATH } from "@/utils/utils";
-import { Avatar, Button, Card, Empty, List, Spin, Typography } from "antd";
-// import { usePathname, useRouter } from "next/navigation";
+import { PlusOutlined } from "@ant-design/icons";
+import { Avatar, Button, Card, Empty, List, Modal, Spin, Typography, Input } from "antd";
 import path from "path";
 import { useEffect, useState } from "react";
+import { debounce } from "lodash";
+import { findUserByIdentifierBlur } from "@/utils/user";
 
 const { Title, Text } = Typography;
 const PENDING_KEY = "__pending__";
 
-export default function ContactsPage({user}: {user: SupabaseUser}) {
-  // const [user, setUser] = useState<SupabaseUser>(null!);
+export default function ContactsPage({ user }: { user: SupabaseUser }) {
   const [contactsList, setContactList] = useState<SupabaseUser[]>([]);
   const [pendingList, setPendingList] = useState<
     { user: SupabaseUser; last_msg: Message | null }[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  // const router = useRouter();
-  // const pathname = usePathname();
-
-  // useEffect(() => {
-  //   if (pathname !== "/") return;
-  //   const fetchUser = async () => {
-  //     const u = await globalStore.getItem<SupabaseUser>("lumiroom-user");
-  //     if (!u || !u.id) {
-  //       router.push("/auth")
-  //       return;
-  //     }
-  //     setUser(u);
-  //   };
-  //   fetchUser();
-  // }, [router, pathname]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -53,7 +40,7 @@ export default function ContactsPage({user}: {user: SupabaseUser}) {
       if (!(await fileService.existsFile(pendingFilePath))) await fileService.createFile(pendingFilePath);
 
       const all = await parseJsonlToTypedObjects<SupabaseUser>(filePath);
-      const pending = await parseJsonlToTypedObjects<{user: SupabaseUser, last_msg: Message}>(pendingFilePath);
+      const pending = await parseJsonlToTypedObjects<{ user: SupabaseUser; last_msg: Message }>(pendingFilePath);
 
       setContactList(all);
       setPendingList(pending);
@@ -98,17 +85,24 @@ export default function ContactsPage({user}: {user: SupabaseUser}) {
       unread: 0,
       created_at: formatDate(),
       creator_id: user.id,
-      members: [user, u]
+      members: [user, u],
     };
-    await appendJsonl(
-      path.join(STORAGE_PATH, user.id, "groups.jsonl"),
-      group
-    );
+    await appendJsonl(path.join(STORAGE_PATH, user.id, "groups.jsonl"), group);
   };
 
-  const renderContactList = () => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSearch = debounce(async (query: string) => {
+    console.log("Searching for:", query);
+    const users = await findUserByIdentifierBlur(query);
+    setContactList(users);
+  }, 300); // Debounce to handle search efficiently
+
+  const renderContactList = (func: null | (() => Promise<void>)) => {
     const items = [
-      ...contactsList.map(c => ({ key: c.id, user: c, label: c.username })),
+      ...contactsList.map((c) => ({ key: c.id, user: c, label: c.username })),
       { key: PENDING_KEY, label: "Pending Requests" },
     ];
 
@@ -116,11 +110,7 @@ export default function ContactsPage({user}: {user: SupabaseUser}) {
       <List
         dataSource={items}
         itemLayout="horizontal"
-        renderItem={(item: {
-          key: string;
-          user?: SupabaseUser;
-          label: string;
-        }) => {
+        renderItem={(item: { key: string; user?: SupabaseUser; label: string }) => {
           if (item.key === PENDING_KEY) {
             return (
               <List.Item
@@ -144,20 +134,19 @@ export default function ContactsPage({user}: {user: SupabaseUser}) {
               onClick={() => setSelectedId(item.key)}
             >
               {item.user && (
-                <List.Item.Meta
-                  avatar={
-                    <Avatar
-                      src={
-                        item.user.avatar_id
-                          ? `/sprites/avatar-${item.user.avatar_id}.png`
-                          : undefined
-                      }
-                    >
-                      {item.user.username?.charAt(0)?.toUpperCase() ?? "?"}
-                    </Avatar>
-                  }
-                  title={<Text>{item.user.username}</Text>}
-                />
+                <>
+                  <List.Item.Meta
+                    avatar={
+                      <Avatar
+                        src={item.user.avatar_id ? `/sprites/avatar-${item.user.avatar_id}.png` : undefined}
+                      >
+                        {item.user.username?.charAt(0)?.toUpperCase() ?? "?"}
+                      </Avatar>
+                    }
+                    title={<Text>{item.user.username}</Text>}
+                  />
+                  {func && <Button onClick={func} />}
+                </>
               )}
             </List.Item>
           );
@@ -188,11 +177,7 @@ export default function ContactsPage({user}: {user: SupabaseUser}) {
               <List.Item.Meta
                 avatar={
                   <Avatar
-                    src={
-                      user.avatar_id
-                        ? `/sprites/avatar-${user.avatar_id}.png`
-                        : undefined
-                    }
+                    src={user.avatar_id ? `/sprites/avatar-${user.avatar_id}.png` : undefined}
                   >
                     {user.username?.charAt(0)?.toUpperCase() ?? "?"}
                   </Avatar>
@@ -208,7 +193,7 @@ export default function ContactsPage({user}: {user: SupabaseUser}) {
   };
 
   const renderContactDetail = () => {
-    const contactEntry = contactsList.find(c => c.id === selectedId);
+    const contactEntry = contactsList.find((c) => c.id === selectedId);
     const contact = contactEntry;
     if (!contact) {
       return <Empty description="Select a contact to view details" />;
@@ -219,11 +204,7 @@ export default function ContactsPage({user}: {user: SupabaseUser}) {
         <div className="flex flex-col items-center gap-4">
           <Avatar
             size={96}
-            src={
-              contact.avatar_id
-                ? `/sprites/avatar-${contact.avatar_id}.png`
-                : undefined
-            }
+            src={contact.avatar_id ? `/sprites/avatar-${contact.avatar_id}.png` : undefined}
             style={{ backgroundColor: "#1677ff" }}
           >
             {contact.username?.charAt(0)?.toUpperCase() ?? "?"}
@@ -234,6 +215,30 @@ export default function ContactsPage({user}: {user: SupabaseUser}) {
       </Card>
     );
   };
+
+  const searchContactPanel = (
+    <Modal open={modalOpen} title="Add New Contact" onCancel={() => setModalOpen(false)} footer={null}>
+      <div className="flex gap-4">
+        {/* Search input */}
+        <Input
+          placeholder="Search Contacts"
+          value={searchQuery}
+          onChange={handleSearchChange}
+          onBlur={() => handleSearch(searchQuery)}
+          allowClear
+        />
+
+        {/* Render contacts list based on the search query */}
+        <div className="flex-1">
+          {loading ? (
+            <Spin size="large" />
+          ) : (
+            renderContactList(null)
+          )}
+        </div>
+      </div>
+    </Modal>
+  );
 
   if (loading) {
     return (
@@ -251,14 +256,18 @@ export default function ContactsPage({user}: {user: SupabaseUser}) {
         style={{ borderRadius: 16 }}
         bodyStyle={{ padding: 16 }}
       >
-        <Title level={4}>Contacts</Title>
-        {renderContactList()}
+        <div className="flex items-center justify-between mb-4">
+          <Title level={4} className="m-0">Contacts</Title>
+          <Button type="primary" icon={<PlusOutlined />} shape="circle" size="large" onClick={() => {}}/>
+        </div>
+        {renderContactList(null)}
       </Card>
 
       {/* Right Panel */}
       <div className="flex-1">
         {selectedId === PENDING_KEY ? renderPendingPanel() : renderContactDetail()}
       </div>
+      {searchContactPanel}
     </div>
   );
 }

@@ -52,7 +52,7 @@ export default function ChatRoom({ chatroomId }: { chatroomId: string }) {
       <Button
         type="primary"
         onClick={() => {
-            router.push(`/lobby`)
+            router.push(`/`)
           }
         }
         style={{

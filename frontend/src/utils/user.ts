@@ -81,3 +81,11 @@ export async function checkUsername(
     method: 'GET'
   })
 }
+
+export async function findUserByIdentifierBlur(
+  identifier: string
+): Promise<SupabaseUser[]> {
+  return await fetchJson<SupabaseUser[]>(`${BASE_URL}api/auth/checkUsername?query=${identifier}`, {
+    method: 'GET'
+  })
+}

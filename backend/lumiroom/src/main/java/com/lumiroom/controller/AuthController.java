@@ -241,4 +241,14 @@ public class AuthController {
       return Result.error("failed to parse jwt, is the token semantically valid?");
     }
   }
+
+  @GetMapping("/findUserByIdentifierBlur")
+  public Result<List<User>> findUserByIdentifierBlur(@RequestParam String query) {
+    try {
+      List<User> users = authService.findUserByIdentifierBlur(query);
+      return Result.success(users, "user found");
+    } catch (Throwable e) {
+      return Result.error(500, "An error occured when finding user by identifier: " + e.getMessage());
+    }
+  }
 }
