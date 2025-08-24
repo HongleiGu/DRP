@@ -37,28 +37,8 @@ export default function HomePage() {
     if (pathname !== "/") return;
 
     const helper = async () => {
-      console.log("Helper started");
-
-      const jwt = await globalStore.getItem<string>('jwt-token');
-      console.log("JWT:", jwt);
-
-      if (!jwt) {
-        console.log("No JWT found, redirecting...");
-        router.push("/auth");
-        return;
-      }
-
-      const valid = await validateJWT(jwt);
-      console.log("JWT valid?", valid);
-
-      if (!valid) {
-        console.log("Invalid JWT, redirecting...");
-        router.push("/auth");
-        return;
-      }
-
+      // this is already checked in layout, no need to do this here.
       const u = await globalStore.getItem<SupabaseUser>('lumiroom-user');
-      console.log("User from store:", u);
 
       if (!u) {
         console.log("No user found, redirecting...");

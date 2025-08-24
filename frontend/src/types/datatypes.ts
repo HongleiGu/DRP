@@ -60,11 +60,20 @@ export interface Group {
   // members: SupabaseUser[]; // members should be fetched from backend for safety
 }
 
+
+export interface GroupEntry {
+  id: string;
+  name: string;
+  created_at: string;
+  creator_id: string;
+  // members: SupabaseUser[]; // members should be fetched from backend for safety
+}
+
 export interface ElectronResponse {
   success: boolean;
   error?: string;  // Optional error message if the operation failed
   // since all operations return a string, we can use data to store the content
-  data?: string;  // Optional data returned from the operation
+  data?: unknown;  // Optional data returned from the operation
 }
 
 // this should match the api exposed in preload.js

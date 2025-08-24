@@ -9,11 +9,15 @@ import { formatDate, PROJECT_NAME, STORAGE_PATH, veryOldDate } from "@/utils/uti
 import globalStore from "@/store";
 import path from "path";
 import fileService from "@/utils/fileService";
-import { appendJsonl, appendJsonls, parseJsonlToTypedObjects, replaceJsonlById } from "@/utils/json";
-import { useStompClient } from "@/hooks/useStompClient";
+import { appendJsonl, appendJsonls, findJsonlById, parseJsonlToTypedObjects, replaceJsonlById } from "@/utils/json";
+// import { useStompClient } from "@/hooks/useStompClient";
 import { deleteMessage, getMessages } from "@/utils/messaging/messages";
 import { useRouter } from "next/navigation"
-import { inviteMessage } from "@/utils/messaging/types";
+import { InviteMessage } from "@/utils/messaging/types";
+import { setStompHandlers } from "@/hooks/useStompClient";
+import { getGroup } from "@/utils/api";
+import { getAllGroupsFilePath, getGroupFilePath } from "@/utils/fileService/commonFilePaths";
+import { StompHandler } from "@/hooks/stompUtils";
 
 const { Text } = Typography;
 
@@ -29,60 +33,65 @@ export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (
     setIsMounted(true);
   }, []);
 
-  // no need to do this again, the root pages fetches for us
-  // useEffect(() => {
-  //   const helper = async () => {
-  //     const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
-  //     console.log("got user", user);
-  //     if (!u || !u.id) {
-  //       router.push("/auth");
-  //       return;
-  //     }
-  //     setUser(u)
-  //   }
-  //   helper()
-  // }, [isMounted, router])
-
-  useStompClient({
-    userId: user ? user.id : null,
-    onMessage: async (msg: Message) => {
-      console.log("📬 Got message in component:", msg);
-      const filePath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
-      if (msg.metadata && msg.metadata.scope == "public" && msg.metadata.type == "message") {
-        // normal messages
-        const receivedRoomId: string = msg.speaker
-        const targetRoomEntry: Group = groupChats.filter((it: Group) => it.id === receivedRoomId)[0]
-        const alteredRoomEntry: Group = {
-          ...targetRoomEntry,
-          unread: Number(targetRoomEntry.unread) + 1, // BUG: unsure why but the unread is a number but behaves like a string, 3 + 1 = 31
+  const handlerNormalAndInviteMessages : StompHandler = async (msg, user) => {
+    const roomFilePath = getAllGroupsFilePath(user.id)
+    const groupFilePath = getGroupFilePath(user.id, msg.chat_room_id)
+    if (!await fileService.existsFile(roomFilePath)) {
+      await fileService.createFile(roomFilePath)
+    }
+    if (!await fileService.existsFile(groupFilePath)) {
+      await fileService.createFile(groupFilePath)
+    }
+    // if group not exist, create it
+    const existingGroup = await findJsonlById<Group>(groupFilePath, msg.chat_room_id)
+    if (!existingGroup) {
+      // create the group instance
+      // try to fetch form the database, maybe it exists on the server
+      const groupData = await getGroup(msg.chat_room_id)
+      
+      if (groupData) {
+        const group: Group = {
+          id: groupData.id,
+          name: groupData.name,
+          unread: 1,
+          created_at: groupData.created_at,
+          creator_id:groupData.creator_id,
           last_message: msg
         }
-        setGroupChats(
-          groupChats.map(it => 
-            it.id === alteredRoomEntry.id ? alteredRoomEntry : it
-          )
-        )
-        
-        await replaceJsonlById(filePath, alteredRoomEntry)
-      } else if (msg.metadata && msg.metadata.scope == "public" && msg.metadata.type == "invite") {
-        const message = msg as inviteMessage
-        // if it is a invite message, we create this new room
-        const receivedRoomId: string = msg.chat_room_id
-        const newRoomEntry: Group = {
-          id: receivedRoomId,
-          name: `Room ${receivedRoomId.substring(0, 5)}`, // temporary name
-          last_message: msg,
-          unread: 1,
-          created_at: formatDate(),
-          creator_id: (msg.metadata.data as any).creator_id
-        }
-        setGroupChats(
-          [...groupChats, newRoomEntry]
-        )
-        
-        await appendJsonl(filePath, newRoomEntry)
+        // since the room does not exist, we append directly
+        setGroupChats([...groupChats, group])
+        // save the message to the groups.jsonl
+        await appendJsonl(roomFilePath, group)
+      } else {
+        // we dont allow sending in rooms not in the server
+        console.log("the roomm doesnt exist")
       }
+      
+    } // can do {...groupData, unread: 0, last_message: msg}, but want to ensure data valid-ness
+    else {
+      // update unread count
+      const group: Group = {
+        id: existingGroup.id,
+        name: existingGroup.name,
+        unread: Number(existingGroup.unread) + 1,
+        created_at: existingGroup.created_at,
+        creator_id: existingGroup.creator_id,
+        last_message: msg
+      }
+      // the groupchat exists, but we need to update the entry
+      setGroupChats(
+        groupChats.map(it => 
+          it.id === group.id ? group : it
+        )
+      )
+      await replaceJsonlById(roomFilePath, group)
     }
+    await appendJsonl(groupFilePath, msg)
+  }
+
+  setStompHandlers({
+    "processNormalMessage": handlerNormalAndInviteMessages,
+    "processInviteMessage": handlerNormalAndInviteMessages,
   })
 
   const fetchGroups = useCallback(async () => {

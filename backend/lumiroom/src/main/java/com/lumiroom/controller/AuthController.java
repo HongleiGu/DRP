@@ -254,4 +254,15 @@ public class AuthController {
       return Result.error(500, "An error occured when finding user by identifier: " + e.getMessage());
     }
   }
+
+  @GetMapping("/findUserById")
+  public Result<User> findUserById(@RequestParam String id) {
+    try {
+      User users = authService.findUserById(id);
+      return Result.success(users, "user found");
+    } catch (Throwable e) {
+      return Result.error(500, "An error occured when finding user by identifier: " + e.getMessage());
+    }
+  }
+
 }

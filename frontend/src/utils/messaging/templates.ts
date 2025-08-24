@@ -1,10 +1,10 @@
 import { SupabaseUser } from "@/types/datatypes";
-import { acceptGreetingMessage, greetingMessage, inviteMessage } from "./types";
+import { AcceptGreetingMessage, GreetingMessage, InviteMessage } from "./types";
 import { v4 as uuidv4 } from 'uuid';
-import { sendMessage } from "./messages";
+import { sendMessage, sendMessageToRoom } from "./messages";
 
 export async function sendGreetings(userId: string, username: string, targetId: string): Promise<void> {
-  const msg: greetingMessage = {
+  const msg: GreetingMessage = {
     id: uuidv4(),
     speaker: userId,
     speaker_name: username,
@@ -21,7 +21,7 @@ export async function sendGreetings(userId: string, username: string, targetId: 
 }
 
 export async function sendAcceptGreetings(userId: string, username: string, targetId: string): Promise<void> {
-  const msg: acceptGreetingMessage = {
+  const msg: AcceptGreetingMessage = {
     id: uuidv4(),
     speaker: userId,
     speaker_name: username,
@@ -38,7 +38,7 @@ export async function sendAcceptGreetings(userId: string, username: string, targ
 }
 
 export async function sendInviteMessage(user: SupabaseUser, roomId: string, userIds: string[]): Promise<void> {
-  const msg: inviteMessage = {
+  const msg: InviteMessage = {
     id: uuidv4(),
     speaker: user.id!,
     speaker_name: user.username!,
@@ -51,7 +51,11 @@ export async function sendInviteMessage(user: SupabaseUser, roomId: string, user
       data: null
     }
   }
+  // send invite to the users
   for (let i of userIds) {
     await sendMessage(msg, i);
   }
+
+  // inform the other users in the room someone is invited
+  await sendMessageToRoom(msg, roomId)
 }

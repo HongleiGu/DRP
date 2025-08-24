@@ -1,6 +1,5 @@
 "use client";
 
-import { useStompClient } from "@/hooks/useStompClient";
 import { Message, Group, SupabaseUser } from "@/types/datatypes";
 import fileService from "@/utils/fileService";
 import {
@@ -14,8 +13,10 @@ import { Avatar, Button, Card, Empty, List, Modal, Spin, Typography, Input, Popo
 import path from "path";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { debounce, set } from "lodash";
-import { findUserByIdentifierBlur } from "@/utils/user";
+import { findUserById, findUserByIdentifierBlur } from "@/utils/user";
 import { sendAcceptGreetings, sendGreetings } from "@/utils/messaging/templates";
+import { setStompHandlers } from "@/hooks/useStompClient";
+import { PendingFileFormat } from "@/types/fileFormat";
 
 const { Title, Text } = Typography;
 const PENDING_KEY = "__pending__";
@@ -52,26 +53,34 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
     fetchContacts();
   }, [user]);
 
-  useStompClient({
-    userId: user ? user.id : null,
-    onMessage: async (msg: Message) => {
-      console.log(msg);
-      if (msg.metadata.type === "greeting" && msg.metadata.scope === "personal") {
-        await addToPending(msg.metadata.data as SupabaseUser, msg);
-      } else {
-        // handle normal messages
+  setStompHandlers({
+    "processGreetingMessage": async (msg, user) => {
+      // greeting messages dont have a roomId, but we should save the msg entry to pending.jsonl
+      if (msg.metadata.scope === "personal" && msg.metadata.type === "greeting") {
+        // we find the speaker of the greeting, and look up who this person is, as we need the details of this person
+        const sender: SupabaseUser | null = await findUserById(msg.speaker)
+        if (!sender) {
+          // if no sender, this message is invalid
+          console.log("No sender found for greeting message, ignoring:", msg)
+          return
+        }
+        const pendingEntry: PendingFileFormat = {
+          user: sender,
+          last_msg: msg
+        }
+        if (!pendingList.find(it => it.user.id === sender.id)) {
+          setPendingList([...pendingList, pendingEntry]);
+        }
+        const filePath = path.join(STORAGE_PATH, user.id, `pending.jsonl`);
+        // if pending not exist on local, create it
+        if (!await fileService.existsFile(filePath)) {
+          await fileService.createFile(filePath)
+        }
+        // append the message to the file
+        await appendJsonl(filePath, pendingEntry);
       }
-    },
-  });
-
-
-  const addToPending = async (u: SupabaseUser, msg: Message) => {
-    const filePath = path.join(STORAGE_PATH, user.id, `pending.jsonl`);
-    if (!pendingList.find(it => it.user.id === u.id)) {
-      setPendingList([...pendingList, { user: u, last_msg: msg }]);
     }
-    await appendJsonl(filePath, u);
-  };
+  })
 
   const acceptGreeting = async (u: SupabaseUser, msg: Message | null) => {
     const filePath = path.join(STORAGE_PATH, user.id, "contacts.jsonl");

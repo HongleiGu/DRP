@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import com.lumiroom.model.commons.Result;
 import com.lumiroom.model.commons.User;
 import com.lumiroom.model.messages.Message;
+import com.lumiroom.model.messages.Room;
 import com.lumiroom.model.messages.RoomCreationRequest;
 import com.lumiroom.model.messages.UserInsertionBatchedRequest;
 import com.lumiroom.model.messages.UserInsertionRequest;
@@ -212,12 +213,15 @@ public class MessageController {
     @GetMapping("/checkRoom")
     public Result<Boolean> checkRoom(@RequestParam String roomId) {
         try {
-            String id = roomService.getRoom(roomId);
+            Room room = roomService.getRoom(roomId);
             List<String> members = roomService.getRoomMembers(roomId);
-            if (members.size() == 0 && id == null) {
+            if (room == null) {
                 return Result.success(false, "the room does not exist");
-            } else if (members.size() == 0 && id != null) {
+            } else if (members.size() == 0 && room != null) {
                 return Result.success(true, "the room exists, but there are no members in it");
+            } else if (members.size() != 0 && room == null) {
+                throw new Exception(
+                        "the room do nt exist, but there are members in the room, its likely the database is corrupted, contact the admin");
             }
             return Result.success(true, "the room exists");
         } catch (Throwable e) {
@@ -281,6 +285,19 @@ public class MessageController {
             return Result.success("successfully inserted users to room", "successfully inserted users to room");
         } catch (Throwable e) {
             return Result.error("inserting users to room failed due to: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/getRoom")
+    public Result<Room> getRoom(@RequestParam String roomId) {
+        try {
+            Room room = roomService.getRoom(roomId);
+            if (room == null) {
+                return Result.error(400, "the room does not exist");
+            }
+            return Result.success(room);
+        } catch (Throwable e) {
+            return Result.error(e.getMessage());
         }
     }
 }

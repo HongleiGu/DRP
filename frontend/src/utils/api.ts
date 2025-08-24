@@ -1,5 +1,5 @@
 "use client" 
-import { Direction, Group, Message, PlayerData, SupabaseUser } from '@/types/datatypes';
+import { Direction, Group, GroupEntry, Message, PlayerData, SupabaseUser } from '@/types/datatypes';
 import globalStore from '@/store';
 import { BASE_URL, fetchJson, formatDate } from './utils';
 
@@ -98,6 +98,16 @@ export async function validateJWT(token: string): Promise<boolean> {
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
       jwt: token
+    })
+  })
+}
+
+export async function getGroup(roomId: string): Promise<GroupEntry> {
+  return await fetchJson<GroupEntry>(`${BASE_URL}api/auth/validateJWT`, {
+    method: "POST",
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      room_id: roomId
     })
   })
 }

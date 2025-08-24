@@ -1,6 +1,7 @@
 import { Message } from "@/types/datatypes";
 
-export interface greetingMessage extends Message {
+// greeting message, sent when a user tries to establish connection with another user
+export interface GreetingMessage extends Message {
   chat_room_id: "",
   metadata: {
     scope: "personal",
@@ -9,7 +10,8 @@ export interface greetingMessage extends Message {
   }
 }
 
-export interface acceptGreetingMessage extends Message {
+// reply to the greeting
+export interface AcceptGreetingMessage extends Message {
   chat_room_id: "",
   metadata: {
     scope: "personal",
@@ -18,10 +20,20 @@ export interface acceptGreetingMessage extends Message {
   }
 }
 
-export interface inviteMessage extends Message {
+// group invite message
+export interface InviteMessage extends Message {
   metadata: {
     scope: "public",
     type: "invite",
     data: null
+  }
+}
+
+// 1-to-1 personal chat message
+export interface PersonalChatMessage extends Message {
+  metadata: {
+    scope: "personal",
+    type: "message",
+    data: null // the sender is the speaker, the receiver is the user him/herself
   }
 }

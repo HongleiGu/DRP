@@ -3,6 +3,7 @@ package com.lumiroom.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.lumiroom.model.messages.Room;
 import com.lumiroom.model.messages.RoomCreationRequest;
 
 import java.util.List;
@@ -23,7 +24,10 @@ public interface RoomMapper {
 
     String createRoom(RoomCreationRequest req);
 
-    String getRoom(@Param("roomId") String roomId);
+    Room getRoom(@Param("roomId") String roomId);
 
     void insertUsersToRoom(@Param("userId") String userId, @Param("roomId") String roomId);
+
+    void deleteUsersFromRoom(@Param("userId") String userId, @Param("roomId") String roomId);
+
 }

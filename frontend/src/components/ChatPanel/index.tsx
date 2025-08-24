@@ -12,9 +12,9 @@ import fileService from "@/utils/fileService";
 import path from "path"
 import { appendJsonl, parseJsonlToTypedObjects } from "@/utils/json";
 import globalStore from "@/store";
-import { useStompClient } from "@/hooks/useStompClient";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
+import { setStompHandler } from "@/hooks/useStompClient";
 
 interface ChatPanelProps {
   chatroomId: string;
@@ -69,27 +69,17 @@ export default function ChatPanel({
   }, [chatroomId, userId])
 
   // setup websocket
-  // Initialize WebSocket message listener once userId is set
-  useStompClient({
-    userId,
-    onMessage: async (msg: Message) => { 
-      console.log("received message", msg, chatroomId)
-      if (msg.metadata.scope == "personal") {
-        // TODO: handle personal msg
-        return
-      }
-      if (msg.chat_room_id !== chatroomId) return; // Ignore other rooms
+  setStompHandler("onRender", async (msg) => {
+    console.log("received message", msg, chatroomId)
+    if (msg.metadata.scope == "personal") {
+      // TODO: handle personal msg
+      return
+    }
+    if (msg.chat_room_id !== chatroomId) return; // Ignore other rooms
 
-      // Append message and save locally
-      setMessages((prev) => [...prev, msg]);
-
-      const filePath = path.join(STORAGE_PATH, userId, `${chatroomId}.jsonl`);
-      const response = await appendJsonl(filePath, msg); // it is best to await for this, though it can work without it
-      if (!response.success) {
-        throw new Error(response.error)
-      }
-    },
-  });
+    // Append message and save locally
+    setMessages((prev) => [...prev, msg]);
+  })
 
   useEffect(() => {
     if (pathname !== `/${PROJECT_NAME}`) return;

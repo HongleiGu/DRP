@@ -1,70 +1,95 @@
-import { useEffect, useCallback } from "react";
+// stompService.ts
 import SockJS from "sockjs-client";
 import { Client, IMessage } from "@stomp/stompjs";
-import { Message } from "@/types/datatypes";
-
-interface UseStompClientOptions {
-  userId: string | null;
-  onMessage: (message: Message) => Promise<void>;
-}
+import { Message, SupabaseUser } from "@/types/datatypes";
+import { defaultHandlers, StompHandlerNames, StompHandlers } from "./stompUtils";
 
 const wsUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:8080/";
 
-let stompClientRef: Client | null = null;
+let stompClient: Client | null = null;
+let currentUser: SupabaseUser | null = null;
+let handlers: StompHandlers = { ...defaultHandlers };
 
-export const useStompClient = ({ userId, onMessage }: UseStompClientOptions) => {
+// --- Public API for handlers ---
+export function setStompHandler(name: StompHandlerNames, fn: typeof handlers[StompHandlerNames]) {
+  handlers[name] = fn;
+  reloadConnection();
+}
 
-  const memoizedOnMessage = useCallback(onMessage, [onMessage]);  // Memoizing onMessage to avoid re-creating it on every render
+export function setStompHandlers(newHandlers: Partial<StompHandlers>) {
+  handlers = { ...handlers, ...newHandlers };
+  reloadConnection();
+}
 
-  useEffect(() => {
-    if (!userId) return;
+export function resetStompHandlers() {
+  handlers = { ...defaultHandlers };
+  reloadConnection();
+}
 
-    const socket = new SockJS(`${wsUrl}ws/messages?userId=${userId}`);
-
-    const stompClient = new Client({
-      webSocketFactory: () => socket,
-      reconnectDelay: 5000,
-      debug: (str) => console.log(`[STOMP] ${str}`),
-      onConnect: () => {
-        console.log("✅ STOMP connected");
-
-        // Subscribe to message queue
-        stompClient.subscribe("/user/queue/messages", async (message: IMessage) => {
-          try {
-            const payload: Message = JSON.parse(message.body);
-            console.log("📨 Received:", payload);
-            await memoizedOnMessage(payload);  // Use the memoized function here
-
-            // Send ACK back over STOMP instead of fetch
-            stompClient.publish({
-              destination: "/app/messsages/ack", // maps to @MessageMapping("/messages/ack")
-              body: JSON.stringify({
-                messageId: payload.id,
-                success: true, // or whatever structure your backend expects
-              }),
-            });
-
-            console.log("✅ ACK sent via STOMP");
-          } catch (err) {
-            console.error("❌ Error handling WebSocket message", err);
-          }
-        });
-      },
-      onStompError: (frame) => {
-        console.error("❌ Broker error:", frame.headers["message"]);
-      },
-    });
-
-    stompClient.activate();
-    stompClientRef = stompClient;
-
-    return () => {
-      stompClient.deactivate();
-    };
-  }, []);  // Dependencies now include memoizedOnMessage
-
-};
+export function getStompHandlers() {
+  return handlers;
+}
 
 export function getStompClient() {
-  return stompClientRef;
+  return stompClient;
+}
+
+// --- Connection bootstrap ---
+export function connectStomp(user: SupabaseUser) {
+  if (stompClient?.active) return;
+  currentUser = user;
+
+  const socket = new SockJS(`${wsUrl}ws/messages?userId=${user.id}`);
+  stompClient = new Client({
+    webSocketFactory: () => socket,
+    reconnectDelay: 5000,
+    debug: (str) => console.log(`[STOMP] ${str}`),
+    onConnect: () => {
+      console.log("✅ STOMP connected");
+
+      stompClient?.subscribe("/user/queue/messages", async (msg: IMessage) => {
+        try {
+          const payload: Message = JSON.parse(msg.body);
+          console.log("📨 Received:", payload);
+
+          // Run through all registered handlers
+          for (const fn of Object.values(handlers)) {
+            await fn(payload, currentUser!, stompClient!);
+          }
+
+          // Always ACK
+          stompClient?.publish({
+            destination: "/app/messsages/ack",
+            body: JSON.stringify({ messageId: payload.id, success: true }),
+          });
+        } catch (err) {
+          console.error("❌ Error handling message", err);
+        }
+      });
+    },
+    onStompError: (frame) => {
+      console.error("❌ Broker error:", frame.headers["message"]);
+    },
+  });
+
+  stompClient.activate();
+}
+
+// --- Disconnect ---
+export function disconnectStomp() {
+  if (stompClient) {
+    console.log("🛑 Disconnecting STOMP");
+    stompClient.deactivate();
+    stompClient = null;
+    currentUser = null;
+  }
+}
+
+// --- Hot reload (reconnect with new handlers) ---
+function reloadConnection() {
+  if (stompClient?.active && currentUser) {
+    console.log("♻️ Reloading STOMP with updated handlers");
+    disconnectStomp();
+    connectStomp(currentUser);
+  }
 }

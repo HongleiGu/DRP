@@ -89,3 +89,11 @@ export async function findUserByIdentifierBlur(
     method: 'GET'
   })
 }
+
+export async function findUserById(
+  id: string
+): Promise<SupabaseUser | null> {
+  return await fetchJson<SupabaseUser | null>(`${BASE_URL}api/auth/findUserById?id=${id}`, {
+    method: 'GET'
+  })
+}

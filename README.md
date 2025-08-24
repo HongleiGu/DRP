@@ -82,8 +82,8 @@ just normal, nothing special
   "speaker": "dd1631e4-abf2-4514-9dbf-b7e2d641d0f9",
   "speaker_name": "someone",
   "chat_message": "hello",
-  "created_at": "1d7ef0b5-46d3-46a5-a794-e528931928c0",
-  "chat_room_id": "",
+  "created_at": "2025-08-23T15:00:00Z",
+  "chat_room_id": "1d7ef0b5-46d3-46a5-a794-e528931928c0",
   "metadata": {
     "scope": "public",
     "type": "message",
@@ -102,6 +102,41 @@ just normal, nothing special
   - scope: public, no need to hide this
   - type: message
   - data: empty, we use the speaker field to know who send this
+
+#### personal messages
+
+direct 1-to-1 messages
+
+```json
+{
+  "id": "91982580-564d-44f5-af94-95fe01de77eb",
+  "speaker": "dd1631e4-abf2-4514-9dbf-b7e2d641d0f9",
+  "speaker_name": "someone",
+  "chat_message": "hello",
+  "created_at": "2025-08-23T15:00:00Z",
+  "chat_room_id": "",
+  "metadata": {
+    "scope": "personal",
+    "type": "message",
+    "data": {
+      "receiver": "dd1631e4-abf2-4514-9dbf-b7e2d641d0f8"
+    } // null
+  }
+}
+```
+
+- id: message uuid
+- speaker: speaker uuid
+- speaker_name: speaker name, so we dont need to fetch the users for every message
+- chat_message: the message
+- created_at: the time this is send
+- chat_room_id: "", this done have a roomId
+- metadata
+  - scope: public, no need to hide this
+  - type: message
+  - data: 
+    - receiver: the uuid of the receiver
+
 
 ### greetings
 
@@ -180,9 +215,7 @@ we separate this from the greetings, this is used, say, when user A creates a gr
   "metadata": {
     "scope": "public",
     "type": "invite",
-    "data": {
-      "creator_id": "dd1631e4-abf2-4514-9dbf-b7e2d641d0f9"
-    }
+    "data": null // we dont need any data, we look up the group based on the chat_room_id
   }
 }
 ```
@@ -202,6 +235,88 @@ we separate this from the greetings, this is used, say, when user A creates a gr
 
 like wechat and whatsapp, I dont think we should wait for the other end to accept this invite
 
+## file storage conventions
+
+### users and rooms:
+
+all the data is stored under 
+
+```.env
+NEXT_PUBLIC_STORAGE_PATH_DEV="D:/Desktop/study/projects/DRP/storage" # for electron dev on local machine
+NEXT_PUBLIC_STORAGE_PATH_PROD="./storage" # use relative path to resolve permission issues and maintain cross-platform consistency
+```
+
+the layout is 
+
+{STORAGE_PATH}/<userid>/<rooms>.jsonl, or {STORAGE_PATH}/<userid>/<special>.jsonl
+
+### {STORAGE_PATH}/<userid>/groups.jsonl:
+
+this is used to find all the groups that should exist on the machine
+
+file format: jsonl
+
+data format: refer to the following type:
+
+```typescript
+export interface Group {
+  id: string;
+  name: string;
+  last_message: Message | null;
+  unread: number;
+  created_at: string;
+  creator_id: string;
+  // members: SupabaseUser[]; // members should be fetched from backend for safety
+}
+```
+
+### {STORAGE_PATH}/<userid>/contacts.jsonl
+
+this is used to find all the contacts that should exist on the machine
+
+file format: jsonl
+
+data format: refer to the following type
+
+```typescript
+export interface SupabaseUser {
+  id: string;
+  username: string;
+  onboarding_complete: boolean;
+  avatar_id: number;
+  created_at?: string;
+  email: string; // since supabase only supports email/password auth, this is required
+}
+```
+
+### {STORAGE_PATH}/<userid>/pending.jsonl
+
+this is used for those who send a friend request, but the user has not replied whether to accept this greeting
+
+file format: jsonl
+
+data format: refer to the following type
+
+```typescript
+{
+  user: SupabaseUser // please see the type above in contacts.jsonl
+  last_msg: Message // please see the type above in the messages section
+}
+```
+
+### {STORAGE_PATH}/<userid>/<groupid>.jsonl
+
+this is used to store the group data
+
+file format: jsonl
+
+data format: refer to the following type
+
+```typescript
+Message // please see the type above in the messages section
+```
+
+may add encryption for the file in future versions for safety
 
 ## WARNINGS FOR DEVELOPERS:
 1. electronStore store the data somewhere in AppData with the app's name, so C:/Users/<user>/AppData/.../<appname>, delete the Cache folder would reset everythin

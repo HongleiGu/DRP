@@ -1,6 +1,7 @@
 package com.lumiroom.service.messages.implementation;
 
 import com.lumiroom.mapper.RoomMapper;
+import com.lumiroom.model.messages.Room;
 import com.lumiroom.model.messages.RoomCreationRequest;
 import com.lumiroom.service.messages.RoomService;
 
@@ -28,23 +29,26 @@ public class RoomServiceImplementation implements RoomService {
         return roomMapper.getMembersByRoomId(roomId);
     }
 
-    @Override
     public boolean checkUserInRoom(String userId, String roomId) {
         return roomMapper.getMembersByRoomId(roomId).contains(userId);
     }
 
-    @Override
     public String createRoom(RoomCreationRequest req) {
         return roomMapper.createRoom(req);
     }
 
-    @Override
-    public String getRoom(String roomId) {
+    public Room getRoom(String roomId) {
         return roomMapper.getRoom(roomId);
     }
 
     @Override
     public void insertUserToRoom(String userId, String roomId) {
         roomMapper.insertUsersToRoom(userId, roomId);
+    }
+
+    @Override
+    public void deleteUserFromRoom(String userId, String roomId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'deleteUserFromRoom'");
     }
 }

@@ -53,7 +53,7 @@
     WHERE 
       username LIKE CONCAT('%', #{identifier}, '%') OR 
       email LIKE CONCAT('%', #{identifier}, '%') OR
-      id::text LIKE CONCAT('%', #{identifier}, '%')
+      id::text LIKE CONCAT('%', #{identifier}, '%') AND
     LIMIT 1
   </select>
 

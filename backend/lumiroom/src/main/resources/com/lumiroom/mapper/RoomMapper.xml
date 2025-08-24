@@ -11,10 +11,11 @@
     WHERE room_id = #{roomId}::uuid
   </select>
 
-  <select id="getRoom" parameterType="string" resultType="string">
-    SELECT id
+  <select id="getRoom" parameterType="string" resultType="">
+    SELECT *
     FROM rooms
     WHERE id = #{roomId}::uuid
+    LIMIT 1
   </select>
 
   <!-- createRoom --> 
@@ -36,4 +37,12 @@
     )
   </insert>
 
+  <!-- deleteUsersFromRoom --> 
+
+  <delete id="deleteUsersFromRoom">
+    DELETE FROM room_users 
+    WHERE 
+      room_id=#{roomId}::uuid AND
+      user_id=#{userId}::uuid
+  </delete>
 </mapper>

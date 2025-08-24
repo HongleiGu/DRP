@@ -2,6 +2,7 @@ package com.lumiroom.service.messages;
 
 import java.util.List;
 
+import com.lumiroom.model.messages.Room;
 import com.lumiroom.model.messages.RoomCreationRequest;
 
 /**
@@ -21,7 +22,9 @@ public interface RoomService {
 
   public String createRoom(RoomCreationRequest req);
 
-  public String getRoom(String roomId);
+  public Room getRoom(String roomId);
+
+  public void deleteUserFromRoom(String userId, String roomId);
 
   public void insertUserToRoom(String userId, String roomId);
 }
