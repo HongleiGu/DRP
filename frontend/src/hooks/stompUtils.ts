@@ -33,3 +33,10 @@ export const defaultHandlers: StompHandlers = {
   processAcceptGreetingMessage,
   onRender: async () => {}
 };
+
+export const handlersCombined = async (msg: Message, user: SupabaseUser, client: Client) => {
+  // Run through all registered handlers
+  for (const fn of Object.values(defaultHandlers)) {
+    await fn(msg, user, client);
+  }
+}

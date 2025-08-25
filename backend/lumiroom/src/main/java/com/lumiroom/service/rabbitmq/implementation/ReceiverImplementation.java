@@ -2,6 +2,8 @@ package com.lumiroom.service.rabbitmq.implementation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lumiroom.model.messages.Message;
+import com.lumiroom.model.messages.MessageScope;
+import com.lumiroom.service.messages.RedisService;
 import com.lumiroom.service.rabbitmq.Receiver;
 import com.lumiroom.ws.WebSocketAckTracker;
 import com.lumiroom.ws.WebSocketDispatcher;
@@ -20,6 +22,9 @@ public class ReceiverImplementation implements Receiver {
 
     @Autowired
     ObjectMapper mapper;
+
+    @Autowired
+    RedisService redisService;
 
     private static final Duration ACK_TIMEOUT = Duration.ofSeconds(5);
 
@@ -63,9 +68,11 @@ public class ReceiverImplementation implements Receiver {
                         System.err.println("❌ No ACK from user " + userId + " for message " + message.getId());
                         channel.basicNack(deliveryTag, false, false);
 
-                        // TODO: Push unacknowledged message to Redis
-                        // Example:
-                        // redisTemplate.opsForList().leftPush("nack:messages", message);
+                        if (message.getMetadata().getScope() == MessageScope.PERSONAL) {
+                            redisService.addMessage(userId, "personal", mapper.writeValueAsString(message));
+                        } else {
+                            redisService.addMessage(userId, roomId, mapper.writeValueAsString(message));
+                        }
                     }
                 } catch (Throwable ex) {
                     ex.printStackTrace();

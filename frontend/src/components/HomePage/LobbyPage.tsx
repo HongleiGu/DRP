@@ -10,6 +10,7 @@ import path from 'path';
 import fileService from '@/utils/fileService';
 import { parseJsonlToTypedObjects } from '@/utils/json';
 import { usePathname, useRouter } from 'next/navigation';
+import { sendInviteMessage } from '@/utils/messaging/templates';
 // import { useRouter } from 'next/navigation';
 // import { useGlobalStore } from '@/store';
 
@@ -61,6 +62,8 @@ export default function CreateRoomPage({user}: {user: SupabaseUser}) {
     try {
       console.log([user, ...selectedUserIds], user?.id ?? "", groupName)
       const roomId = await createRoom([user, ...selectedUserIds], user?.id ?? "", groupName);
+      // send invite to the users
+      await sendInviteMessage(user, roomId.id, selectedUserIds.map(it => it.id))
       await globalStore.setItem('lumiroom-room', roomId)
       router.push(`/${PROJECT_NAME}/`);
     } catch (err) {

@@ -11,7 +11,7 @@
     WHERE room_id = #{roomId}::uuid
   </select>
 
-  <select id="getRoom" parameterType="string" resultType="">
+  <select id="getRoom" parameterType="string" resultType="com.lumiroom.model.messages.Room">
     SELECT *
     FROM rooms
     WHERE id = #{roomId}::uuid

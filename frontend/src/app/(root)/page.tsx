@@ -47,7 +47,7 @@ export default function HomePage() {
       }
 
       setUser(u);
-      console.log("User set:", u);
+
     };
 
     helper();

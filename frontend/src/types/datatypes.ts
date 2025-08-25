@@ -57,6 +57,7 @@ export interface Group {
   unread: number;
   created_at: string;
   creator_id: string;
+  type: "personal" | "group" // for a group, we dont allow any updates
   // members: SupabaseUser[]; // members should be fetched from backend for safety
 }
 

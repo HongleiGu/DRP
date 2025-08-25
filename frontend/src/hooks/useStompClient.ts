@@ -37,6 +37,8 @@ export function getStompClient() {
 // --- Connection bootstrap ---
 export function connectStomp(user: SupabaseUser) {
   if (stompClient?.active) return;
+  if (!user) return
+  console.log(user)
   currentUser = user;
 
   const socket = new SockJS(`${wsUrl}ws/messages?userId=${user.id}`);

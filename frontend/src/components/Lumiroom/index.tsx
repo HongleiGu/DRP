@@ -105,8 +105,10 @@ export default function Game({
     helper();
 
     return () => {
-      game.stop();
-      gameRef.current = null;
+      if (game) {
+        game.stop();
+        gameRef.current = null;
+      }
     };
   }, [chatroomId, router]);
 

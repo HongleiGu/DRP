@@ -77,22 +77,22 @@ services:
     networks:
       - lumiroom-network
 
-  nginx:
-    image: nginx:latest
-    container_name: lumiroom-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - /etc/letsencrypt/live/lumiroom.duckdns.org:/etc/letsencrypt/live/lumiroom.duckdns.org:ro
-      - /etc/letsencrypt/archive/lumiroom.duckdns.org:/etc/letsencrypt/archive/lumiroom.duckdns.org:ro
+  # nginx:
+  #   image: nginx:latest
+  #   container_name: lumiroom-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - /etc/letsencrypt/live/lumiroom.duckdns.org:/etc/letsencrypt/live/lumiroom.duckdns.org:ro
+  #     - /etc/letsencrypt/archive/lumiroom.duckdns.org:/etc/letsencrypt/archive/lumiroom.duckdns.org:ro
 
-    depends_on:
-      - backend
-    restart: unless-stopped
-    networks:
-      - lumiroom-network
+  #   depends_on:
+  #     - backend
+  #   restart: unless-stopped
+  #   networks:
+  #     - lumiroom-network
 
 volumes:
   redis_data:
