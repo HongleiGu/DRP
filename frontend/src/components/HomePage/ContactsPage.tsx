@@ -11,12 +11,13 @@ import { formatDate, STORAGE_PATH } from "@/utils/utils";
 import { PlusOutlined } from "@ant-design/icons";
 import { Avatar, Button, Card, Empty, List, Modal, Spin, Typography, Input, Popover } from "antd";
 import path from "path";
-import { ReactNode, useEffect, useRef, useState } from "react";
-import { debounce, set } from "lodash";
+import { ReactNode, useEffect, useState } from "react";
+import { debounce } from "lodash";
 import { findUserById, findUserByIdentifierBlur } from "@/utils/user";
 import { sendAcceptGreetings, sendGreetings } from "@/utils/messaging/templates";
 import { setStompHandlers } from "@/hooks/useStompClient";
 import { PendingFileFormat } from "@/types/fileFormat";
+import { createRoom } from "@/utils/api";
 
 const { Title, Text } = Typography;
 const PENDING_KEY = "__pending__";
@@ -88,17 +89,20 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
 
     setPendingList(pendingList.filter(it => it.user.id !== u.id));
 
-    sendAcceptGreetings(user.id, user.username, u.id);
+    const a = await createRoom([u, user], user.id, `${u.username} and ${user.username}`, "personal", msg)
+
+    sendAcceptGreetings(user.id, user.username, u.id, a.id);
     await deleteJsonlById(pendingFilePath, u.id);
     await appendJsonl(filePath, u);
 
     const group: Group = {
-      id: u.id,
-      name: u.username,
+      id: a.id,
+      name: a.name,
       last_message: msg,
-      unread: 0,
+      unread: 1,
       created_at: formatDate(),
       creator_id: user.id,
+      type: "personal"
     };
     await appendJsonl(path.join(STORAGE_PATH, user.id, "groups.jsonl"), group);
   };
@@ -119,7 +123,7 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
   };
 
   const renderContactList = (components: ((user: SupabaseUser) => ReactNode)[], values: SupabaseUser[], withPending: boolean = true) => {
-    let items: { key: string; user?: SupabaseUser; label: string; }[] = values.map((c) => ({ key: c.id, user: c, label: c.username }));
+    const items: { key: string; user?: SupabaseUser; label: string; }[] = values.map((c) => ({ key: c.id, user: c, label: c.username }));
     if (withPending) {
       items.push({ key: PENDING_KEY, label: "Pending Requests", user: undefined });
     }

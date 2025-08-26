@@ -9,7 +9,7 @@ import { SupabaseUser } from "@/types/datatypes";
 import { useRouter, usePathname } from "next/navigation";
 import globalStore from "@/store";
 import { validateJWT } from "@/utils/api";
-import { getMessages } from "@/utils/messaging/messages";
+import { deleteMessage, deleteMessages, getMessages } from "@/utils/messaging/messages";
 import { handlersCombined } from "@/hooks/stompUtils";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -32,8 +32,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
         setUser(u);
         const redisMessages = await getMessages(u.id)
+        console.log(redisMessages)
         const client = getStompClient()
+        console.log("in providers")
         redisMessages.map(async it => await handlersCombined(it, u, client!))
+        await deleteMessages(u.id)
         connectStomp(u);
       } finally {
         setLoading(false);

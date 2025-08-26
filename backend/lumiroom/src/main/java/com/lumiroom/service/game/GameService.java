@@ -11,4 +11,6 @@ public interface GameService {
   void updatePlayerData(PlayerData data);
 
   void updatePlayerData(User userId, String roomId, Integer x, Integer y);
+
+  void insertPlayer(User userId, String roomId);
 }

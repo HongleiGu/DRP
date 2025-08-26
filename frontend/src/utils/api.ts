@@ -7,6 +7,7 @@ export async function createRoom(
   users: SupabaseUser[],
   creator_id: string,
   groupName: string = 'groupchat',
+  type: "public" | "personal",
   last_message: Message | null = null
 ): Promise<Group> {
   const user = await globalStore.getItem('lumiroom-user') as SupabaseUser
@@ -32,8 +33,8 @@ export async function createRoom(
     })
   })
 
-  // // send invitation requests
-  // sendMessage()
+  // insert the player datas
+  
 
   return {
     id: roomId,
@@ -42,7 +43,7 @@ export async function createRoom(
     unread: last_message === null ? 0 : 1,
     created_at: formatDate(),
     creator_id: creator_id,
-    members: users
+    type: type
   } as Group
 }
 

@@ -13,7 +13,7 @@ import { appendJsonl, appendJsonls, findJsonlById, parseJsonlToTypedObjects, rep
 // import { useStompClient } from "@/hooks/useStompClient";
 import { deleteMessage, getMessages } from "@/utils/messaging/messages";
 import { useRouter } from "next/navigation"
-import { InviteMessage } from "@/utils/messaging/types";
+// import { InviteMessage } from "@/utils/messaging/types";
 import { setStompHandlers } from "@/hooks/useStompClient";
 import { getGroup } from "@/utils/api";
 import { getAllGroupsFilePath, getGroupFilePath } from "@/utils/fileService/commonFilePaths";
@@ -33,6 +33,8 @@ export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (
     setIsMounted(true);
   }, []);
 
+  // note that for normal messages, the group type should remain the same
+  // but for invite messages, you cannot invite the person to a personal room, personal room is 1-to-1 only
   const handlerNormalAndInviteMessages : StompHandler = async (msg, user) => {
     const roomFilePath = getAllGroupsFilePath(user.id)
     const groupFilePath = getGroupFilePath(user.id, msg.chat_room_id)
@@ -56,7 +58,8 @@ export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (
           unread: 1,
           created_at: groupData.created_at,
           creator_id:groupData.creator_id,
-          last_message: msg
+          last_message: msg,
+          type: groupData.type
         }
         // since the room does not exist, we append directly
         setGroupChats([...groupChats, group])
@@ -64,7 +67,7 @@ export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (
         await appendJsonl(roomFilePath, group)
       } else {
         // we dont allow sending in rooms not in the server
-        console.log("the roomm doesnt exist")
+        console.log("the room doesnt exist")
       }
       
     } // can do {...groupData, unread: 0, last_message: msg}, but want to ensure data valid-ness
@@ -76,7 +79,8 @@ export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (
         unread: Number(existingGroup.unread) + 1,
         created_at: existingGroup.created_at,
         creator_id: existingGroup.creator_id,
-        last_message: msg
+        last_message: msg,
+        type: existingGroup.type
       }
       // the groupchat exists, but we need to update the entry
       setGroupChats(
@@ -110,81 +114,81 @@ export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (
     }
   }, [user.id]);
 
-  // merge the local groups with those from redis
-  // we can reasonably assume the messages in redis is sorted by time
-  // TODO: currently the room creation logic is unhandled
-  const fetchFromRedis = useCallback(async (): Promise<Group[]> => {
-    try {
-      const returnGroupsChats = groupChats;
-      const messages: Message[] = await getMessages(user.id); // assumes user.id is present
-      console.log("redis data:", messages);
-      const allMessages: Record<string, Message[]> = {};
+  // // merge the local groups with those from redis
+  // // we can reasonably assume the messages in redis is sorted by time
+  // // TODO: currently the room creation logic is unhandled
+  // const fetchFromRedis = useCallback(async (): Promise<Group[]> => {
+  //   try {
+  //     const returnGroupsChats = groupChats;
+  //     const messages: Message[] = await getMessages(user.id); // assumes user.id is present
+  //     console.log("redis data:", messages);
+  //     const allMessages: Record<string, Message[]> = {};
 
-      // Group messages by room
-      for (const msg of messages) {
-        const roomId = msg.metadata && msg.metadata.scope === "public" ? msg.chat_room_id : msg.speaker + "." + msg.speaker_name; // fallback for personal
-        if (!allMessages[roomId]) {
-          allMessages[roomId] = [];
-        }
-        allMessages[roomId].push(msg);
-      }
+  //     // Group messages by room
+  //     for (const msg of messages) {
+  //       const roomId = msg.metadata && msg.metadata.scope === "public" ? msg.chat_room_id : msg.speaker + "." + msg.speaker_name; // fallback for personal
+  //       if (!allMessages[roomId]) {
+  //         allMessages[roomId] = [];
+  //       }
+  //       allMessages[roomId].push(msg);
+  //     }
 
-      // Process each room
-      for (const roomId of Object.keys(allMessages)) {
-        const roomMessages = allMessages[roomId];
-        const filePath = path.join(STORAGE_PATH, user.id, roomId + `.jsonl`);
+  //     // Process each room
+  //     for (const roomId of Object.keys(allMessages)) {
+  //       const roomMessages = allMessages[roomId];
+  //       const filePath = path.join(STORAGE_PATH, user.id, roomId + `.jsonl`);
 
-        // Append all messages to chat history file
-        await appendJsonls(filePath, roomMessages);
-        const groupPath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
+  //       // Append all messages to chat history file
+  //       await appendJsonls(filePath, roomMessages);
+  //       const groupPath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
 
 
-        // Get current group entry
-        const localRoom = groupChats.find((room) => room.id === roomId);
-        if (!localRoom) {
-          // we now the speaker attr is a uuid, but the speaker_name may have dots, this is ugly, but maybe will just leave it there
-          const firstDotIndex = roomId.indexOf('.');
-          const speaker = roomId.substring(0, firstDotIndex);
-          const speaker_name = roomId.substring(firstDotIndex + 1);
-          const tempRoom = {
-            id: speaker,
-            name: speaker_name,
-            last_message: null,
-            unread: 0,
-            created_at: formatDate(),
-            creator_id: speaker,
-          } as Group
-          // I think no need to append as a final write
-          returnGroupsChats.push(tempRoom);
-          await appendJsonl(groupPath, tempRoom);
-          await deleteMessage(user.id, speaker)
-          continue
-        }; // TODO: handle room creation logic
+  //       // Get current group entry
+  //       const localRoom = groupChats.find((room) => room.id === roomId);
+  //       if (!localRoom) {
+  //         // we now the speaker attr is a uuid, but the speaker_name may have dots, this is ugly, but maybe will just leave it there
+  //         const firstDotIndex = roomId.indexOf('.');
+  //         const speaker = roomId.substring(0, firstDotIndex);
+  //         const speaker_name = roomId.substring(firstDotIndex + 1);
+  //         const tempRoom = {
+  //           id: speaker,
+  //           name: speaker_name,
+  //           last_message: null,
+  //           unread: 0,
+  //           created_at: formatDate(),
+  //           creator_id: speaker,
+  //         } as Group
+  //         // I think no need to append as a final write
+  //         returnGroupsChats.push(tempRoom);
+  //         await appendJsonl(groupPath, tempRoom);
+  //         await deleteMessage(user.id, speaker)
+  //         continue
+  //       }; // TODO: handle room creation logic
 
-        // Sort messages by creation time
-        const sorted = roomMessages.sort(
-          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
-        const latest = sorted[sorted.length - 1];
+  //       // Sort messages by creation time
+  //       const sorted = roomMessages.sort(
+  //         (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  //       );
+  //       const latest = sorted[sorted.length - 1];
 
-        // Update local group entry
-        const updatedRoom: Group = {
-          ...localRoom,
-          last_message: latest,
-          unread: localRoom.unread + sorted.length,
-          created_at: latest.created_at,
-        };
+  //       // Update local group entry
+  //       const updatedRoom: Group = {
+  //         ...localRoom,
+  //         last_message: latest,
+  //         unread: localRoom.unread + sorted.length,
+  //         created_at: latest.created_at,
+  //       };
 
-        await replaceJsonlById(groupPath, { ...updatedRoom, id: roomId });
-        await deleteMessage(user.id, roomId)
-      }
+  //       await replaceJsonlById(groupPath, { ...updatedRoom, id: roomId });
+  //       await deleteMessage(user.id, roomId)
+  //     }
 
-      return returnGroupsChats;
-    } catch (err) {
-      console.error("❌ Failed to fetch groups from Redis:", err);
-      return groupChats;
-    }
-  }, [user.id]);
+  //     return returnGroupsChats;
+  //   } catch (err) {
+  //     console.error("❌ Failed to fetch groups from Redis:", err);
+  //     return groupChats;
+  //   }
+  // }, [user.id]);
 
 
 
@@ -195,40 +199,7 @@ export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (
       setLoading(true);
 
       const localGroups: Group[] = await fetchGroups();
-      const redisGroups: Group[] = await fetchFromRedis(); // returns updated Rooms from Redis
-      console.log("groups", localGroups, redisGroups)
-
-      // Build map from localGroups
-      const roomMap: Record<string, Group> = {};
-      for (const room of localGroups) {
-        roomMap[room.id] = room;
-      }
-
-      for (const redisRoom of redisGroups) {
-        const existing = roomMap[redisRoom.id];
-
-        if (!existing) {
-          // Not in local, just add
-          roomMap[redisRoom.id] = redisRoom;
-        } else {
-          // Exists — merge by latest message
-          const isRedisNewer =
-            new Date(redisRoom.last_message ? redisRoom.last_message.created_at : veryOldDate).getTime() >
-            new Date(existing.last_message ? existing.last_message.created_at : veryOldDate).getTime();
-
-          roomMap[redisRoom.id] = {
-            ...existing,
-            ...redisRoom,
-            last_message: isRedisNewer ? redisRoom.last_message : existing.last_message,
-            unread: existing.unread + redisRoom.unread,
-          };
-        }
-      }
-
-      const mergedGroups = Object.values(roomMap);
-      setGroupChats(mergedGroups);
-      const groupPath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
-      await fileService.writeFile(groupPath, mergedGroups.map(it => JSON.stringify(it)).join("\n") + "\n")
+      setGroupChats(localGroups);
       setLoading(false);
     };
 

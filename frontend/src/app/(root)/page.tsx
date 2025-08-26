@@ -10,6 +10,7 @@ import {
 } from "@ant-design/icons";
 import "@/app/globals.css";
 import "@/app/antd.css";
+import Image from "next/image";
 
 import ChatsPage from "@/components/HomePage/ChatsPage";
 import ContactsPage from "@/components/HomePage/ContactsPage";
@@ -18,7 +19,7 @@ import globalStore from "@/store";
 import { signOut } from "@/utils/user";
 import { LoadingSpinner } from "@/components/Lumiroom/LoadingSpinner";
 import { SupabaseUser } from "@/types/datatypes";
-import { validateJWT } from "@/utils/api";
+// import { validateJWT } from "@/utils/api";
 import LobbyPage from "@/components/HomePage/LobbyPage";
 
 const { Header, Content } = Layout;
@@ -129,7 +130,7 @@ export default function HomePage() {
             }`}
             onClick={() => setActiveTab("chats")}
           >
-            <img src="/icon/白猫.svg" alt="Logo" width={20} height={20}/>
+            <Image src="/icon/白猫.svg" alt="Logo" width={20} height={20}/>
             <span className="text-sm">Chats</span>
           </button>
           <button
@@ -138,7 +139,7 @@ export default function HomePage() {
             }`}
             onClick={() => setActiveTab("contacts")}
           >
-            <img src="/icon/三花猫.svg" alt="Logo" width={20} height={20}/>
+            <Image src="/icon/三花猫.svg" alt="Logo" width={20} height={20}/>
             <span className="text-sm">Contacts</span>
           </button>
           <button
@@ -147,7 +148,7 @@ export default function HomePage() {
             }`}
             onClick={() => setActiveTab("profile")}
           >
-            <img src="/icon/橘猫.svg" alt="Logo" width={20} height={20}/>
+            <Image src="/icon/橘猫.svg" alt="Logo" width={20} height={20}/>
             <span className="text-sm">Me</span>
           </button>
           <button
@@ -156,7 +157,7 @@ export default function HomePage() {
             }`}
             onClick={() => setActiveTab("lobby")}
           >
-            <img src="/icon/蓝猫.svg" alt="Logo" width={20} height={20}/>
+            <Image src="/icon/蓝猫.svg" alt="Logo" width={20} height={20}/>
             <span className="text-sm">Lobby</span>
           </button>
         </div>

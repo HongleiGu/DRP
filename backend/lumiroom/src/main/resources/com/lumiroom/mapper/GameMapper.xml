@@ -26,4 +26,12 @@
       last_updated = now()
   </insert>
 
+  <!-- insertPlayer --> 
+
+  <insert id="insertPlayer">
+    INSERT INTO players
+      (user_id, name, room_id, x, y, direction, avatar_id, last_updated)
+    VALUES
+      (#{userId}::uuid, #{name}, #{roomId}::uuid, #{x}, #{y}, #{direction}, #{avatarId}, now())
+  </insert>
 </mapper>

@@ -16,7 +16,9 @@ export interface AcceptGreetingMessage extends Message {
   metadata: {
     scope: "personal",
     type: "accept greeting",
-    data: null
+    data: {
+      room_id: string
+    }
   }
 }
 

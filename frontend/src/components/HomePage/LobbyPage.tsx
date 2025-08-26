@@ -61,7 +61,7 @@ export default function CreateRoomPage({user}: {user: SupabaseUser}) {
     setCreatingLoading(true);
     try {
       console.log([user, ...selectedUserIds], user?.id ?? "", groupName)
-      const roomId = await createRoom([user, ...selectedUserIds], user?.id ?? "", groupName);
+      const roomId = await createRoom([user, ...selectedUserIds], user?.id ?? "", groupName, "public");
       // send invite to the users
       await sendInviteMessage(user, roomId.id, selectedUserIds.map(it => it.id))
       await globalStore.setItem('lumiroom-room', roomId)

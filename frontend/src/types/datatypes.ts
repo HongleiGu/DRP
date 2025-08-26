@@ -57,7 +57,7 @@ export interface Group {
   unread: number;
   created_at: string;
   creator_id: string;
-  type: "personal" | "group" // for a group, we dont allow any updates
+  type: "personal" | "group" // for a group, we dont allow any alterations, there can only be two groups
   // members: SupabaseUser[]; // members should be fetched from backend for safety
 }
 
@@ -67,6 +67,7 @@ export interface GroupEntry {
   name: string;
   created_at: string;
   creator_id: string;
+  type: "personal" | "group"
   // members: SupabaseUser[]; // members should be fetched from backend for safety
 }
 

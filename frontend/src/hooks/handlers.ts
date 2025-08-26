@@ -52,6 +52,7 @@ export const processGreetingMessage: StompHandler = async (msg, user) => {
       user: sender,
       last_msg: msg
     }
+    console.log(pendingEntry)
     const filePath = path.join(STORAGE_PATH, user.id, `pending.jsonl`);
     // if pending not exist on local, create it
     if (!await fileService.existsFile(filePath)) {
@@ -102,7 +103,8 @@ export const processNormalAndInviteMessage: StompHandler = async (msg, user) => 
         unread: 1,
         created_at: groupData.created_at,
         creator_id:groupData.creator_id,
-        last_message: msg
+        last_message: msg,
+        type: groupData.type
       }
       await appendJsonl(roomFilePath, group)
     } else {
@@ -117,7 +119,8 @@ export const processNormalAndInviteMessage: StompHandler = async (msg, user) => 
       unread: Number(existingGroup.unread) + 1,
       created_at: existingGroup.created_at,
       creator_id: existingGroup.creator_id,
-      last_message: msg
+      last_message: msg,
+      type: existingGroup.type
     }
 
     await replaceJsonlById(roomFilePath, group)

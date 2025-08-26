@@ -11,4 +11,6 @@ public interface GameMapper {
   List<PlayerData> getPlayersInRoom(String roomId);
 
   void updatePlayerData(PlayerData data);
+
+  void insertPlayer(PlayerData playerData);
 }

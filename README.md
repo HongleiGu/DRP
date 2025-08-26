@@ -184,7 +184,9 @@ this is used as to inform that the user accepts the greeting, this is the point 
   "metadata": {
     "scope": "personal",
     "type": "accept greeting",
-    "data": {} // null, since the speaker field contains this
+    "data": {
+      "room_id": "some uuid" // for unification, we see such 1-to-1 chats also as rooms, the room_id has to be requested from psql
+    } // null, since the speaker field contains this
   }
 }
 ```

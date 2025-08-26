@@ -20,7 +20,7 @@ export async function sendGreetings(userId: string, username: string, targetId: 
   await sendMessage(msg, targetId)
 }
 
-export async function sendAcceptGreetings(userId: string, username: string, targetId: string): Promise<void> {
+export async function sendAcceptGreetings(userId: string, username: string, targetId: string, roomId: string): Promise<void> {
   const msg: AcceptGreetingMessage = {
     id: uuidv4(),
     speaker: userId,
@@ -31,7 +31,9 @@ export async function sendAcceptGreetings(userId: string, username: string, targ
     metadata: {
       scope: "personal",
       type: "accept greeting",
-      data: null
+      data: {
+        room_id: roomId
+      }
     }
   }
   await sendMessage(msg, targetId)
@@ -52,7 +54,7 @@ export async function sendInviteMessage(user: SupabaseUser, roomId: string, user
     }
   }
   // send invite to the users
-  for (let i of userIds) {
+  for (const i of userIds) {
     await sendMessage(msg, i);
   }
 

@@ -27,4 +27,8 @@ public class GameServiceImplementation implements GameService {
   public void updatePlayerData(User user, String roomId, Integer x, Integer y) {
     mapper.updatePlayerData(new PlayerData(user.getId(), user.getUsername(), roomId, x, y, "down", user.getAvatarId()));
   }
+
+  public void insertPlayer(User user, String roomId) {
+    mapper.insertPlayer(new PlayerData(user.getId(), user.getUsername(), roomId, 200, 300, "down", user.getAvatarId()));
+  }
 }
