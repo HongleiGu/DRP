@@ -14,8 +14,8 @@ import { appendJsonl, parseJsonlToTypedObjects } from "@/utils/json";
 import globalStore from "@/store";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { setStompHandler } from "@/hooks/useStompClient";
 import GroupManagementPanel from "./GroupManagementPanel";
+import { messageWebsocket } from "@/hooks/StompService";
 
 interface ChatPanelProps {
   chatroomId: string;
@@ -71,7 +71,7 @@ export default function ChatPanel({
   }, [chatroomId, userId])
 
   // setup websocket
-  setStompHandler("onRender", async (msg) => {
+  messageWebsocket.setHandler("onRender", async (msg) => {
     console.log("received message", msg, chatroomId)
     if (msg.metadata.scope == "personal") {
       // TODO: handle personal msg

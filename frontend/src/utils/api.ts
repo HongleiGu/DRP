@@ -49,30 +49,12 @@ export async function createRoom(
 }
 
 export async function getPlayers(roomId: string): Promise<PlayerData[]> {
-  const result = await fetchJson<PlayerData[]>(`${BASE_URL}api/game/getPlayers?roomId=${roomId}`, {
+  return await fetchJson<PlayerData[]>(`${BASE_URL}api/game/getPlayers?roomId=${roomId}`, {
     method: "GET",
     headers: { 'Content-Type': 'application/json' }
   })
-  console.log(result)
-  return result
 }
 
-export async function resetPlayerToDefault(userId: string, roomId: string, name: string | null = null, avatarId: string | null = null): Promise<void> {
-  await fetchJson<string>(`${BASE_URL}api/game/updatePlayerData`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      id: "",
-      user_id: userId,
-      name: name,
-      room_id: roomId,
-      x: 200,
-      y: 300,
-      direction: "down" as Direction,
-      avatarId: avatarId
-    } as PlayerData)
-  })
-}
 
 export async function updatePlayerPosition(userId: string, roomId: string, {x,y,direction}: {
   x: number;
@@ -91,9 +73,13 @@ export async function updatePlayerPosition(userId: string, roomId: string, {x,y,
       x: x,
       y: y,
       direction: direction,
-      avatarId: ""
+      avatarId: 0
     } as PlayerData)
   })
+}
+
+export async function resetPlayerToDefault(userId: string, roomId: string) {
+  await updatePlayerPosition(userId, roomId, {x: 200, y: 300, direction: "down"})
 }
 
 export async function validateJWT(token: string): Promise<boolean> {

@@ -41,7 +41,6 @@ export async function signIn(
     password: string
   }
 ): Promise<SupabaseUser> {
-  console.log(BASE_URL)
   const {user, token} = await fetchJson<{user: SupabaseUser, token: string}>(`${BASE_URL}api/auth/login`, {
     method: "POST",
     headers: { 'Content-Type': 'application/json' },

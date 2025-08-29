@@ -6,7 +6,7 @@ export class OtherPlayer extends ex.Actor {
   public userId: string;
   public roomId: string;
   public name: string;
-  public avatarId: string;
+  public avatarId: number;
   private label?: ex.Label;
 
   private currentDirection: "up" | "down" | "left" | "right" = "down";
@@ -15,7 +15,7 @@ export class OtherPlayer extends ex.Actor {
   private moveSpeed = 300;
   private smoothFactor = 0.1;
 
-  constructor(args: ex.ActorArgs & { userId: string; roomId: string; name: string; avatarId: string }) {
+  constructor(args: ex.ActorArgs & { userId: string; roomId: string; name: string; avatarId: number }) {
     super({ ...args, collisionType: ex.CollisionType.PreventCollision });
     this.userId = args.userId;
     this.roomId = args.roomId;

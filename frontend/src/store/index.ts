@@ -28,7 +28,6 @@ const electronStore: globalStore = {
 const capacitorStore: globalStore = {
   async getItem<T>(key: string): Promise<T | undefined> {
     const { value } = await Preferences.get({ key });
-    console.log(value)
     if (!value) return undefined;
     try {
       return JSON.parse(value) as T;
@@ -71,11 +70,5 @@ const globalStore: globalStore =
     : isCapacitor()
     ? capacitorStore
     : webStore;
-
-console.log(
-  isElectron() ? 'electron' :
-  isCapacitor() ? 'capacitor' :
-  'web'
-);
 
 export default globalStore;

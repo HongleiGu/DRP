@@ -23,7 +23,6 @@ const electronFileSystem: FileService = {
 
   async createFile(filePath: string): Promise<void> {
     const response = await window.electronApi.createFile(filePath);
-    // console.log("creata file", response)
     if (!response.success) throw new Error(response.error || 'Failed to create file');
   },
 

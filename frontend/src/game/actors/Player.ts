@@ -8,9 +8,9 @@ export class Player extends ex.Actor {
     public currentDirection: 'up' | 'down' | 'left' | 'right' = 'down';
     public roomId: string;
     public name: string;
-    public avatarId: string;
+    public avatarId: number;
 
-    constructor(args: ex.ActorArgs & { userId: string, roomId: string, name: string, avatarId: string}) {
+    constructor(args: ex.ActorArgs & { userId: string, roomId: string, name: string, avatarId: number}) {
         super({
             ...args,
             collisionType: ex.CollisionType.Active
@@ -24,7 +24,7 @@ export class Player extends ex.Actor {
 
     onInitialize(): void {
         const sheet = ex.SpriteSheet.fromImageSource({
-            image: Resources.CharacterSpriteSheets[Number.parseInt(this.avatarId ?? "0")],
+            image: Resources.CharacterSpriteSheets[Number(this.avatarId ?? 0)],
             grid: { spriteWidth: 16, spriteHeight: 20, rows: 4, columns: 3 }
         });
 

@@ -35,7 +35,7 @@ export interface PlayerData {
   x: number;
   y: number;
   direction: Direction;
-  avatarId: string
+  avatarId: number
 }
 
 export type Direction = "up" | "down" | "right" | "left"

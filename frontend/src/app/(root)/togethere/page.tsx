@@ -22,7 +22,6 @@ export default function RoomPage() {
       try {
         const u = await globalStore.getItem<SupabaseUser>('lumiroom-user')
         const roomId = await globalStore.getItem<string>('lumiroom-room')
-        console.log(u, roomId)
         setIsLoading(true);
 
         if (!u || !u.id) {
@@ -35,7 +34,6 @@ export default function RoomPage() {
         }
         // setUser(u)
         setRoomId(roomId)
-        console.log(roomId)
         if (!await checkRoom(roomId!)) {
           throw new Error("the room does not exist")
         }

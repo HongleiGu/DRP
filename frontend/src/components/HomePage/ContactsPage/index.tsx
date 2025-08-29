@@ -12,13 +12,13 @@ import { Button, Card, Spin, Typography } from "antd";
 import path from "path";
 import { useEffect, useState } from "react";
 import { findUserById } from "@/utils/user";
-import { setStompHandlers } from "@/hooks/useStompClient";
 import { PendingFileFormat } from "@/types/fileFormat";
 import ContactList from "@/components/Contacts/ContactsPanel";
 import PendingPanel from "@/components/Contacts/PendingPanel";
 import ContactDetails from "@/components/Contacts/ContactDetails";
 import { SearchPanel } from "@/components/Contacts/SearchPanel";
 import { sendGreetings } from "@/utils/messaging/templates";
+import { messageWebsocket } from "@/hooks/StompService";
 
 const { Title } = Typography;
 
@@ -50,7 +50,8 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
     fetchContacts();
   }, [user]);
 
-  setStompHandlers({
+  // there is a universal messageWebsocket connection in GlobalApp
+  messageWebsocket.setHandlers({
     "processGreetingMessage": async (msg, user) => {
       // greeting messages dont have a roomId, but we should save the msg entry to pending.jsonl
       if (msg.metadata.scope === "personal" && msg.metadata.type === "greeting") {
@@ -65,7 +66,6 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
           user: sender,
           last_msg: msg
         }
-        console.log(pendingList)
         if (!pendingList.find(it => it.user.id == sender.id)) {
           setPendingList([...pendingList, pendingEntry]);
         }

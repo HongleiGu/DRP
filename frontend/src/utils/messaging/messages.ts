@@ -67,7 +67,6 @@ export async function checkRoom(roomId: string): Promise<boolean> {
   const result = await fetchJson<boolean>(`${BASE_URL}api/rooms/checkRoom?roomId=${roomId}`, {
     method: 'GET',
   })
-  console.log(result)
   return result
 }
 

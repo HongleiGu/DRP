@@ -158,7 +158,6 @@ export const processAcceptGreetingMessage: StompHandler = async (msg, user) => {
 
     // create group (contacts are treated as rooms for simple organization)
     const room = await getContacts(user.id, msg.speaker)
-    console.log(room, user, msg)
     if (!room) {
       throw new Error("the room does not exist")
     }

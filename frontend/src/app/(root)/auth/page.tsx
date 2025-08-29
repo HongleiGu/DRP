@@ -75,7 +75,6 @@ export default function AuthPage() {
       if (!data || !data.user || !data.token) throw new Error("Verification returned invalid user data");
       await globalStore.setItem<SupabaseUser>('lumiroom-user', data.user);
       await globalStore.setItem<string>('jwt-token', data.token);
-      console.log("onVerify", user);
       router.push("/");
     } catch (err) {
       if (err instanceof Error) setError(err.message || "Verification failed.");
@@ -96,7 +95,6 @@ export default function AuthPage() {
       if (resUser) {
         setUser(resUser);
         await globalStore.setItem<SupabaseUser>('lumiroom-user', resUser);
-        console.log("onLogin");
         router.push("/")
       } else setError("Invalid username/email or password");
     } catch (err) {

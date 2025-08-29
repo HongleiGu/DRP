@@ -210,7 +210,6 @@ export async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Prom
       if (payload.code !== 200) {
         throw new Error(payload.msg || `API error: ${payload.code}`);
       }
-      console.log(payload.data)
       return payload.data as T;
     } else {
       // ✅ Browser/Electron fetch
@@ -221,7 +220,6 @@ export async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Prom
       if (payload.code !== 200) {
         throw new Error(payload.msg || `API error: ${payload.code}`);
       }
-      console.log(payload.data)
       return payload.data as T;
     }
   } catch (err) {

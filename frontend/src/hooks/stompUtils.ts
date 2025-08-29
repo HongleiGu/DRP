@@ -1,11 +1,9 @@
 // stompService.ts
-import { Client } from "@stomp/stompjs";
 import { Message, SupabaseUser } from "@/types/datatypes";
 
 export type StompHandler = (
   msg: Message,
-  user: SupabaseUser,
-  client?: Client
+  user: SupabaseUser
 ) => Promise<void>;
 
 export type StompHandlerNames = "processPersonalMessage" |
@@ -34,9 +32,9 @@ export const defaultHandlers: StompHandlers = {
   onRender: async () => {}
 };
 
-export const handlersCombined = async (msg: Message, user: SupabaseUser, client: Client) => {
+export const handlersCombined = async (msg: Message, user: SupabaseUser) => {
   // Run through all registered handlers
   for (const fn of Object.values(defaultHandlers)) {
-    await fn(msg, user, client);
+    await fn(msg, user);
   }
 }

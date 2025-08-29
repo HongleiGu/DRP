@@ -61,7 +61,6 @@ export default function CreateRoomPage({user}: {user: SupabaseUser}) {
   const handleCreateRoom = async () => {
     setCreatingLoading(true);
     try {
-      console.log([user, ...selectedUserIds], user?.id ?? "", groupName)
       const room = await createRoom([user, ...selectedUserIds], user?.id ?? "", groupName, "public");
       // send invite to the users
       await sendInviteMessage(user, room.id, selectedUserIds.map(it => it.id))

@@ -1,29 +1,27 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Engine, DisplayMode, Color, FadeInOut, Loader } from "excalibur";
+import * as ex from "excalibur";
 import { initializeGame } from "./engine";
 import { Resources } from "@/game/config/resources";
-import { Alert, Button, Card } from "antd";
-// import { CalendarOutlined, YoutubeOutlined } from "@ant-design/icons";
+import { Alert, Button } from "antd";
 import { useRouter } from "next/navigation";
-// import MarkdownCalendar from "../Calendar";
 import { resetPlayerToDefault } from "@/utils/api";
 import globalStore from "@/store";
 import { SceneCallbacks, SupabaseUser } from "@/types/datatypes";
-// import { useGlobalStore } from "@/store";
 
 export default function Game({
   chatroomId,
   chatPanelVisible,
   setChatPanelVisible,
-}: any) {
+}: {
+  chatroomId: string,
+  chatPanelVisible: boolean,
+  setChatPanelVisible: (visible: boolean) => void
+}) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const gameRef = useRef<Engine | null>(null);
+  const gameRef = useRef<ex.Engine | null>(null);
   const [, setUser] = useState<SupabaseUser>(null!)
 
   useEffect(() => {
@@ -44,17 +42,15 @@ export default function Game({
       setUser(u)
       await resetPlayerToDefault(
         u?.id,
-        chatroomId,
-        u?.username as string,
-        u?.avatar_id.toString() ?? "0"
+        chatroomId
       );
 
 
-      game = new Engine({
+      game = new ex.Engine({
         resolution: { width: 256, height: 256 },
         suppressPlayButton: true,
         canvasElement: canvasRef.current,
-        displayMode: DisplayMode.FitContainerAndFill,
+        displayMode: ex.DisplayMode.FitContainerAndFill,
         pixelArt: true,
         pixelRatio: 4,
       });
@@ -62,7 +58,6 @@ export default function Game({
       gameRef.current = game;
 
       // Initialize game with callbacks
-      // console.log("inited room", chatroomId);
       const sceneCallbacks: SceneCallbacks = {
         showInteractButtonCalendar: () => {},
         showInteractButtonTV: () => {}
@@ -70,13 +65,11 @@ export default function Game({
       initializeGame(
         game,
         sceneCallbacks,
-        u?.id ?? "unknown",
-        u?.username ?? "Player",
-        chatroomId,
-        u?.avatar_id?.toString() ?? "0",
+        u,
+        chatroomId
       );
 
-      const loader = new Loader();
+      const loader = new ex.Loader();
       for (const resource of Object.values(Resources)) {
         if (Array.isArray(resource)) {
           for (const res of resource) {
@@ -87,10 +80,10 @@ export default function Game({
         }
       }
 
-      const inTransition = new FadeInOut({
+      const inTransition = new ex.FadeInOut({
         duration: 1000,
         direction: "in",
-        color: Color.ExcaliburBlue,
+        color: ex.Color.ExcaliburBlue,
       });
 
       game

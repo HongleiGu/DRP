@@ -1,4 +1,3 @@
-import { FontSource, ImageSource } from 'excalibur'
 import { LdtkResource } from '@excaliburjs/plugin-ldtk'
 import * as ex from 'excalibur';
 
@@ -35,20 +34,20 @@ export const paths = {
 }
 
 export const Resources = {
-    CharacterSpriteSheet: new ImageSource(paths.Sprites.CharacterSpritePath),
-    HeroSpriteSheetPng: new ImageSource(paths.Sprites.Hero01),
-    CharacterSpriteSheets: Array.from(Array(32).keys()).map((i) => new ImageSource(paths.Sprites.CharacterSpritePaths(i + 1))),
-    TelevisionSprite: new ImageSource(paths.Sprites.Television),
-    CalendarSprite: new ImageSource(paths.Sprites.Calendar),
-    PixelifySansFont: new FontSource(paths.Fonts.Pixelify_Sans, 'PixelifySans', { 
+    CharacterSpriteSheet: new ex.ImageSource(paths.Sprites.CharacterSpritePath),
+    HeroSpriteSheetPng: new ex.ImageSource(paths.Sprites.Hero01),
+    CharacterSpriteSheets: Array.from(Array(32).keys()).map((i) => new ex.ImageSource(paths.Sprites.CharacterSpritePaths(i + 1))),
+    TelevisionSprite: new ex.ImageSource(paths.Sprites.Television),
+    CalendarSprite: new ex.ImageSource(paths.Sprites.Calendar),
+    PixelifySansFont: new ex.FontSource(paths.Fonts.Pixelify_Sans, 'PixelifySans', { 
       filtering: ex.ImageFiltering.Pixel,
       size: 8, // set a default size
     }),
-    DeliusFont: new FontSource(paths.Fonts.Delius, 'Delius', { 
+    DeliusFont: new ex.FontSource(paths.Fonts.Delius, 'Delius', { 
       // filtering: ex.ImageFiltering.Pixel,
       size: 8, // set a default size
     }),
-    DeliusMainFont: new FontSource(paths.Fonts.Delius, 'DeliusMain', { 
+    DeliusMainFont: new ex.FontSource(paths.Fonts.Delius, 'DeliusMain', { 
       // filtering: ex.ImageFiltering.Pixel,
       size: 8, // set a default size
       bold: true,
@@ -58,7 +57,7 @@ export const Resources = {
         color: ex.Color.Black,
       }
     }),
-    ChewyFont: new FontSource(paths.Fonts.Chewy, 'Chewy', { 
+    ChewyFont: new ex.FontSource(paths.Fonts.Chewy, 'Chewy', { 
       // filtering: ex.ImageFiltering.Pixel,
       size: 8, // set a default size
     }),

@@ -1,7 +1,6 @@
 "use client";
 
 // import "./antd.css";
-import { connectStomp, disconnectStomp, getStompClient } from "@/hooks/useStompClient";
 import { useEffect, useState } from "react";
 import { SupabaseUser } from "@/types/datatypes";
 import { useRouter } from "next/navigation";
@@ -9,6 +8,7 @@ import globalStore from "@/store";
 import { validateJWT } from "@/utils/api";
 import { deleteMessages, getMessages } from "@/utils/messaging/messages";
 import { handlersCombined } from "@/hooks/stompUtils";
+import { messageSubscription, messageWebsocket } from "@/hooks/StompService";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -29,10 +29,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
       setUser(u);
       const redisMessages = await getMessages(u.id)
-      console.log(redisMessages)
-      const client = getStompClient()
-      console.log("in providers")
-      redisMessages.map(async it => await handlersCombined(it, u, client!))
+      redisMessages.map(async it => await handlersCombined(it, u))
       await deleteMessages(u.id)
       setLoading(false);
     };
@@ -41,14 +38,14 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!user) return;
-    console.log(user)
-    connectStomp(user);
-    return () => disconnectStomp();
+    // globally, we only connect to the message websocket, since is universally required 
+    // we customly connect to the game websocket only when needed
+    messageWebsocket.connect(user, null, messageSubscription)
+    return () => messageWebsocket.disconnect();
   }, [user]);
 
   if (loading) return <div>Loading...</div>;
   if (!user) {
-    console.log("no user")
     return <div>Loading user...</div>;
   }
 

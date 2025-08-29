@@ -7,7 +7,6 @@ import { App, ConfigProvider } from "antd";
 // import GlobalApp from "@/components/GlobalApp";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  console.log("layout rendering")
   return (
     <html lang="en">
       <body className="antialiased" style={{ margin: 0 }}> 

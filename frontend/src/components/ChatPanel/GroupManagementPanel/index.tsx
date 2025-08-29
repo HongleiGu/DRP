@@ -25,9 +25,7 @@ export default function GroupManagementPanel({
 
   // Load members from server (replace with actual API logic)
   const loadMembers = useCallback(async () => {
-    console.log("roomId", chatroomId)
     const room = await getRoom(chatroomId);
-    console.log(room)
     setRoom(room);
   }, [chatroomId]);
 
