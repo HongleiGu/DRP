@@ -15,6 +15,7 @@ import globalStore from "@/store";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { setStompHandler } from "@/hooks/useStompClient";
+import GroupManagementPanel from "./GroupManagementPanel";
 
 interface ChatPanelProps {
   chatroomId: string;
@@ -37,6 +38,7 @@ export default function ChatPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [, contextHolder] = message.useMessage();
   const pathname = usePathname();
+  const [openGroupManagement, setOpenGroupManagement] = useState<boolean>(false);
   // const [msgChannel, setMsgChannel] = useState<RealtimeChannel>(null!); // use websocket instead of supabase
   
   
@@ -219,15 +221,18 @@ export default function ChatPanel({
 
   return (
     <Card
-      title="Chat Group"
+      title="Chat Room"
       extra={
-        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Badge status="success" />
-          <span>
-            {onlineUsers.length}{" "}
-            {onlineUsers.length === 1 ? "player" : "players"} online
+        <>
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge status="success" />
+            <span>
+              {onlineUsers.length}{" "}
+              {onlineUsers.length === 1 ? "player" : "players"} online
+            </span>
+            <Button onClick={() => setOpenGroupManagement(true)} icon="..." />
           </span>
-        </span>
+        </>
       }
       style={{ flex: 1 }}
       styles={{
@@ -283,6 +288,13 @@ export default function ChatPanel({
           />
           <div ref={messagesEndRef} />
         </InfiniteScroll>
+        {/* Group Management Panel */}
+        <GroupManagementPanel
+          visible={openGroupManagement}
+          onClose={() => setOpenGroupManagement(false)}
+          chatroomId={chatroomId}
+          currentUser={user}
+        />
       </div>
       {footer}
     </Card>

@@ -210,6 +210,7 @@ export async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Prom
       if (payload.code !== 200) {
         throw new Error(payload.msg || `API error: ${payload.code}`);
       }
+      console.log(payload.data)
       return payload.data as T;
     } else {
       // ✅ Browser/Electron fetch
@@ -220,6 +221,7 @@ export async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Prom
       if (payload.code !== 200) {
         throw new Error(payload.msg || `API error: ${payload.code}`);
       }
+      console.log(payload.data)
       return payload.data as T;
     }
   } catch (err) {
@@ -227,3 +229,33 @@ export async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Prom
     throw err;
   }
 }
+
+export const PENDING_KEY = "__pending__"
+
+export function removeDuplicatesById<T>(list: T[], property: string): T[] {
+  const seenIds = new Set<unknown>(); // To track unique IDs
+  const properties = property.split("."); // Split property for nested keys
+
+  return list.filter(item => {
+    let current: unknown = item;
+    
+    // Traverse through each key in the path
+    for (const key of properties) {
+      if (typeof current !== 'object' || current === null) {
+        current = undefined;
+        break;
+      }
+      current = (current as Record<string, unknown>)[key];
+    }
+
+    // If we already saw this value, skip it
+    if (seenIds.has(current)) {
+      return false;
+    }
+
+    // Otherwise, add it to the set and keep the item
+    seenIds.add(current);
+    return true;
+  });
+}
+

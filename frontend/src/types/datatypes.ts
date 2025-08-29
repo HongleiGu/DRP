@@ -1,7 +1,7 @@
 "use client"
 
 export type MessageScope = "public" | "personal";
-export type MessageType = "message" | "invite" | "greeting" | "accept greeting";
+export type MessageType = "message" | "invite" | "greeting" | "accept greeting" | "delete contact";
 
 export interface Message {
   id: string;  // UUID for unique message ID
@@ -50,19 +50,19 @@ export interface SupabaseUser {
 }
 
 
-export interface Group {
+export interface Room {
   id: string;
   name: string;
   last_message: Message | null;
   unread: number;
   created_at: string;
   creator_id: string;
-  type: "personal" | "group" // for a group, we dont allow any alterations, there can only be two groups
-  // members: SupabaseUser[]; // members should be fetched from backend for safety
+  type: "personal" | "public" // for a group, we dont allow any alterations, there can only be two groups
+  members: SupabaseUser[]; // members should be fetched from backend for safety
 }
 
 
-export interface GroupEntry {
+export interface RoomEntry {
   id: string;
   name: string;
   created_at: string;
@@ -111,4 +111,10 @@ export interface Response {
 export interface AuthResponse {
   user: SupabaseUser,
   token: string
+}
+
+export interface Contacts {
+  first_user: string,
+  second_user: string,
+  room_id: string
 }

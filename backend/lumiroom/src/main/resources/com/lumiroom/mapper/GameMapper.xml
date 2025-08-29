@@ -5,8 +5,8 @@
 
 <mapper namespace="com.lumiroom.mapper.GameMapper">
 
-  <select id="getPlayersInRoom" parameterType="string" resultType="com.lumiroom.model.game.PlayerData">
-    SELECT *
+  <select id="getPlayersInRoom" parameterType="string">
+    SELECT user_id, name, room_id, x, y, direction, avatar_id
     FROM players
     WHERE room_id = #{roomId}::uuid
   </select>

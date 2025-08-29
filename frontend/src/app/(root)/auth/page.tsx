@@ -9,6 +9,8 @@ import { SupabaseUser, SignInArgs } from "@/types/datatypes";
 import globalStore from "@/store";
 import { debounce } from "lodash";
 import { useRouter } from "next/navigation";
+import "@/app/globals.css";
+
 
 const { Title } = Typography;
 
@@ -205,9 +207,14 @@ export default function AuthPage() {
       </Form.Item>
 
       {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
-      <Button type="primary" htmlType="submit" loading={loading} block>
-        Verify Email
-      </Button>
+      <div className="flex gap-2">
+        <Button type="primary" htmlType="submit" loading={loading} className="flex-1">
+          Verify Email
+        </Button>
+        <Button type="default" onClick={() => setStep("register")} className="flex-1">
+          Return
+        </Button>
+      </div>
     </Form>
   );
 

@@ -22,21 +22,43 @@ export async function appendJsonls(filePath: string, data: object[]): Promise<vo
  * Delete the first JSONL line with a matching `id` field.
  */
 export async function deleteJsonlById(filePath: string, id: string): Promise<void> {
+  await deleteAllJsonlByProperty(filePath, "id", id)
+}
+
+/**
+ * Delete all JSONL lines with a matching property value.
+ * @param filePath - Path to the JSONL file
+ * @param propertyPath - Dot-separated path to the property, e.g. 'someentry.user.id'
+ * @param value - Value to match for deletion
+ */
+export async function deleteAllJsonlByProperty(
+  filePath: string,
+  propertyPath: string,
+  value: unknown
+): Promise<void> {
   const content = await fileService.readFile(filePath);
   const lines = content.split('\n').filter(line => line.trim() !== '');
 
-  let found = false;
+  const pathParts = propertyPath.split('.');
+
   const updatedLines = lines.filter(line => {
-    const obj = JSON.parse(line);
-    if (!found && obj.id === id) {
-      found = true;
-      return false;
+    const obj: Record<string, unknown> = JSON.parse(line);
+
+    let current: unknown = obj;
+    for (const key of pathParts) {
+      if (typeof current !== 'object' || current === null) {
+        current = undefined;
+        break;
+      }
+      current = (current as Record<string, unknown>)[key];
     }
-    return true;
+
+    return current !== value;
   });
 
   await fileService.writeFile(filePath, updatedLines.join('\n') + '\n');
 }
+
 
 /**
  * Replace a JSONL entry with a matching `id` while preserving line order.

@@ -1,5 +1,5 @@
 import { SupabaseUser } from "@/types/datatypes";
-import { AcceptGreetingMessage, GreetingMessage, InviteMessage } from "./types";
+import { AcceptGreetingMessage, DeleteContactsMessage, GreetingMessage, InviteMessage } from "./types";
 import { v4 as uuidv4 } from 'uuid';
 import { sendMessage, sendMessageToRoom } from "./messages";
 
@@ -39,6 +39,23 @@ export async function sendAcceptGreetings(userId: string, username: string, targ
   await sendMessage(msg, targetId)
 }
 
+export async function sendDeleteMessage(userId: string, username: string, targetId: string, roomId: string): Promise<void> {
+  const msg: DeleteContactsMessage = {
+    id: uuidv4(),
+    speaker: userId,
+    speaker_name: username,
+    chat_message: `${username} removed you from his/her contact`,
+    chat_room_id: roomId,
+    created_at: new Date().toISOString(),
+    metadata: {
+      scope: "personal",
+      type: "delete contact",
+      data: null
+    }
+  }
+  await sendMessage(msg, targetId)
+}
+
 export async function sendInviteMessage(user: SupabaseUser, roomId: string, userIds: string[]): Promise<void> {
   const msg: InviteMessage = {
     id: uuidv4(),
@@ -55,6 +72,7 @@ export async function sendInviteMessage(user: SupabaseUser, roomId: string, user
   }
   // send invite to the users
   for (const i of userIds) {
+    if (i == user.id) continue
     await sendMessage(msg, i);
   }
 

@@ -1,4 +1,4 @@
-package com.lumiroom.model.messages;
+package com.lumiroom.model.rooms;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class UserInsertionBatchedRequest {
+public class RoomRequestBatched {
   private List<String> userIds;
   private String roomId;
 }

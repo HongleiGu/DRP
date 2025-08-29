@@ -5,16 +5,20 @@ import org.springframework.web.bind.annotation.*;
 
 import com.lumiroom.model.commons.Result;
 import com.lumiroom.model.commons.User;
+import com.lumiroom.model.contacts.Contacts;
 import com.lumiroom.model.messages.Message;
-import com.lumiroom.model.messages.Room;
-import com.lumiroom.model.messages.RoomCreationRequest;
-import com.lumiroom.model.messages.UserInsertionBatchedRequest;
-import com.lumiroom.model.messages.UserInsertionRequest;
+import com.lumiroom.model.messages.MessageType;
+import com.lumiroom.model.rooms.Room;
+import com.lumiroom.model.rooms.RoomCreationRequest;
+import com.lumiroom.model.rooms.RoomRequest;
+import com.lumiroom.model.rooms.RoomRequestBatched;
 import com.lumiroom.service.auth.AuthService;
 import com.lumiroom.service.game.GameService;
+import com.lumiroom.service.messages.ContactsService;
 import com.lumiroom.service.messages.RedisService;
 import com.lumiroom.service.messages.RoomService;
 import com.lumiroom.service.rabbitmq.Sender;
+import com.lumiroom.utils.Utils;
 
 import java.util.List;
 
@@ -62,30 +66,20 @@ import java.util.List;
 @RestController
 @CrossOrigin
 @RequestMapping("/api/message")
+
 public class MessageController {
 
-    private final Sender sender;
-    private final RoomService roomService;
-    private final GameService gameService;
-    private final AuthService authService;
+    @Autowired
+    private Sender sender;
+
+    @Autowired
+    private RoomService roomService;
+
+    @Autowired
+    private ContactsService contactsService;
 
     @Autowired
     private RedisService redisService;
-
-    /**
-     * Constructs a new {@code MessageController}.
-     *
-     * @param sender      service for sending RabbitMQ messages
-     * @param roomService service for managing rooms and memberships
-     * @param gameService service for updating game state
-     * @param authService service for user authentication and lookup
-     */
-    public MessageController(Sender sender, RoomService roomService, GameService gameService, AuthService authService) {
-        this.sender = sender;
-        this.roomService = roomService;
-        this.gameService = gameService;
-        this.authService = authService;
-    }
 
     /**
      * Health check endpoint to verify that the Spring Boot service is running.
@@ -129,12 +123,15 @@ public class MessageController {
             @RequestParam String roomId,
             @RequestBody Message messageRequest) {
         try {
-            List<String> users = roomService.getRoomMembers(roomId);
+            List<User> users = roomService.getRoomMembers(roomId);
             if (users == null || users.isEmpty()) {
                 return Result.error("No members found in room " + roomId);
             }
-            for (String userId : users) {
-                String routingKey = String.format("%s.%s.msg", roomId, userId);
+            if (!users.stream().anyMatch(user -> user.getId().equals(messageRequest.getSpeaker()))) {
+                return Result.error("You cannot send a message to a room you are not in");
+            }
+            for (User user : users) {
+                String routingKey = String.format("%s.%s.msg", roomId, user.getId());
                 sender.send(routingKey, messageRequest);
             }
             return Result.success("Message sent to room " + roomId);
@@ -196,108 +193,6 @@ public class MessageController {
             return Result.success("Deleted");
         } catch (Throwable e) {
             return Result.error("Delete Failed");
-        }
-    }
-
-    /**
-     * Checks whether a room exists and whether it contains members.
-     *
-     * @param roomId the ID of the room
-     * @return a {@link Result} with:
-     *         <ul>
-     *         <li>{@code false} if the room does not exist</li>
-     *         <li>{@code true} with a message indicating if the room is empty or
-     *         populated</li>
-     *         </ul>
-     */
-    @GetMapping("/checkRoom")
-    public Result<Boolean> checkRoom(@RequestParam String roomId) {
-        try {
-            Room room = roomService.getRoom(roomId);
-            List<String> members = roomService.getRoomMembers(roomId);
-            if (room == null) {
-                return Result.success(false, "the room does not exist");
-            } else if (members.size() == 0 && room != null) {
-                return Result.success(true, "the room exists, but there are no members in it");
-            } else if (members.size() != 0 && room == null) {
-                throw new Exception(
-                        "the room do nt exist, but there are members in the room, its likely the database is corrupted, contact the admin");
-            }
-            return Result.success(true, "the room exists");
-        } catch (Throwable e) {
-            return Result.error(500, "an error occurred when checking room: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Creates a new room.
-     *
-     * @param req a {@link RoomCreationRequest} containing room metadata
-     * @return a {@link Result} containing the created room ID on success
-     */
-    @PostMapping("/createRoom")
-    public Result<String> createRoom(@RequestBody RoomCreationRequest req) {
-        try {
-            return Result.success(roomService.createRoom(req), "room creation success");
-        } catch (Throwable e) {
-            return Result.error("room creation failed due to: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Inserts a single user into a room and updates their in-game player state.
-     *
-     * @param req a {@link UserInsertionRequest} containing user and room IDs
-     * @return a {@link Result} confirming success or reporting failure
-     */
-    @PostMapping("/insertUserToRoom")
-    public Result<String> insertUsersToRoom(@RequestBody UserInsertionRequest req) {
-        try {
-            String userId = req.getUserId();
-            String roomId = req.getRoomId();
-            roomService.insertUserToRoom(userId, roomId);
-            User user = authService.findUserById(userId);
-            gameService.updatePlayerData(user, roomId, 200, 300);
-            return Result.success("successfully inserted user to room", "successfully inserted user to room");
-        } catch (Throwable e) {
-            return Result.error("inserting user to room failed due to: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Inserts multiple users into a room in a batch operation and updates each
-     * user's game state.
-     *
-     * @param req a {@link UserInsertionBatchedRequest} containing a list of user
-     *            IDs and the target room ID
-     * @return a {@link Result} confirming success or reporting failure
-     */
-    @PostMapping("/insertUsersToRoomBatched")
-    public Result<String> insertUsersToRoomBatched(@RequestBody UserInsertionBatchedRequest req) {
-        try {
-            List<String> userIds = req.getUserIds();
-            String roomId = req.getRoomId();
-            for (String id : userIds) {
-                roomService.insertUserToRoom(id, roomId);
-                User user = authService.findUserById(id);
-                gameService.updatePlayerData(user, roomId, 200, 300);
-            }
-            return Result.success("successfully inserted users to room", "successfully inserted users to room");
-        } catch (Throwable e) {
-            return Result.error("inserting users to room failed due to: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/getRoom")
-    public Result<Room> getRoom(@RequestParam String roomId) {
-        try {
-            Room room = roomService.getRoom(roomId);
-            if (room == null) {
-                return Result.error(400, "the room does not exist");
-            }
-            return Result.success(room);
-        } catch (Throwable e) {
-            return Result.error(e.getMessage());
         }
     }
 }

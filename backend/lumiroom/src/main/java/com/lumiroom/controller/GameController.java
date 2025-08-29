@@ -119,7 +119,6 @@ public class GameController {
 
     // Broadcast to all subscribers in the room
     messagingTemplate.convertAndSend("/topic/room/" + roomId, positionMessage);
-    // TODO: Persist update to database if required
   }
 
   /**

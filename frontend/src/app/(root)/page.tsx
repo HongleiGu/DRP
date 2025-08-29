@@ -2,9 +2,8 @@
 
 import { usePathname, useRouter} from "next/navigation";
 import { useEffect, useState } from "react";
-import { Layout, Typography, Popover, Button, Avatar } from "antd";
+import { Layout, Popover, Button, Avatar } from "antd";
 import {
-  WechatOutlined,
   LogoutOutlined,
   LoginOutlined,
 } from "@ant-design/icons";
@@ -21,9 +20,9 @@ import { LoadingSpinner } from "@/components/Lumiroom/LoadingSpinner";
 import { SupabaseUser } from "@/types/datatypes";
 // import { validateJWT } from "@/utils/api";
 import LobbyPage from "@/components/HomePage/LobbyPage";
+import GlobalApp from "@/components/GlobalApp";
 
 const { Header, Content } = Layout;
-const { Title } = Typography;
 
 export default function HomePage() {
   const router = useRouter();
@@ -89,15 +88,9 @@ export default function HomePage() {
   );
 
   return (
+    <GlobalApp>
     <Layout className="min-h-screen bg-gray-50 flex flex-col">
       <Header className="bg-white flex justify-between items-center px-4 py-3 shadow-sm">
-        <div className="flex items-center">
-          <WechatOutlined className="text-blue-500 text-2xl mr-3" />
-          <Title level={4} className="m-0 text-gray-800">
-            Chat App
-          </Title>
-        </div>
-
         <Popover
           content={popoverContent}
           trigger="click"
@@ -163,5 +156,6 @@ export default function HomePage() {
         </div>
       </div>
     </Layout>
+    </GlobalApp>
   );
 }

@@ -8,9 +8,10 @@ import globalStore from '@/store';
 import { PROJECT_NAME, STORAGE_PATH } from '@/utils/utils';
 import path from 'path';
 import fileService from '@/utils/fileService';
-import { parseJsonlToTypedObjects } from '@/utils/json';
+import { appendJsonl, parseJsonlToTypedObjects } from '@/utils/json';
 import { usePathname, useRouter } from 'next/navigation';
 import { sendInviteMessage } from '@/utils/messaging/templates';
+import { getAllGroupsFilePath } from '@/utils/fileService/commonFilePaths';
 // import { useRouter } from 'next/navigation';
 // import { useGlobalStore } from '@/store';
 
@@ -61,10 +62,11 @@ export default function CreateRoomPage({user}: {user: SupabaseUser}) {
     setCreatingLoading(true);
     try {
       console.log([user, ...selectedUserIds], user?.id ?? "", groupName)
-      const roomId = await createRoom([user, ...selectedUserIds], user?.id ?? "", groupName, "public");
+      const room = await createRoom([user, ...selectedUserIds], user?.id ?? "", groupName, "public");
       // send invite to the users
-      await sendInviteMessage(user, roomId.id, selectedUserIds.map(it => it.id))
-      await globalStore.setItem('lumiroom-room', roomId)
+      await sendInviteMessage(user, room.id, selectedUserIds.map(it => it.id))
+      await appendJsonl(getAllGroupsFilePath(user.id), room)
+      await globalStore.setItem('lumiroom-room', room.id)
       router.push(`/${PROJECT_NAME}/`);
     } catch (err) {
       message.error('Failed to create room');
@@ -85,7 +87,7 @@ export default function CreateRoomPage({user}: {user: SupabaseUser}) {
             padding: '0 24px',
           }}
         >
-          <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ Create a New Group</Text>
+          <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ Create a New Room</Text>
         </Header>
         <Content
           style={{
@@ -121,7 +123,7 @@ export default function CreateRoomPage({user}: {user: SupabaseUser}) {
           padding: '0 24px',
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ Create a New Group</Text>
+        <Text style={{ color: '#fff', fontSize: 20, fontWeight: 500 }}>✨ Create a New Room</Text>
       </Header> */}
       <Content
         style={{
@@ -133,7 +135,7 @@ export default function CreateRoomPage({user}: {user: SupabaseUser}) {
         }}
       >
         <Card
-          title={<Title level={3} style={{ marginBottom: 0 }}>Create Your Chat Group</Title>}
+          title={<Title level={3} style={{ marginBottom: 0 }}>Create Your Chat Room</Title>}
           style={{
             width: '100%',
             maxWidth: 500,
@@ -176,7 +178,7 @@ export default function CreateRoomPage({user}: {user: SupabaseUser}) {
             <Divider />
 
             <div>
-              <Text strong>Group Name:</Text>
+              <Text strong>Room Name:</Text>
               <Input
                 placeholder="Enter a name for your group"
                 value={groupName}
@@ -195,7 +197,7 @@ export default function CreateRoomPage({user}: {user: SupabaseUser}) {
               disabled={selectedUserIds.length === 0 || groupName.trim() === ''}
               onClick={handleCreateRoom}
             >
-              🚀 Create Group
+              🚀 Create Room
             </Button>
           </Space>
         </Card>

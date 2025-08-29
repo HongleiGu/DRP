@@ -51,9 +51,9 @@
     SELECT id, username, onboarding_complete, avatar_id, created_at, email, password_hash
     FROM users
     WHERE 
-      username LIKE CONCAT('%', #{identifier}, '%') OR 
-      email LIKE CONCAT('%', #{identifier}, '%') OR
-      id::text LIKE CONCAT('%', #{identifier}, '%')
+      username = #{identifier} OR 
+      email = #{identifier} OR
+      id::text = #{identifier}
     LIMIT 1
   </select>
 

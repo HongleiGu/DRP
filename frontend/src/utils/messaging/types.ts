@@ -39,3 +39,12 @@ export interface PersonalChatMessage extends Message {
     data: null // the sender is the speaker, the receiver is the user him/herself
   }
 }
+
+export interface DeleteContactsMessage extends Message {
+  chat_room_id: string,
+  metadata: {
+    scope: "personal",
+    type: "delete contact",
+    data: null
+  }
+}

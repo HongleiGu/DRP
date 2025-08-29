@@ -2,15 +2,18 @@ package com.lumiroom.model.messages;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.lumiroom.model.GenericEnum;
 
 /**
  * Represents whether a message is public (room-based) or personal (direct to
  * user).
  */
-public enum MessageType {
+public enum MessageType implements GenericEnum {
     INVITE("invite"),
     MESSAGE("message"),
-    GREETING("greeting");
+    GREETING("greeting"),
+    ACCEPT_GREETING("accept greeting"),
+    DELETE_CONTACT("delete contact");
 
     private final String value;
 

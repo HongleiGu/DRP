@@ -2,8 +2,10 @@ package com.lumiroom.service.messages;
 
 import java.util.List;
 
-import com.lumiroom.model.messages.Room;
-import com.lumiroom.model.messages.RoomCreationRequest;
+import com.lumiroom.model.commons.User;
+import com.lumiroom.model.rooms.Room;
+import com.lumiroom.model.rooms.RoomCreationRequest;
+// import com.lumiroom.model.rooms.RoomStatus;
 
 /**
  * Service to interact with room membership data.
@@ -16,7 +18,7 @@ public interface RoomService {
    * @param roomId
    * @return
    */
-  public List<String> getRoomMembers(String roomId);
+  public List<User> getRoomMembers(String roomId);
 
   public boolean checkUserInRoom(String userId, String roomId);
 
@@ -27,4 +29,8 @@ public interface RoomService {
   public void deleteUserFromRoom(String userId, String roomId);
 
   public void insertUserToRoom(String userId, String roomId);
+
+  // public void changeRoomStatus(String roomId, RoomStatus status);
+
+  public void deleteRoom(String roomId);
 }

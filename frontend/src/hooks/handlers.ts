@@ -2,7 +2,7 @@
 // if not overloaded, these functions will be used by default
 // to follow the stompjs function type, all of them should take (message: IMessage) as parameter
 
-import { Group, SupabaseUser } from "@/types/datatypes";
+import { Room, SupabaseUser } from "@/types/datatypes";
 import { StompHandler } from "./stompUtils";
 // import globalStore from "@/store";
 import { STORAGE_PATH } from "@/utils/utils";
@@ -12,8 +12,8 @@ import { appendJsonl, deleteJsonlById, findJsonlById, replaceJsonlById } from "@
 import { PersonalChatMessage } from "@/utils/messaging/types";
 import { findUserById } from "@/utils/user";
 import { PendingFileFormat } from "@/types/fileFormat";
-import { getAllGroupsFilePath, getContactsFilePath, getGroupFilePath, getPendingFilePath } from "@/utils/fileService/commonFilePaths";
-import { getGroup } from "@/utils/api";
+import { getAllGroupsFilePath, getContactsFilePath, getRoomFilePath, getPendingFilePath } from "@/utils/fileService/commonFilePaths";
+import { getContacts, getRoom } from "@/utils/api";
 
 // when getting a message, we identify the group this comes from and save it to the corresponding group
 export const processPersonalMessage: StompHandler = async (msg, user) => {
@@ -52,7 +52,6 @@ export const processGreetingMessage: StompHandler = async (msg, user) => {
       user: sender,
       last_msg: msg
     }
-    console.log(pendingEntry)
     const filePath = path.join(STORAGE_PATH, user.id, `pending.jsonl`);
     // if pending not exist on local, create it
     if (!await fileService.existsFile(filePath)) {
@@ -84,27 +83,28 @@ export const processNormalMessage: StompHandler = async (msg, user) => {
 // this should not be seen as a handler, it is just because invite and normal share the same logic
 export const processNormalAndInviteMessage: StompHandler = async (msg, user) => {
   const roomFilePath = getAllGroupsFilePath(user.id)
-  const groupFilePath = getGroupFilePath(user.id, msg.chat_room_id)
+  const groupFilePath = getRoomFilePath(user.id, msg.chat_room_id)
   if (!await fileService.existsFile(roomFilePath)) {
     await fileService.createFile(roomFilePath)
   }
   if (!await fileService.existsFile(groupFilePath)) {
     await fileService.createFile(groupFilePath)
   }
-  // if group not exist, create it
-  const existingGroup = await findJsonlById<Group>(groupFilePath, msg.chat_room_id)
+  // if group not exist on local, create it
+  const existingGroup = await findJsonlById<Room>(groupFilePath, msg.chat_room_id)
   if (!existingGroup) {
-    // create the group instance
-    const groupData = await getGroup(msg.chat_room_id)
+    // if the room does not exist in server, we restrict this request
+    const groupData = await getRoom(msg.chat_room_id)
     if (groupData) {
-      const group: Group = {
+      const group: Room = {
         id: groupData.id,
         name: groupData.name,
         unread: 1,
         created_at: groupData.created_at,
         creator_id:groupData.creator_id,
         last_message: msg,
-        type: groupData.type
+        type: groupData.type,
+        members: groupData.members
       }
       await appendJsonl(roomFilePath, group)
     } else {
@@ -113,14 +113,15 @@ export const processNormalAndInviteMessage: StompHandler = async (msg, user) => 
   } // can do {...groupData, unread: 0, last_message: msg}, but want to ensure data valid-ness
   else {
     // update unread count
-    const group: Group = {
+    const group: Room = {
       id: existingGroup.id,
       name: existingGroup.name,
       unread: Number(existingGroup.unread) + 1,
       created_at: existingGroup.created_at,
       creator_id: existingGroup.creator_id,
       last_message: msg,
-      type: existingGroup.type
+      type: existingGroup.type,
+      members: existingGroup.members
     }
 
     await replaceJsonlById(roomFilePath, group)
@@ -131,8 +132,12 @@ export const processNormalAndInviteMessage: StompHandler = async (msg, user) => 
 export const processAcceptGreetingMessage: StompHandler = async (msg, user) => {
   // accept greeting message, upon receiving, just save the contact and try to delete the entry in pending
   if (msg.metadata.scope == "personal" && msg.metadata.type == "accept greeting") {
+
+    // file paths
     const contactsFilePath = getContactsFilePath(user.id)
     const pendingFilePath = getPendingFilePath(user.id)
+
+    // if the files dont exist, create them
     if (!await fileService.existsFile(contactsFilePath)) {
       await fileService.createFile(contactsFilePath)
     }
@@ -140,6 +145,7 @@ export const processAcceptGreetingMessage: StompHandler = async (msg, user) => {
       await fileService.createFile(pendingFilePath)
     }
 
+    // just a check, since we need to get the user anyway in the frontend
     const sender = await findUserById(msg.speaker);
 
     if (!sender) {
@@ -150,6 +156,24 @@ export const processAcceptGreetingMessage: StompHandler = async (msg, user) => {
     // save the contacts:
     await appendJsonl(contactsFilePath, sender)
 
+    // create group (contacts are treated as rooms for simple organization)
+    const room = await getContacts(user.id, msg.speaker)
+    console.log(room, user, msg)
+    if (!room) {
+      throw new Error("the room does not exist")
+    }
+    await appendJsonl(getAllGroupsFilePath(user.id), {
+      id: room.id,
+      name: room.name,
+      created_at: room.created_at,
+      creator_id: room.creator_id,
+      type: "personal", // this marks whether contact or group chat
+      unread: 1,
+      last_message: msg,
+      status: "created", // we need to mark the status as created
+      members: [user, sender]
+    } as Room)
+
     // might have A -> greeting B and B -> greeting -> A at the same time
     // if we are in A's perspective, then the accept greeting is sent from B
     // and we should delete B from the pending list
@@ -157,8 +181,19 @@ export const processAcceptGreetingMessage: StompHandler = async (msg, user) => {
   }
 }
 
-// // when getting a message, we increase the unread count of the corresponding group
-// export const increaseGroupUnread: StompHandler = async (msg, user) => {
-//   const filePath = path.join(STORAGE_PATH, user.id, `groups.jsonl`);
-//   await replaceJsonlById(filePath, {id: msg.chat_room_id})
-// }
+export const processDeleteMessage: StompHandler = async (msg, user) => {
+  if (msg.metadata.scope == "personal" && msg.metadata.type == "delete contact") {
+    // should not just remove the contact from the list
+    // rather, we should remove the entry of say 1: current, 2: other
+    // 1: other, 2: current may be kept, but cannot send messages unless they add again
+    // but I am considering that when the user deleted a contact, remove both entries, so its easier for chat
+    // but if A delete B, we should keep A in B's contact?
+    // A deletes B, speaker is A, receiver is B
+
+    // remove B from A's contact list
+    const contactsFilePath = getContactsFilePath(user.id)
+    await deleteJsonlById(contactsFilePath, msg.speaker)
+
+    // the psql entry is already deleted when A deletes the contact
+  }
+}

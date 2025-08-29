@@ -1,5 +1,5 @@
 "use client" 
-import { Direction, Group, GroupEntry, Message, PlayerData, SupabaseUser } from '@/types/datatypes';
+import { Direction, Room, Message, PlayerData, SupabaseUser } from '@/types/datatypes';
 import globalStore from '@/store';
 import { BASE_URL, fetchJson, formatDate } from './utils';
 
@@ -9,22 +9,23 @@ export async function createRoom(
   groupName: string = 'groupchat',
   type: "public" | "personal",
   last_message: Message | null = null
-): Promise<Group> {
+): Promise<Room> {
   const user = await globalStore.getItem('lumiroom-user') as SupabaseUser
   if (!user) {
     throw new Error('You must be signed in to create a room');
   }
   // create a room and request the roomId
-  const roomId = await fetchJson<string>(`${BASE_URL}api/createRoom`, {
+  const roomId = await fetchJson<string>(`${BASE_URL}api/rooms/createRoom`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         room_name: groupName,
         creator_id,
+        type
       }),
     });
   // insert the invited users in the room
-  await fetchJson<string>(`${BASE_URL}api/message/insertUsersToRoomBatched`, {
+  await fetchJson<string>(`${BASE_URL}api/rooms/insertUsersToRoomBatched`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
@@ -44,14 +45,16 @@ export async function createRoom(
     created_at: formatDate(),
     creator_id: creator_id,
     type: type
-  } as Group
+  } as Room
 }
 
 export async function getPlayers(roomId: string): Promise<PlayerData[]> {
-  return await fetchJson<PlayerData[]>(`${BASE_URL}api/game/getPlayers?roomId=${roomId}`, {
+  const result = await fetchJson<PlayerData[]>(`${BASE_URL}api/game/getPlayers?roomId=${roomId}`, {
     method: "GET",
     headers: { 'Content-Type': 'application/json' }
   })
+  console.log(result)
+  return result
 }
 
 export async function resetPlayerToDefault(userId: string, roomId: string, name: string | null = null, avatarId: string | null = null): Promise<void> {
@@ -103,11 +106,45 @@ export async function validateJWT(token: string): Promise<boolean> {
   })
 }
 
-export async function getGroup(roomId: string): Promise<GroupEntry> {
-  return await fetchJson<GroupEntry>(`${BASE_URL}api/auth/validateJWT`, {
-    method: "POST",
+export async function getRoom(roomId: string): Promise<Room> {
+  return await fetchJson<Room>(`${BASE_URL}api/rooms/getRoom?roomId=${roomId}`, {
+    method: "GET",
+    headers: {'Content-Type': 'application/json'},
+  })
+}
+
+export async function deleteUserFromRoom(userId: string, roomId: string): Promise<string> {
+  return await fetchJson<string>(`${BASE_URL}api/rooms/deleteUserFromRoom`, {
+    method: "DELETE",
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
+      user_id: userId,
+      room_id: roomId
+    })
+  })
+}
+
+export async function deleteRoom(roomId: string): Promise<string> {
+  return await fetchJson<string>(`${BASE_URL}api/rooms/deleteUserFromRoom?roomId=${roomId}`, {
+    method: "DELETE",
+    headers: {'Content-Type': 'application/json'}
+  })
+}
+
+export async function getContacts(firstUser: string, secondUser: string): Promise<Room> {
+  return await fetchJson<Room>(`${BASE_URL}api/contacts/getContacts?firstUser=${firstUser}&secondUser=${secondUser}`, {
+    method: "GET",
+    headers: { 'Content-Type': 'application/json' }
+  })
+}
+
+export async function addContacts(firstUser: string, secondUser: string, roomId: string): Promise<string> {
+  return await fetchJson<string>(`${BASE_URL}api/contacts/addContacts`, {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      first_user: firstUser,
+      second_user: secondUser,
       room_id: roomId
     })
   })

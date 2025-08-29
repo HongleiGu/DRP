@@ -5,13 +5,16 @@
 
 <mapper namespace="com.lumiroom.mapper.RoomMapper">
 
-  <select id="getMembersByRoomId" parameterType="string" resultType="string">
-    SELECT member_id
-    FROM room_users
-    WHERE room_id = #{roomId}::uuid
+  <select id="getMembersByRoomId" parameterType="string">
+    SELECT * from users
+    WHERE id IN (
+      SELECT member_id
+      FROM room_users
+      WHERE room_id = #{roomId}::uuid
+    )
   </select>
 
-  <select id="getRoom" parameterType="string" resultType="com.lumiroom.model.messages.Room">
+  <select id="getRoom" parameterType="string" resultType="com.lumiroom.model.rooms.Room">
     SELECT *
     FROM rooms
     WHERE id = #{roomId}::uuid
@@ -20,7 +23,7 @@
 
   <!-- createRoom --> 
 
-  <select id="createRoom" parameterType="com.lumiroom.model.messages.RoomCreationRequest" resultType="string">
+  <select id="createRoom" parameterType="com.lumiroom.model.rooms.RoomCreationRequest" resultType="string">
     INSERT INTO rooms (name, creator_id)
     VALUES (#{roomName}, #{creatorId}::uuid)
     RETURNING id
@@ -43,6 +46,22 @@
     DELETE FROM room_users 
     WHERE 
       room_id=#{roomId}::uuid AND
-      user_id=#{userId}::uuid
+      member_id=#{userId}::uuid
+  </delete>
+
+
+  <!-- changeRoomStatus --> 
+<!-- 
+  <update id="changeRoomStatus">
+    UPDATE rooms
+    SET status = #{status}
+    WHERE room_id=${roomId}::uuid
+  </update>   -->
+
+  <!-- deleteRoom --> 
+
+  <delete id="deleteRoom">
+    DELETE FROM rooms
+    WHERE id=#{roomId}::uuid
   </delete>
 </mapper>

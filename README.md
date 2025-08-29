@@ -261,7 +261,7 @@ file format: jsonl
 data format: refer to the following type:
 
 ```typescript
-export interface Group {
+export interface Room {
   id: string;
   name: string;
   last_message: Message | null;

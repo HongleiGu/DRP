@@ -2,6 +2,7 @@
 
 import ChatRoom from '@/components/ChatRoom';
 import GateLoadingCSS from '@/components/GateLoading';
+import GlobalApp from '@/components/GlobalApp';
 import globalStore from '@/store';
 import { SupabaseUser } from '@/types/datatypes';
 import { checkRoom } from '@/utils/messaging/messages';
@@ -34,8 +35,8 @@ export default function RoomPage() {
         }
         // setUser(u)
         setRoomId(roomId)
-        
-        if (await checkRoom(roomId!)) {
+        console.log(roomId)
+        if (!await checkRoom(roomId!)) {
           throw new Error("the room does not exist")
         }
       } catch (error) {
@@ -54,8 +55,8 @@ export default function RoomPage() {
   }
 
   return (
-    <>
-      <ChatRoom chatroomId={roomId!} />;
-    </>
+    <GlobalApp>
+      <ChatRoom chatroomId={roomId!} />
+    </GlobalApp>
   )
 }
