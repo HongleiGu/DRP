@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 import com.lumiroom.model.commons.User;
 import com.lumiroom.model.rooms.Room;
 import com.lumiroom.model.rooms.RoomCreationRequest;
+import com.lumiroom.model.rooms.RoomWithMembers;
 
 import java.util.List;
 
@@ -32,4 +33,6 @@ public interface RoomMapper {
     void deleteUsersFromRoom(@Param("userId") String userId, @Param("roomId") String roomId);
 
     void deleteRoom(String roomId);
+
+    List<Room> getAllRoomsofUser(String userId);
 }

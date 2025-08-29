@@ -1,7 +1,7 @@
 import globalStore from '@/store';
 import { CapacitorHttp } from '@capacitor/core';
 import { z } from 'zod';
-import { isCapacitor } from './env';
+import { isCapacitor, isElectron } from './env';
 
 // Function to convert snake_case to camelCase
 function toCamelCase(snakeCase: string): string {
@@ -168,7 +168,11 @@ export const STORAGE_PATH = typeof window === 'undefined'
       
 export const veryOldDate = "1970-01-01T00:00:00.000Z";
 
-export const BASE_URL = process.env.NEXT_PUBLIC_SPRINGBOOT_URL || 'http://localhost:8080/';
+export const BASE_URL =  (
+  isElectron() ? 
+    process.env.NEXT_PUBLIC_SPRINGBOOT_URL_PC : 
+    process.env.NEXT_PUBLIC_SPRINGBOOT_URL_ANDROID) 
+  || "http://localhost:8080/";
 
 // export interface FetchOptions extends RequestInit {
 //   skipAuth?: boolean; // skip JWT token injection

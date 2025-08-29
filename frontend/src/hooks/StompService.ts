@@ -1,7 +1,8 @@
 import SockJS from "sockjs-client";
 import { Client, IMessage, IPublishParams, StompSubscription } from "@stomp/stompjs";
-import { SupabaseUser } from "@/types/datatypes";
+import { Message, SupabaseUser } from "@/types/datatypes";
 import { defaultHandlers, StompHandler, StompHandlers } from "./stompUtils";
+import { isElectron } from "@/utils/env";
 
 type StompType = "message" | "game";
 type MessageExtraParams = null; // empty object
@@ -96,7 +97,7 @@ export class StompService<T extends StompType = StompType> {
   private reloadConnection() {
     if (this.stompClient?.active && this.currentUser) {
       // Instead of fully disconnecting, just unsubscribe/resubscribe
-      if (this.subscription != null) {
+      if (this.subscription) {
         this.unsubscribe();
         console.log("subscription", this.subscription)
         this.subscribe(this.subscription.sub);
@@ -123,15 +124,20 @@ export class StompService<T extends StompType = StompType> {
   private unsubscribe() {
     if (!this.stompClient?.connected || !this.subscription) return;
     this.stompClient.unsubscribe(this.subscription.id);
-    this.subscription = null;
+    // we should keep the subscription param
+    // this.subscription = null;
   }
 }
 
 // Example instances
-const wsUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:8080/";
+const wsUrl = (
+  isElectron() ? 
+    process.env.NEXT_PUBLIC_WEBSOCKET_URL_PC : 
+    process.env.NEXT_PUBLIC_WEBSOCKET_URL_ANDROID) 
+  || "http://localhost:8080/";
 
-export const messageWebsocket = new StompService(`${wsUrl}ws/messages`, "message");
-export const gameWebsocket = new StompService(`${wsUrl}ws/game`, "game");
+export const messageWebsocket = new StompService<"message">(`${wsUrl}ws/messages`, "message");
+export const gameWebsocket = new StompService<"game">(`${wsUrl}ws/game`, "game");
 
 export interface Subscription {
   endpoint: string;
@@ -141,11 +147,11 @@ export interface Subscription {
 export const messageSubscription: Subscription = {
   endpoint: "/user/queue/messages",
   callback: (stompService: StompService) => async (msg: IMessage) => {
-    const payload = JSON.parse(msg.body);
+    const payload: Message = JSON.parse(msg.body);
     for (const fn of Object.values(stompService.getHandlers())) {
       await fn(payload, stompService.getCurrentUser()!);
     }
-
+    console.log("subscription callback")
     // ACK
     stompService.publish({
       destination: "/app/messages/ack",

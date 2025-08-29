@@ -6,6 +6,7 @@ import com.lumiroom.model.commons.User;
 import com.lumiroom.model.rooms.Room;
 import com.lumiroom.model.rooms.RoomCreationRequest;
 // import com.lumiroom.model.rooms.RoomStatus;
+import com.lumiroom.model.rooms.RoomWithMembers;
 
 /**
  * Service to interact with room membership data.
@@ -33,4 +34,6 @@ public interface RoomService {
   // public void changeRoomStatus(String roomId, RoomStatus status);
 
   public void deleteRoom(String roomId);
+
+  public List<Room> getAllRoomsofUser(String userId);
 }

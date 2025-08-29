@@ -5,20 +5,12 @@ import org.springframework.web.bind.annotation.*;
 
 import com.lumiroom.model.commons.Result;
 import com.lumiroom.model.commons.User;
-import com.lumiroom.model.contacts.Contacts;
 import com.lumiroom.model.messages.Message;
-import com.lumiroom.model.messages.MessageType;
-import com.lumiroom.model.rooms.Room;
-import com.lumiroom.model.rooms.RoomCreationRequest;
-import com.lumiroom.model.rooms.RoomRequest;
-import com.lumiroom.model.rooms.RoomRequestBatched;
 import com.lumiroom.service.auth.AuthService;
 import com.lumiroom.service.game.GameService;
-import com.lumiroom.service.messages.ContactsService;
 import com.lumiroom.service.messages.RedisService;
 import com.lumiroom.service.messages.RoomService;
 import com.lumiroom.service.rabbitmq.Sender;
-import com.lumiroom.utils.Utils;
 
 import java.util.List;
 
@@ -74,9 +66,6 @@ public class MessageController {
 
     @Autowired
     private RoomService roomService;
-
-    @Autowired
-    private ContactsService contactsService;
 
     @Autowired
     private RedisService redisService;

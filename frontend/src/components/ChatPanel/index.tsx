@@ -2,20 +2,22 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Badge, Button, Input, List, Popover, message, Card } from "antd";
 import EmojiGrid from "../EmojiGrids";
-import { Message, MessageScope, MessageType, PlayerData, SupabaseUser } from "@/types/datatypes";
-import { sendMessage, deleteMessage, getMessage } from "@/utils/messaging/messages";
+import { Message, MessageScope, MessageType, Room, SupabaseUser } from "@/types/datatypes";
+import { deleteMessage, getMessage, sendMessageToRoom } from "@/utils/messaging/messages";
 import { PROJECT_NAME, STORAGE_PATH } from "@/utils/utils";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { v4 as uuidv4 } from 'uuid';
 import { LumiAvatar } from "../LumiAvatar";
 import fileService from "@/utils/fileService";
 import path from "path"
-import { appendJsonl, parseJsonlToTypedObjects } from "@/utils/json";
+import { appendJsonl, parseJsonlToTypedObjects, replaceJsonlById } from "@/utils/json";
 import globalStore from "@/store";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import GroupManagementPanel from "./GroupManagementPanel";
 import { messageWebsocket } from "@/hooks/StompService";
+import { getRoom } from "@/utils/api";
+import { getAllGroupsFilePath } from "@/utils/fileService/commonFilePaths";
 
 interface ChatPanelProps {
   chatroomId: string;
@@ -31,7 +33,7 @@ export default function ChatPanel({
   const [userId, setUserId] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [emojiPopoverOpen, setEmojiPopoverOpen] = useState(false);
-  const [members] = useState<PlayerData[]>([]);
+  const [room, setRoom] = useState<Room>(null!);
   // const pathname = usePathname();
   const [user, setUser] = useState<SupabaseUser>(null!)
   const router = useRouter();
@@ -114,6 +116,15 @@ export default function ChatPanel({
         // loadLocalMessage is destructive, need to preserve order here
         await loadLocalMessages()
         await loadMessages();
+        // the rooms should be processed at the end, we dont want to block message loading
+        // just in case if fetching is slow
+
+        // rememeber the api also fetches the members, the member is not []
+        const r = await getRoom(chatroomId);
+        // update the members just incase there are some changes in the server side
+        // the data is the latest server status, so we can just overwrite
+        replaceJsonlById(getAllGroupsFilePath(user.id), r)
+        setRoom(r);
       }
     }
     helper()
@@ -137,7 +148,7 @@ export default function ChatPanel({
         appendJsonl(filePath, theMessage)
 
         // send the message through springboot api
-        sendMessage(theMessage, userId)
+        sendMessageToRoom(theMessage, chatroomId)
 
       } catch (err) {
         console.error(err)
@@ -271,9 +282,12 @@ export default function ChatPanel({
                     avatar={
                       <LumiAvatar
                         avatarId={
-                          members.find(
-                            (member) => member.user_id === msg.speaker
-                          )?.avatarId ?? "0"
+                          (() => {
+                            if (!room) return 0
+                            console.log("finding avatars", room.members, msg.speaker)
+                          return room.members.find(
+                            (member) => member.id === msg.speaker
+                          )?.avatar_id ?? 0})()
                         }
                       />
                     }

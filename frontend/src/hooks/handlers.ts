@@ -110,6 +110,7 @@ export const processNormalAndInviteMessage: StompHandler = async (msg, user) => 
     } else {
       console.log("the room doesnt exist")
     }
+    await appendJsonl(groupFilePath, msg) // only when the room does not exist should we append it to the local file
   } // can do {...groupData, unread: 0, last_message: msg}, but want to ensure data valid-ness
   else {
     // update unread count
@@ -126,7 +127,6 @@ export const processNormalAndInviteMessage: StompHandler = async (msg, user) => 
 
     await replaceJsonlById(roomFilePath, group)
   }
-  await appendJsonl(groupFilePath, msg)
 }
 
 export const processAcceptGreetingMessage: StompHandler = async (msg, user) => {

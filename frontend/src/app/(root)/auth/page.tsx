@@ -5,11 +5,14 @@ import { Form, Input, Button, Typography, Alert, Card, Tabs } from "antd";
 import { LoginOutlined, UserOutlined } from "@ant-design/icons";
 import { LumiAvatar } from "@/components/LumiAvatar";
 import { signIn, signOut, verifyOtp, requestOtp, checkUsername } from "@/utils/user";
-import { SupabaseUser, SignInArgs } from "@/types/datatypes";
+import { SupabaseUser, SignInArgs, Room } from "@/types/datatypes";
 import globalStore from "@/store";
 import { debounce } from "lodash";
 import { useRouter } from "next/navigation";
 import "@/app/globals.css";
+import { getAllRoomsofUser } from "@/utils/api";
+import fileService from "@/utils/fileService";
+import { getAllGroupsFilePath } from "@/utils/fileService/commonFilePaths";
 
 
 const { Title } = Typography;
@@ -94,6 +97,15 @@ export default function AuthPage() {
       const resUser = await signIn({ identifier: emailToUse, password: values.password });
       if (resUser) {
         setUser(resUser);
+        const filePath = getAllGroupsFilePath(resUser.id)
+        // for consisrtency, we fetch all the rooms for the user, and store it to groups
+        // but the chat messages should not be fetch, and it does not exist on the server
+        const rooms: Room[] = await getAllRoomsofUser(resUser.id)
+        // the api does not include the members, it should be null if nothing is changed
+        rooms.forEach(it => it.members = [])
+        // although the member is not included in the api, we will update it when entering the groupchat as a background task anyway
+        // so we will just overwrite the all groups file
+        fileService.writeFile(filePath, JSON.stringify(rooms))
         await globalStore.setItem<SupabaseUser>('lumiroom-user', resUser);
         router.push("/")
       } else setError("Invalid username/email or password");

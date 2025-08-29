@@ -4,6 +4,7 @@ import com.lumiroom.mapper.RoomMapper;
 import com.lumiroom.model.commons.User;
 import com.lumiroom.model.rooms.Room;
 import com.lumiroom.model.rooms.RoomCreationRequest;
+import com.lumiroom.model.rooms.RoomWithMembers;
 // import com.lumiroom.model.rooms.RoomStatus;
 import com.lumiroom.service.messages.RoomService;
 
@@ -63,6 +64,11 @@ public class RoomServiceImplementation implements RoomService {
     @Override
     public void deleteRoom(String roomId) {
         roomMapper.deleteRoom(roomId);
+    }
+
+    @Override
+    public List<Room> getAllRoomsofUser(String userId) {
+        return roomMapper.getAllRoomsofUser(userId);
     }
 
     // @Override

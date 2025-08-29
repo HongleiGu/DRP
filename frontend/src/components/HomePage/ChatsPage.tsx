@@ -70,7 +70,7 @@ export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (
         // we dont allow sending in rooms not in the server
         console.error("the room doesnt exist")
       }
-      
+      await appendJsonl(groupFilePath, msg)
     } // can do {...groupData, unread: 0, last_message: msg}, but want to ensure data valid-ness
     else {
       // update unread count
@@ -92,7 +92,6 @@ export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (
       )
       await replaceJsonlById(roomFilePath, group)
     }
-    await appendJsonl(groupFilePath, msg)
   }
 
   messageWebsocket.setHandlers({

@@ -178,4 +178,16 @@ public class RoomController {
       return Result.error(e.getMessage());
     }
   }
+
+  // note: this does not return the members of the room as it is too cumbersome,
+  // need to update the users when enter the room
+  @GetMapping("/getAllRoomsofUser")
+  public Result<List<Room>> getAllRoomsofUser(@RequestParam String userId) {
+    try {
+      List<Room> rooms = roomService.getAllRoomsofUser(userId);
+      return Result.success(rooms);
+    } catch (Throwable e) {
+      return Result.error("Failed to get all rooms of the user due to error:" + e.getMessage());
+    }
+  }
 }

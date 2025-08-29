@@ -14,6 +14,7 @@ export interface Message {
     scope: MessageScope,
     type: MessageType,
     data: unknown // not any as eslint unhappy, this should be any data, if taking all possible and future circumstances
+    // will need a cdn to carry out file and png/gif emojis
   }
 }
 
