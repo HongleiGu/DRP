@@ -119,3 +119,26 @@ export interface Contacts {
   second_user: string,
   room_id: string
 }
+
+export interface AIGenerateResponse {
+  response: string,
+  done: boolean,
+  totalDuration: number,
+  loadDuration: number,
+  promptEvalCount: number,
+  evalCount: number
+}
+
+export interface AIChatResponse {
+  message: string,
+  done: boolean,
+  totalDuration: number,
+  loadDuration: number,
+  promptEvalCount: number,
+  evalCount: number
+}
+
+export interface AIMessage {
+  role: string,
+  content: string
+}

@@ -45,6 +45,9 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  mvc:
+    async:
+      request-timeout: 5m # when ollama loads the model, the time needed is uncertain, can easily be minutes, usually this need 2m, but will set 5m for safety
 
 logging:
   level:

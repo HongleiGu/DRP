@@ -6,7 +6,6 @@ import org.apache.ibatis.annotations.Param;
 import com.lumiroom.model.commons.User;
 import com.lumiroom.model.rooms.Room;
 import com.lumiroom.model.rooms.RoomCreationRequest;
-import com.lumiroom.model.rooms.RoomWithMembers;
 
 import java.util.List;
 

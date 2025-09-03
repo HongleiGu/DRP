@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import * as ex from "excalibur";
 import { initializeGame } from "./engine";
 import { Resources } from "@/game/config/resources";
@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { resetPlayerToDefault } from "@/utils/api";
 import globalStore from "@/store";
 import { SceneCallbacks, SupabaseUser } from "@/types/datatypes";
+import PluginDropdown from "../PluginDropdown";
 
 export default function Game({
   chatroomId,
@@ -22,7 +23,15 @@ export default function Game({
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<ex.Engine | null>(null);
-  const [, setUser] = useState<SupabaseUser>(null!)
+  const [user, setUser] = useState<SupabaseUser>(null!);
+
+  // State to store the active panel
+  const [activePanel, setActivePanel] = useState<ReactNode | null>(null);
+
+  // Unified openPanel function
+  const openPanel = (panel: ReactNode) => {
+    setActivePanel(panel);
+  };
 
   useEffect(() => {
     let game: ex.Engine;
@@ -39,12 +48,8 @@ export default function Game({
         router.push("/onboarding");
         return;
       }
-      setUser(u)
-      await resetPlayerToDefault(
-        u?.id,
-        chatroomId
-      );
-
+      setUser(u);
+      await resetPlayerToDefault(u?.id, chatroomId);
 
       game = new ex.Engine({
         resolution: { width: 256, height: 256 },
@@ -57,17 +62,11 @@ export default function Game({
 
       gameRef.current = game;
 
-      // Initialize game with callbacks
       const sceneCallbacks: SceneCallbacks = {
         showInteractButtonCalendar: () => {},
         showInteractButtonTV: () => {}
-      }
-      initializeGame(
-        game,
-        sceneCallbacks,
-        u,
-        chatroomId
-      );
+      };
+      initializeGame(game, sceneCallbacks, u, chatroomId);
 
       const loader = new ex.Loader();
       for (const resource of Object.values(Resources)) {
@@ -109,6 +108,11 @@ export default function Game({
     <div className="relative w-full h-full">
       <canvas ref={canvasRef} className="w-full h-full" />
 
+      {/* Render the active plugin panel in the center of the canvas */}
+      {activePanel && (
+        activePanel
+      )}
+
       {/* Buttons container - positioned bottom right */}
       <div
         style={{
@@ -117,7 +121,7 @@ export default function Game({
           right: 16,
           display: "flex",
           flexDirection: "column",
-          gap: "12px", // spacing between buttons
+          gap: "12px",
           zIndex: 10,
           width: 120,
         }}
@@ -125,6 +129,7 @@ export default function Game({
         <Button onClick={() => setChatPanelVisible(!chatPanelVisible)} block>
           {chatPanelVisible ? "Hide Chat" : "Show Chat"}
         </Button>
+        <PluginDropdown gameRef={gameRef} user={user} openPanel={openPanel} />
         <Alert message="Use WASD or arrow keys to move" type="info" showIcon />
       </div>
     </div>

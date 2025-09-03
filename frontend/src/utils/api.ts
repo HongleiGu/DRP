@@ -142,3 +142,55 @@ export async function getAllRoomsofUser(userId: string) {
     headers: { 'Content-Type': 'application/json' }
   })
 }
+
+// utils/aiClient.ts
+import { AIMessage, AIChatResponse } from "@/types/datatypes";
+
+export async function* streamChat(
+  messages: AIMessage[]
+): AsyncGenerator<AIChatResponse, void, unknown> {
+  const jwt = await globalStore.getItem<string>("jwt-token")
+  if (!jwt) {
+    return
+  }
+  const res = await fetch(`${BASE_URL}api/ai/chat`, {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": jwt
+    },
+    body: JSON.stringify({ 
+      model: "qwen3:latest",
+      provider: "ollama",
+      messages 
+    }),
+  });
+
+  if (!res.ok || !res.body) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split("\n").filter(Boolean);
+
+    for (const part of parts) {
+      try {
+        const parsed: AIChatResponse = JSON.parse(part);
+        yield parsed;
+      } catch {
+        // incomplete JSON, carry over to next buffer
+        buffer = part;
+        continue;
+      }
+    }
+    buffer = "";
+  }
+}

@@ -63,6 +63,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      ollama:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lumiroom
       SPRING_DATASOURCE_USERNAME: postgres
@@ -93,10 +95,35 @@ services:
   #   restart: unless-stopped
   #   networks:
   #     - lumiroom-network
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-gpu
+    ports:
+      - "11434:11434"
+    volumes:
+      # Mount your host model directory directly where Ollama expects it
+      - D:/ollama/models:/root/.ollama/models
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - NVIDIA_VISIBLE_DEVICES=all
+      - OLLAMA_KEEP_ALIVE=10m
+      - OLLAMA_MAX_LOADED_MODELS=1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+    networks:
+      - lumiroom-network
 
 volumes:
   redis_data:
   pgdata:
+  ollama_data:
+    driver: local  # Define the local volume to persist Ollama data
 
 networks:
   lumiroom-network:

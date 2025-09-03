@@ -6,6 +6,7 @@ import { PlayerData, SceneCallbacks, SupabaseUser } from "@/types/datatypes";
 import { getPlayers } from "@/utils/api";
 import { gameWebsocket, Subscription } from "@/hooks/StompService";
 import { IMessage } from "@stomp/stompjs";
+import { setGlobalPlayer } from "@/utils/globalPlayer";
 
 export class MainScene extends ex.Scene {
   private player!: Player;
@@ -15,7 +16,7 @@ export class MainScene extends ex.Scene {
   private roomId: string;
   private user: SupabaseUser;
   private lastBroadcast = 0;
-  private BROADCAST_INTERVAL = 1000; // ms
+  private BROADCAST_INTERVAL = 5000; // ms
 
 
   private subscriptionId?: string;
@@ -27,6 +28,10 @@ export class MainScene extends ex.Scene {
     this.roomId = roomId;
   }
 
+  public getPlayer() {
+    return this.player
+  }
+
   async onInitialize(): Promise<void> {
     Resources.LdtkResource.addToScene(this, {
       pos: ex.vec(0, 0),
@@ -35,6 +40,8 @@ export class MainScene extends ex.Scene {
     this.findEntities();
     await this.initPlayers(this.roomId);
     this.setupSubscription();
+    console.log("set player", this.player)
+    setGlobalPlayer(this.player);
   }
 
   private findEntities() {
