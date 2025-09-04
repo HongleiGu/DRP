@@ -10,6 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GenerateResponse {
+  private String model;
   private String response; // incremental in streaming, full otherwise
   private Boolean done;
 

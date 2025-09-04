@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Input, Button, Card, Spin } from "antd";
-import { SendOutlined, RobotOutlined, UserOutlined, RobotFilled } from "@ant-design/icons";
+import { Input, Button, Spin } from "antd";
+import { SendOutlined, RobotOutlined, UserOutlined, RobotFilled, CloseOutlined } from "@ant-design/icons";
 import { AIMessage } from "@/types/datatypes";
 import globalStore from "@/store";
 import { BASE_URL } from "@/utils/utils";
@@ -101,7 +101,6 @@ export default function Chat() {
   };
 
   if (!isOpen) {
-    // Popover/launcher before opening the chat
     return (
       <div className="fixed bottom-8 right-8 z-50">
         <Button
@@ -117,52 +116,60 @@ export default function Chat() {
 
   return (
     <div className="fixed bottom-8 right-8 z-50 w-[360px] h-[500px] flex flex-col shadow-lg rounded-2xl bg-white">
-      <Card className="flex-1 flex flex-col p-0 rounded-2xl overflow-hidden">
-        {/* Messages */}
-        <div className="flex-1 overflow-auto p-4 space-y-4">
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              {msg.role === "assistant" && <RobotOutlined className="text-gray-500 mt-1" />}
-              <div
-                className={`p-3 rounded-xl max-w-[75%] whitespace-pre-wrap ${
-                  msg.role === "user" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
-                }`}
-              >
-                {msg.content}
-              </div>
-              {msg.role === "user" && <UserOutlined className="text-blue-500 mt-1" />}
-            </div>
-          ))}
-          {isStreaming && (
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
-              <Spin size="small" /> AI is typing...
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+      {/* Header with Close */}
+      <div className="flex items-center justify-between p-3 border-b">
+        <span className="font-semibold text-gray-700">AI Chat</span>
+        <Button
+          type="text"
+          icon={<CloseOutlined />}
+          onClick={() => setIsOpen(false)}
+        />
+      </div>
 
-        {/* Input fixed at bottom */}
-        <div className="p-4 border-t flex gap-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onPressEnter={sendMessage}
-            disabled={isStreaming}
-            placeholder="Type a message..."
-          />
-          <Button
-            type="primary"
-            icon={<SendOutlined />}
-            onClick={sendMessage}
-            disabled={isStreaming}
+      {/* Messages container */}
+      <div className="flex-1 overflow-auto p-4 space-y-4">
+        {messages.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
-            Send
-          </Button>
-        </div>
-      </Card>
+            {msg.role === "assistant" && <RobotOutlined className="text-gray-500 mt-1" />}
+            <div
+              className={`p-3 rounded-xl max-w-[75%] whitespace-pre-wrap ${
+                msg.role === "user" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
+              }`}
+            >
+              {msg.content}
+            </div>
+            {msg.role === "user" && <UserOutlined className="text-blue-500 mt-1" />}
+          </div>
+        ))}
+        {isStreaming && (
+          <div className="flex items-center gap-2 text-gray-500 text-sm">
+            <Spin size="small" /> AI is typing...
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input fixed at bottom */}
+      <div className="p-3 border-t flex gap-2">
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onPressEnter={sendMessage}
+          disabled={isStreaming}
+          placeholder="Type a message..."
+        />
+        <Button
+          type="primary"
+          icon={<SendOutlined />}
+          onClick={sendMessage}
+          disabled={isStreaming}
+        >
+          Send
+        </Button>
+      </div>
     </div>
   );
 }

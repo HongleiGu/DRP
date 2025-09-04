@@ -64,7 +64,7 @@ export abstract class Plugin extends ex.Actor {
 
     // Automatically trigger onPlayerClose if implemented
     const distance = this.pos.distance(this.currentPlayer.pos);
-    console.log(distance)
+    // console.log(distance)
     if (distance < this.playerDetectionDistance) { // example threshold for "close"
       this.openPanel(this.panel);
       if (this.onPlayerClose) this.onPlayerClose(this.currentPlayer, engine);
