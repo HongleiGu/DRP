@@ -57,8 +57,6 @@ services:
         condition: service_started
       redis:
         condition: service_started
-      ollama:
-        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lumiroom
       SPRING_DATASOURCE_USERNAME: postgres
