@@ -26,6 +26,7 @@ public class SenderImplementation implements Sender {
   }
 
   public void send(String routingKey, Message message) {
+    System.out.println("📤 Sending message to routing key: " + routingKey);
     String jsonMessage;
     try {
       jsonMessage = mapper.writeValueAsString(message);

@@ -18,7 +18,7 @@ import PendingPanel from "@/components/Contacts/PendingPanel";
 import ContactDetails from "@/components/Contacts/ContactDetails";
 import { SearchPanel } from "@/components/Contacts/SearchPanel";
 import { sendGreetings } from "@/utils/messaging/templates";
-import { messageWebsocket } from "@/hooks/StompService";
+import { getMessageWebsocket } from "@/hooks/StompService";
 
 const { Title } = Typography;
 
@@ -51,7 +51,7 @@ export default function ContactsPage({ user }: { user: SupabaseUser }) {
   }, [user]);
 
   // there is a universal messageWebsocket connection in GlobalApp
-  messageWebsocket.setHandlers({
+  getMessageWebsocket()?.setHandlers({
     "processGreetingMessage": async (msg, user) => {
       // greeting messages dont have a roomId, but we should save the msg entry to pending.jsonl
       if (msg.metadata.scope === "personal" && msg.metadata.type === "greeting") {

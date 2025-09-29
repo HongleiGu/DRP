@@ -87,6 +87,7 @@ public class WebSocketController {
      */
     @MessageMapping("/message/ack")
     public void receiveAck(AckPayload payload, Principal principal) {
+        System.out.println("Received ack with principal" + principal.toString() + "and payload" + payload.toString());
         String userId = principal.getName();
         ackTracker.confirmAck("message:" + userId + ":" + payload.getMessageId(), payload.isSuccess());
     }

@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation"
 import { getRoom } from "@/utils/api";
 import { getAllGroupsFilePath, getRoomFilePath } from "@/utils/fileService/commonFilePaths";
 import { StompHandler } from "@/hooks/stompUtils";
-import { messageWebsocket } from "@/hooks/StompService";
+import { getMessageWebsocket } from "@/hooks/StompService";
 
 const { Text } = Typography;
 
@@ -94,7 +94,7 @@ export default function ChatsPage({user, setTab}: {user: SupabaseUser, setTab: (
     }
   }
 
-  messageWebsocket.setHandlers({
+  getMessageWebsocket()?.setHandlers({
     "processNormalMessage": handlerNormalAndInviteMessages,
     "processInviteMessage": handlerNormalAndInviteMessages,
   })

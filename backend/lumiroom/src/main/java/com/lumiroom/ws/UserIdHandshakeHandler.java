@@ -26,7 +26,7 @@ public class UserIdHandshakeHandler extends DefaultHandshakeHandler {
                                                 .map(q -> q.substring("userId=".length()))
                                                 .findFirst())
                                 .orElse(UUID.randomUUID().toString());
-
+                System.out.println("Handshake established for userId=" + userId);
                 return () -> userId;
         }
 }

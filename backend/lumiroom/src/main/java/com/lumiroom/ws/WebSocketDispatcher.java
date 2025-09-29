@@ -16,14 +16,17 @@ public class WebSocketDispatcher {
   }
 
   public void sendMessageToUser(String userId, Message message) {
+    String destination = "/queue/messages";
+    System.out.println("Sending to" + destination);
     messagingTemplate.convertAndSendToUser(
-        "msg-" + userId,
-        "/queue/messages", // client will subscribe to this
+        userId,
+        destination, // client will subscribe to this
         message);
   }
 
   public void sendPlayerDataToRoom(String roomId, PlayerData message) {
-    String destination = "/topic/game/" + message.getRoomId();
+    String destination = "/queue/messages";// + message.getRoomId();
+    System.out.println("Sending to" + destination);
     messagingTemplate.convertAndSend(
         destination,
         message);

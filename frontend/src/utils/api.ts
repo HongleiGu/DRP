@@ -137,7 +137,7 @@ export async function addContacts(firstUser: string, secondUser: string, roomId:
 }
 
 export async function getAllRoomsofUser(userId: string) {
-  return await fetchJson<Room[]>(`${BASE_URL}api/contacts/getAllRoomsofUser?userId=${userId}`, {
+  return await fetchJson<Room[]>(`${BASE_URL}api/rooms/getAllRoomsofUser?userId=${userId}`, {
     method: "GET",
     headers: { 'Content-Type': 'application/json' }
   })

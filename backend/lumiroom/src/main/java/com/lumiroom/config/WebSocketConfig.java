@@ -1,7 +1,9 @@
 package com.lumiroom.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -65,13 +67,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      * @param config the broker registry to configure
      */
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry config) {
-        // Simple broker handles subscription endpoints for queues and topics
-        config.enableSimpleBroker("/queue", "/topic");
-        // All messages sent to @MessageMapping endpoints must start with /app
-        config.setApplicationDestinationPrefixes("/app");
-        // Enables per-user routing for convertAndSendToUser
-        config.setUserDestinationPrefix("/user");
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        ThreadPoolTaskScheduler taskScheduler = taskScheduler();
+
+        registry.enableSimpleBroker("/topic", "/queue")
+                .setHeartbeatValue(new long[] { 10000, 10000 }) // 10s incoming/outgoing
+                .setTaskScheduler(taskScheduler);
+
+        registry.setApplicationDestinationPrefixes("/app");
+        registry.setUserDestinationPrefix("/user");
     }
 
     /**
@@ -91,5 +95,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 // Authorization is handled at the controller level, so no handshake handler is
                 // set
                 .withSockJS();
+    }
+
+    // Thread pool for scheduling heartbeat messages to clients
+    // This helps detect dead connections and clean up resources
+    @Bean
+    public ThreadPoolTaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(1);
+        scheduler.setThreadNamePrefix("wss-heartbeat-thread-");
+        scheduler.initialize();
+        return scheduler;
     }
 }

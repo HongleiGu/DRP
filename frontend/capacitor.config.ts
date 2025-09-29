@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'lumiroom',
   webDir: 'out',
   server: {
-    androidScheme: 'http',
+    androidScheme: 'https',
   }
 };
 

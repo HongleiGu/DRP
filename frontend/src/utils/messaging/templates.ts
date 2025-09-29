@@ -1,7 +1,7 @@
 import { SupabaseUser } from "@/types/datatypes";
-import { AcceptGreetingMessage, DeleteContactsMessage, GreetingMessage, InviteMessage } from "./types";
 import { v4 as uuidv4 } from 'uuid';
 import { sendMessage, sendMessageToRoom } from "./messages";
+import { GreetingMessage, AcceptGreetingMessage, DeleteContactsMessage, InviteMessage } from "./types";
 
 export async function sendGreetings(userId: string, username: string, targetId: string): Promise<void> {
   const msg: GreetingMessage = {

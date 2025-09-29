@@ -4,7 +4,7 @@ import { Player } from "../actors/Player";
 import { OtherPlayer } from "../actors/OtherPlayer";
 import { PlayerData, SceneCallbacks, SupabaseUser } from "@/types/datatypes";
 import { getPlayers } from "@/utils/api";
-import { gameWebsocket, Subscription } from "@/hooks/StompService";
+import { getGameWebsocket, setGameWebsocket, StompService, Subscription } from "@/hooks/StompService";
 import { IMessage } from "@stomp/stompjs";
 import { setGlobalPlayer } from "@/utils/globalPlayer";
 
@@ -13,6 +13,7 @@ export class MainScene extends ex.Scene {
   private otherPlayers: Record<string, OtherPlayer> = {};
   // eslint-disable-line @typescript-eslint/no-unused-vars
   private callbacks: SceneCallbacks;
+  private gameWebsocket: StompService;
   private roomId: string;
   private user: SupabaseUser;
   private lastBroadcast = 0;
@@ -26,6 +27,8 @@ export class MainScene extends ex.Scene {
     this.callbacks = callbacks;
     this.user = user;
     this.roomId = roomId;
+    setGameWebsocket();
+    this.gameWebsocket = getGameWebsocket()!;
   }
 
   public getPlayer() {
@@ -62,7 +65,7 @@ export class MainScene extends ex.Scene {
 
   onPreUpdate(): void {
     const now = Date.now();
-    if (this.player && gameWebsocket.connected) {
+    if (this.player && this.gameWebsocket.connected) {
       if (now - this.lastBroadcast > this.BROADCAST_INTERVAL) {
         const positionMessage: PlayerData = {
           user_id: this.user.id,
@@ -74,7 +77,7 @@ export class MainScene extends ex.Scene {
           id: "", // the id is not needed, in the backend, we need to let psql generate this
           direction: this.player.currentDirection
         };
-        gameWebsocket.publish({
+        this.gameWebsocket.publish({
           destination: "/app/game/broadcastPosition",
           body: JSON.stringify(positionMessage),
         });
@@ -111,12 +114,12 @@ export class MainScene extends ex.Scene {
   }
 
   private setupSubscription() {
-    if (!gameWebsocket) {
+    if (!this.gameWebsocket) {
       console.error("Game STOMP client not initialized!");
       return;
     }
 
-    gameWebsocket.connect(this.user, {roomId: this.roomId},
+    this.gameWebsocket.connect(this.user, {roomId: this.roomId},
       {
         endpoint: `topic/game/${this.roomId}`,
         callback: () => async (message: IMessage) => {
@@ -148,8 +151,8 @@ export class MainScene extends ex.Scene {
   }
 
   onDeactivate(): void {
-    if (gameWebsocket && this.subscriptionId) {
-      gameWebsocket.disconnect()
+    if (this.gameWebsocket && this.subscriptionId) {
+      this.gameWebsocket.disconnect()
     }
     this.otherPlayers = {};
   }

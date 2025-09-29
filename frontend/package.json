@@ -20,6 +20,7 @@
     "@ant-design/static-style-extract": "^1.0.3",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@capacitor/android": "^7.4.2",
+    "@capacitor/app": "^7.1.0",
     "@capacitor/cli": "^7.4.2",
     "@capacitor/core": "^7.4.2",
     "@capacitor/filesystem": "^7.1.4",

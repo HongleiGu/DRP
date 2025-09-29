@@ -45,3 +45,12 @@
 /frontend/.clerk/
 
 /nginx/certs
+
+# ───────── Java built packages ───────────
+*.jar
+
+# ───────── Keys ───────────
+*.pem
+
+# ───────── test storage ───────────
+/frontend/storage/

@@ -9,18 +9,18 @@ import { STORAGE_PATH } from "@/utils/utils";
 import path from "path";
 import fileService from "@/utils/fileService";
 import { appendJsonl, deleteJsonlById, findJsonlById, replaceJsonlById } from "@/utils/json";
-import { PersonalChatMessage } from "@/utils/messaging/types";
 import { findUserById } from "@/utils/user";
 import { PendingFileFormat } from "@/types/fileFormat";
 import { getAllGroupsFilePath, getContactsFilePath, getRoomFilePath, getPendingFilePath } from "@/utils/fileService/commonFilePaths";
 import { getContacts, getRoom } from "@/utils/api";
+import { PersonalChatMessage } from "@/utils/messaging/types";
 
 // when getting a message, we identify the group this comes from and save it to the corresponding group
 export const processPersonalMessage: StompHandler = async (msg, user) => {
-  // personal messages do not have a roomId
+  // personal messages have a roomId, we assume the rooms is certain to only contain the 2 people
   if (msg.metadata.scope === "personal" && msg.metadata.type === "message") {
     const typedMsg = msg as PersonalChatMessage
-    const sender = typedMsg.speaker;
+    const sender = typedMsg.chat_room_id;
     if (!sender) {
       console.warn("⚠️ Personal message without receiver, ignoring:", msg);
       return;

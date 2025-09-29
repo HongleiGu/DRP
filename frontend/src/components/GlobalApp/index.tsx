@@ -8,7 +8,7 @@ import globalStore from "@/store";
 import { validateJWT } from "@/utils/api";
 import { deleteMessages, getMessages } from "@/utils/messaging/messages";
 import { handlersCombined } from "@/hooks/stompUtils";
-import { messageSubscription, messageWebsocket } from "@/hooks/StompService";
+import { messageSubscription, getMessageWebsocket, setMessageWebsocket} from "@/hooks/StompService";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -32,17 +32,18 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       redisMessages.map(async it => await handlersCombined(it, u))
       await deleteMessages(u.id)
       setLoading(false);
+      setMessageWebsocket();
+      const messageWebsocket = getMessageWebsocket();
+      if (!messageWebsocket) {
+        throw new Error("No message websocket found");
+      }
+      messageWebsocket.connect(u, null, messageSubscription)
     };
     helper();
+    return () => {
+      getMessageWebsocket()?.disconnect();
+    }
   }, []);
-
-  useEffect(() => {
-    if (!user) return;
-    // globally, we only connect to the message websocket, since is universally required 
-    // we customly connect to the game websocket only when needed
-    messageWebsocket.connect(user, null, messageSubscription)
-    return () => messageWebsocket.disconnect();
-  }, [user]);
 
   if (loading) return <div>Loading...</div>;
   if (!user) {

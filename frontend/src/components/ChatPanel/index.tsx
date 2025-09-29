@@ -15,7 +15,7 @@ import globalStore from "@/store";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import GroupManagementPanel from "./GroupManagementPanel";
-import { messageWebsocket } from "@/hooks/StompService";
+import { getMessageWebsocket } from "@/hooks/StompService";
 import { getRoom } from "@/utils/api";
 import { getAllGroupsFilePath } from "@/utils/fileService/commonFilePaths";
 
@@ -73,12 +73,11 @@ export default function ChatPanel({
   }, [chatroomId, userId])
 
   // setup websocket
-  messageWebsocket.setHandler("onRender", async (msg) => {
+  getMessageWebsocket()?.setHandler("onRender", async (msg) => {
     console.log("received message", msg, chatroomId)
-    if (msg.metadata.scope == "personal") {
-      // TODO: handle personal msg
-      return
-    }
+    // well, we will specify a bit more about this, whether personal messages should be seen as something in the room is under consideration
+    // if (msg.metadata.scope == "personal") {
+    // }
     if (msg.chat_room_id !== chatroomId) return; // Ignore other rooms
 
     // Append message and save locally

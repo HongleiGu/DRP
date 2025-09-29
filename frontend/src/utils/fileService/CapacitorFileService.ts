@@ -33,7 +33,8 @@ const capacitorFileService: FileService = {
       path: filePath,
       data: '',
       directory: Directory.Data,
-      encoding: Encoding.UTF8
+      encoding: Encoding.UTF8,
+      recursive: true
     });
   },
 

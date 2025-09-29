@@ -1,12 +1,18 @@
+"use client"
+
 // import type { Metadata } from "next";
 import "@ant-design/v5-patch-for-react-19";
 import "@/app/globals.css";
 // import "@/app/antd.css"
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { App, ConfigProvider } from "antd";
-// import GlobalApp from "@/components/GlobalApp";
+import { setupWebsocketLifecycle } from "@/hooks/StompService";
+import { useEffect } from "react";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    setupWebsocketLifecycle();
+  }, []);
   return (
     <html lang="en">
       <body className="antialiased" style={{ margin: 0 }}> 

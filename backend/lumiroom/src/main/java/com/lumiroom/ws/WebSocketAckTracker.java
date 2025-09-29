@@ -21,6 +21,7 @@ public class WebSocketAckTracker {
     }
 
     public void confirmAck(String ackKey, boolean success) {
+        System.out.println("Comvirming ack for key: " + ackKey + " with success: " + success);
         CompletableFuture<Boolean> future = pendingAcks.get(ackKey);
         if (future != null) {
             future.complete(success);
